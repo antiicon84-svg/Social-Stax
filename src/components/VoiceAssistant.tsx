@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mic, MicOff, Volume2, X, Minimize2, Maximize2, Bot, Loader2, Navigation } from 'lucide-react';
+import { Mic, MicOff, Volume2, X, Minimize2, Maximize2, Bot, Loader2, Navigation, Send } from 'lucide-react';
 import { httpsCallable } from 'firebase/functions';
 import { getFirebaseFunctions } from '@/config/firebase';
 
@@ -110,6 +110,7 @@ const VoiceAssistant: React.FC = () => {
     }
   ]);
   const [transcript, setTranscript] = useState('');
+  const [textInput, setTextInput] = useState('');
   const [isSupported, setIsSupported] = useState(true);
   const [isTTSSupported, setIsTTSSupported] = useState(true);
 
@@ -204,11 +205,14 @@ const VoiceAssistant: React.FC = () => {
       const functions = getFirebaseFunctions();
       const geminiChat = httpsCallable(functions, 'geminiLiveChat');
 
-      // Build conversation history for context
-      const history = messages.slice(-6).map(m => ({
-        role: m.role,
-        text: m.text.replace(/\[NAVIGATE:[^\]]+\]/g, '').trim()
-      }));
+      // Build conversation history for context (skip initial greeting, keep last 6)
+      const history = messages
+        .slice(1) // skip the hardcoded initial greeting
+        .slice(-6)
+        .map(m => ({
+          role: m.role,
+          text: m.text.replace(/\[NAVIGATE:[^\]]+\]/g, '').trim()
+        }));
 
       const result = await geminiChat({
         message: userText,
@@ -401,52 +405,72 @@ const VoiceAssistant: React.FC = () => {
         </div>
 
         {/* Controls */}
-        <div className="p-3 border-t border-white/5 bg-gray-900/50">
-          <div className="flex items-center justify-center gap-3">
-            {isSpeaking && (
+        <div className="p-3 border-t border-white/5 bg-gray-900/50 space-y-2">
+          {isSpeaking && (
+            <div className="flex justify-center">
               <button
                 onClick={() => { window.speechSynthesis?.cancel(); setIsSpeaking(false); }}
-                className="p-2.5 rounded-full bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white transition-all"
+                className="p-1.5 rounded-full bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white transition-all"
                 title="Stop speaking"
               >
-                <Volume2 size={16} />
+                <Volume2 size={14} />
+              </button>
+            </div>
+          )}
+
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (textInput.trim() && !isProcessing) {
+                processUserMessage(textInput.trim());
+                setTextInput('');
+              }
+            }}
+            className="flex items-center gap-2"
+          >
+            <input
+              type="text"
+              value={textInput}
+              onChange={(e) => setTextInput(e.target.value)}
+              placeholder={isProcessing ? 'Processing...' : 'Type a message...'}
+              disabled={isProcessing}
+              className="flex-1 bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 transition-colors disabled:opacity-50"
+            />
+            <button
+              type="submit"
+              disabled={isProcessing || !textInput.trim()}
+              className="p-2.5 rounded-xl bg-gradient-to-br from-cyan-500 to-purple-600 text-white disabled:opacity-40 disabled:cursor-not-allowed hover:from-cyan-400 hover:to-purple-500 transition-all"
+              title="Send message"
+            >
+              <Send size={16} />
+            </button>
+            {isSupported && (
+              <button
+                type="button"
+                onClick={toggleListening}
+                disabled={isProcessing}
+                className={`relative p-2.5 rounded-xl flex items-center justify-center transition-all ${
+                  isListening
+                    ? 'bg-red-600 hover:bg-red-700'
+                    : isProcessing
+                    ? 'bg-gray-700 cursor-not-allowed'
+                    : 'bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white'
+                }`}
+                title={isListening ? 'Stop' : 'Speak to Stax'}
+              >
+                {isListening && (
+                  <div className="absolute inset-0 rounded-xl bg-red-600 animate-ping opacity-30" />
+                )}
+                {isProcessing ? (
+                  <Loader2 size={16} className="text-white animate-spin" />
+                ) : isListening ? (
+                  <MicOff size={16} className="text-white" />
+                ) : (
+                  <Mic size={16} className="text-white" />
+                )}
               </button>
             )}
-
-            <button
-              onClick={toggleListening}
-              disabled={isProcessing}
-              className={`relative w-14 h-14 rounded-full flex items-center justify-center transition-all shadow-lg ${
-                isListening
-                  ? 'bg-red-600 hover:bg-red-700 shadow-red-900/40'
-                  : isProcessing
-                  ? 'bg-gray-700 cursor-not-allowed'
-                  : 'bg-gradient-to-br from-cyan-500 to-purple-600 hover:from-cyan-400 hover:to-purple-500 shadow-purple-900/40'
-              }`}
-              title={isListening ? 'Stop' : 'Speak to Stax'}
-            >
-              {isListening && (
-                <div className="absolute inset-0 rounded-full bg-red-600 animate-ping opacity-30" />
-              )}
-              {isProcessing ? (
-                <Loader2 size={22} className="text-white animate-spin" />
-              ) : isListening ? (
-                <MicOff size={22} className="text-white" />
-              ) : (
-                <Mic size={22} className="text-white" />
-              )}
-            </button>
-          </div>
-
-          <p className="text-center text-xs text-gray-600 mt-2">
-            {!isSupported
-              ? 'Voice not supported in this browser'
-              : isListening
-              ? 'Listening... tap to stop'
-              : isProcessing
-              ? 'Processing your request...'
-              : 'Tap mic to speak · Can navigate the app'}
-          </p>
+          </form>
         </div>
       </div>
     </div>

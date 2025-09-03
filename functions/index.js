@@ -365,6 +365,12 @@ exports.geminiAI = functions.https.onCall(async (data, context) => {
     throw new functions.https.HttpsError('unauthenticated', 'Must be authenticated');
   }
 
+  // Diagnostic log to check for API key
+  if (!process.env.GOOGLE_API_KEY) {
+    console.error('FATAL: GOOGLE_API_KEY environment variable is not set. AI functions will fail.');
+    throw new functions.https.HttpsError('internal', 'The server is missing its connection to the AI service.');
+  }
+
   const { operation, payload } = data;
   if (!operation || !payload) {
     throw new functions.https.HttpsError('invalid-argument', 'operation and payload required');
@@ -372,7 +378,7 @@ exports.geminiAI = functions.https.onCall(async (data, context) => {
 
   const { GoogleGenerativeAI } = require('@google/generative-ai');
   const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
-  const model = genAI.getGenerativeModel({ model: 'gemini-3.1-pro' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
 
   try {
     let result;
@@ -517,16 +523,20 @@ exports.geminiLiveChat = functions.https.onCall(async (data, context) => {
 
     const { GoogleGenerativeAI } = require('@google/generative-ai');
     const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
-    const model = genAI.getGenerativeModel({ model: 'gemini-3.1-pro' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-3.1-flash' });
 
     // Build conversation with context
     const contents = [];
 
-    // Add history
+    // Add history, ensuring it starts with a user message (Gemini requirement)
     if (history && history.length > 0) {
+      let foundFirstUser = false;
       for (const msg of history) {
+        const role = msg.role === 'user' ? 'user' : 'model';
+        if (!foundFirstUser && role === 'model') continue;
+        foundFirstUser = true;
         contents.push({
-          role: msg.role === 'user' ? 'user' : 'model',
+          role,
           parts: [{ text: msg.text }]
         });
       }
@@ -577,7 +587,7 @@ exports.geminiVoiceAssistant = functions.https.onCall(async (data, context) => {
     const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
 
     // Use Gemini with audio capabilities for voice assistant
-    const model = genAI.getGenerativeModel({ model: 'gemini-3.1-pro' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
 
     // Prepare the audio part
     const audioPart = {
