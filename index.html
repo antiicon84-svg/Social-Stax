@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
+<html lang="en" class="dark">
+  <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Social StaX</title>
-    
+    <title>Social Stax</title>
+
     <!-- PWA Settings -->
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#000000">
@@ -20,34 +20,33 @@
     <script type="module" src="https://platform-static.appkit.dev/appkit.js"></script>
 
     <style>
-        body {
-            background-color: #000000;
-            color: #ffffff;
-            background-image: radial-gradient(circle at 50% 0%, rgba(220, 38, 38, 0.15) 0px, transparent 60%);
-            background-attachment: fixed;
-            overscroll-behavior-y: none;
-        }
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #000000; }
-        ::-webkit-scrollbar-thumb { background: #dc2626; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #ef4444; }
-        input, textarea, select {
-            background-color: #ffffff !important;
-            color: #000000 !important;
-            border: 1px solid #e2e8f0;
-        }
-        input::placeholder, textarea::placeholder { color: #94a3b8 !important; }
-        input:focus, textarea:focus, select:focus {
-            border-color: #ef4444 !important;
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.3);
-        }
+      body {
+        background-color: #000000;
+        color: #ffffff;
+        background-image: radial-gradient(circle at 50% 0%, rgba(220, 38, 38, 0.1) 0%, transparent 70%);
+        background-attachment: fixed;
+        margin: 0;
+        overflow-x: hidden;
+      }
+      
+      /* Hide scrollbars for a cleaner app look */
+      ::-webkit-scrollbar {
+        width: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #1f2937;
+        border-radius: 10px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #374151;
+      }
     </style>
-    <link rel="stylesheet" href="/index.css">
-</head>
-<body class="font-sans antialiased text-white selection:bg-red-600 selection:text-white">
-    <noscript>You need to enable JavaScript to run this app.</noscript>
+  </head>
+  <body class="selection:bg-red-600 selection:text-white">
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
-</body>
+  </body>
 </html>
