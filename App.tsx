@@ -10,21 +10,33 @@ const App: React.FC = () => {
   const [isAppKitEnvironment, setIsAppKitEnvironment] = useState(false);
 
   useEffect(() => {
-    if (isAppKit()) {
-      setIsAppKitEnvironment(true);
-      window.appkit!.ready.then(() => {
+    const initializeApp = async () => {
+      try {
+        // Check if running in AppKit environment
+        if (isAppKit() && window.appkit) {
+          setIsAppKitEnvironment(true);
+          try {
+            await window.appkit.ready;
+            setIsReady(true);
+          } catch (error) {
+            console.error("AppKit failed to initialize:", error);
+            // Fallback to web if AppKit fails
+            setIsAppKitEnvironment(false);
+            setIsReady(true);
+          }
+        } else {
+          // Running in a standard web browser environment
+          setIsAppKitEnvironment(false);
+          setIsReady(true);
+        }
+      } catch (error) {
+        console.error("App initialization error:", error);
         setIsReady(true);
-      }).catch((error) => {
-        console.error("AppKit failed to initialize:", error);
-        // Fallback to web if AppKit fails
         setIsAppKitEnvironment(false);
-        setIsReady(true);
-      });
-    } else {
-      // Running in a standard web browser environment
-      setIsAppKitEnvironment(false);
-      setIsReady(true);
-    }
+      }
+    };
+
+    initializeApp();
   }, []);
 
   if (!isReady) {
@@ -44,4 +56,4 @@ const App: React.FC = () => {
   }
 };
 
-export default App;.js
+export default App;
