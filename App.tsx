@@ -7,9 +7,11 @@ import { isAppKit } from './utils/appkitUtils'; // Import appkit utilities
 const App: React.FC = () => {
   const [isReady, setIsReady] = useState(false);
   const [isAppKitEnvironment, setIsAppKitEnvironment] = useState(false);
+  console.log('[App] Render: isReady', isReady, 'isAppKitEnvironment', isAppKitEnvironment);
 
   useEffect(() => {
     const initializeApp = async () => {
+      console.log('[App] Initializing...');
       try {
         // Check if running in AppKit environment
         if (isAppKit() && (window as any).appkit) {
@@ -38,6 +40,7 @@ const App: React.FC = () => {
   }, []);
 
   if (!isReady) {
+    console.log('[App] Not ready, showing spinner');
     return (
       <div className="flex items-center justify-center min-h-screen bg-black">
         <LoadingSpinner size="large" />
@@ -45,6 +48,7 @@ const App: React.FC = () => {
     );
   }
 
+  console.log('[App] Ready, rendering', isAppKitEnvironment ? 'AppKitRouter' : 'WebRouter');
   return isAppKitEnvironment ? <AppKitRouter /> : <WebRouter />;
 };
 

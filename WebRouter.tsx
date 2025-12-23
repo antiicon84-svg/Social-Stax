@@ -38,11 +38,13 @@ const WebRouter: React.FC = () => {
   const [isLoadingPosts, setIsLoadingPosts] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0); 
+  console.log('[WebRouter] Render', { clients, posts, isLoadingClients, isLoadingPosts, loadError });
   const navigate = useNavigate();
 
   // Fetch Data
   useEffect(() => {
     const fetchData = async () => {
+      console.log('[WebRouter] Fetching data...');
       setIsLoadingClients(true);
       setIsLoadingPosts(true);
       setLoadError(null);
@@ -99,6 +101,7 @@ const WebRouter: React.FC = () => {
     onDataRefresh: handleRefresh,
   };
 
+  console.log('[WebRouter] Rendering main layout');
   return (
     <div className="flex min-h-screen bg-black flex-col md:flex-row">
       <Navbar clients={clients} />

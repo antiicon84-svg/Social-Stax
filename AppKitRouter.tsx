@@ -12,7 +12,7 @@ import BillingView from './views/BillingView';
 import Button from './components/Button';
 import { getClients, getScheduledPosts, deletePost } from './services/dbService';
 import { Client, Post } from './types';
-import { appkitNavigate } from './utils/appkitUtils';
+
 
 const AppKitRouter: React.FC = () => {
   const [clients, setClients] = useState<Client[]>([]);
@@ -110,7 +110,7 @@ const AppKitRouter: React.FC = () => {
       <div className="p-6 md:p-10 flex-grow max-w-7xl mx-auto text-center text-gray-400">
         <h1 className="text-3xl font-bold mb-4 text-white">404 - Page Not Found</h1>
         <p className="mb-6">The requested page could not be found.</p>
-        <Button variant="primary" onClick={() => appkitNavigate('/')}>Go to Dashboard</Button>
+        <Button variant="primary" onClick={() => { window.location.hash = '/'; }}>Go to Dashboard</Button>
       </div>
     );
   }

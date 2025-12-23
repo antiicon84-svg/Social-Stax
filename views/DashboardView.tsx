@@ -20,6 +20,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({
   isLoadingPosts,
   onDataRefresh
 }) => {
+  console.log('[DashboardView] Render', { clients, posts, isLoadingClients, isLoadingPosts });
   return (
     <div className="p-6 md:p-10 max-w-7xl mx-auto w-full">
       <div className="flex justify-between items-center mb-8">
