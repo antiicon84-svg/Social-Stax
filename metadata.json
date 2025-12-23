@@ -1,0 +1,8 @@
+{
+  "name": "Social StaX",
+  "description": "A-Iconic's 'all-in-one' Marketing, SMM & Content Creation Platform",
+  "requestFramePermissions": [
+    "geolocation",
+    "microphone"
+  ]
+}
