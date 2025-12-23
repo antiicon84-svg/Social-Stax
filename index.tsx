@@ -3,15 +3,14 @@ import ReactDOM from 'react-dom/client';
 import { HashRouter, MemoryRouter } from 'react-router-dom';
 import App from './App';
 import ErrorBoundary from './components/ErrorBoundary';
-import './types';
 import { isAppKit } from './utils/appkitUtils';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
   throw new Error("Could not find root element to mount to");
 }
-const root = ReactDOM.createRoot(rootElement);
 
+const root = ReactDOM.createRoot(rootElement);
 const isBlobEnv = window.location.protocol === 'blob:';
 
 const renderApp = () => {
@@ -20,13 +19,9 @@ const renderApp = () => {
   const appComponent = (
     <React.StrictMode>
       <ErrorBoundary>
-        {isAppKit() && !isBlobEnv ? (
+        <Router> 
           <App />
-        ) : (
-          <Router> 
-            <App />
-          </Router>
-        )}
+        </Router>
       </ErrorBoundary>
     </React.StrictMode>
   );
@@ -43,10 +38,10 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-if (window.appkit && !isBlobEnv) {
-  window.appkit.ready.then(() => {
+if ((window as any).appkit && !isBlobEnv) {
+  (window as any).appkit.ready.then(() => {
     renderApp();
-  }).catch((error) => {
+  }).catch((error: any) => {
     console.error("AppKit failed to initialize, falling back to web rendering:", error);
     renderApp();
   });
