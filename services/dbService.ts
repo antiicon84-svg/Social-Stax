@@ -13,7 +13,7 @@ const POSTS_KEY = 'social_stax_posts';
 export const getClients = async (): Promise<Client[]> => {
   const data = localStorage.getItem(CLIENTS_KEY);
   return data ? JSON.parse(data) : [];
-};Feat: Add dbService.ts with localStorage mock persistence
+};
 
 export const saveClient = async (client: Client): Promise<void> => {
   const clients = await getClients();
@@ -40,5 +40,5 @@ export const deletePost = async (postId: string): Promise<void> => {
 
 export const getClientById = async (id: string): Promise<Client | undefined> => {
   const clients = await getClients();
-  return clients.find(c => id === c.id || id === c.name);
+  return clients.find(c => c.id === id);
 };
