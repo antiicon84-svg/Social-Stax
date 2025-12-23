@@ -13,26 +13,36 @@ import Button from './components/Button';
 import { getClients, getScheduledPosts, deletePost } from './services/dbService';
 import { Client, Post } from './types';
 
-
 const AppKitRouter: React.FC = () => {
   const [clients, setClients] = useState<Client[]>([]);
   const [posts, setPosts] = useState<Post[]>([]);
   const [isLoadingClients, setIsLoadingClients] = useState(true);
   const [isLoadingPosts, setIsLoadingPosts] = useState(true);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  
+  const getPathFromHash = () => {
+    const hash = window.location.hash.substring(1) || '/';
+    return hash.startsWith('/') ? hash : '/' + hash;
+  };
 
-  const [currentHashPath, setCurrentHashPath] = useState(window.location.hash.substring(1) || '/');
+  const [currentHashPath, setCurrentHashPath] = useState(getPathFromHash());
 
   useEffect(() => {
     const handleHashChange = () => {
-      setCurrentHashPath(window.location.hash.substring(1) || '/');
+      const newPath = getPathFromHash();
+      console.log('[AppKitRouter] Hash changed to:', newPath);
+      setCurrentHashPath(newPath);
     };
+
     window.addEventListener('hashchange', handleHashChange);
+    console.log('[AppKitRouter] Initial path:', currentHashPath);
+    
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
   useEffect(() => {
     const fetchData = async () => {
+      console.log('[AppKitRouter] Fetching data...');
       setIsLoadingClients(true);
       setIsLoadingPosts(true);
       try {
@@ -43,7 +53,7 @@ const AppKitRouter: React.FC = () => {
         setClients(fetchedClients);
         setPosts(fetchedPosts);
       } catch (err) {
-        console.error("Failed to load local data", err);
+        console.error("[AppKitRouter] Failed to load local data", err);
       } finally {
         setIsLoadingClients(false);
         setIsLoadingPosts(false);
@@ -70,20 +80,21 @@ const AppKitRouter: React.FC = () => {
         await deletePost(postId);
         handleRefresh();
       } catch (error) {
-        console.error('Error deleting post:', error);
+        console.error('[AppKitRouter] Error deleting post:', error);
         alert('Failed to delete post. Please try again.');
       }
     }
   }, [handleRefresh]);
 
-  let content;
   const path = currentHashPath;
+  console.log('[AppKitRouter] Rendering path:', path);
 
+  let content;
   if (path === '/' || path === '/dashboard' || path === '/settings') {
     content = (
-      <DashboardView
-        clients={clients}
-        posts={posts}
+      <DashboardView 
+        clients={clients} 
+        posts={posts} 
         onDeletePost={handleDeletePost}
         isLoadingClients={isLoadingClients}
         isLoadingPosts={isLoadingPosts}
@@ -109,7 +120,7 @@ const AppKitRouter: React.FC = () => {
     content = (
       <div className="p-6 md:p-10 flex-grow max-w-7xl mx-auto text-center text-gray-400">
         <h1 className="text-3xl font-bold mb-4 text-white">404 - Page Not Found</h1>
-        <p className="mb-6">The requested page could not be found.</p>
+        <p className="mb-6">The requested page could not be found. (Path: {path})</p>
         <Button variant="primary" onClick={() => { window.location.hash = '/'; }}>Go to Dashboard</Button>
       </div>
     );
