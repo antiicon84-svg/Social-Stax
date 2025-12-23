@@ -8,7 +8,7 @@ import ClientDetailView from './views/ClientDetailView';
 import DownloadsView from './views/DownloadsView';
 import TemplatesView from './views/TemplatesView';
 import ContentLabView from './views/ContentLabView'; 
-import PromptGuideView from './views/PromptGuideView'; // Import
+import PromptGuideView from './views/PromptGuideView';
 import BillingView from './views/BillingView';
 import Button from './components/Button';
 import { getClients, getScheduledPosts, deletePost } from './services/dbService'; 
@@ -20,11 +20,23 @@ const ClientDetailWrapper: React.FC<{ onPostScheduled: () => void }> = ({ onPost
   return <ClientDetailView clientId={clientId} onPostScheduled={onPostScheduled} />;
 };
 
+const ErrorFallback: React.FC = () => {
+  const navigate = useNavigate();
+  return (
+    <div className="p-6 md:p-10 flex-grow max-w-7xl mx-auto text-center text-gray-400">
+      <h1 className="text-3xl font-bold mb-4 text-white">404 - Page Not Found</h1>
+      <p className="mb-6">The requested page could not be found.</p>
+      <Button variant="primary" onClick={() => navigate('/')}>Go to Dashboard</Button>
+    </div>
+  );
+};
+
 const WebRouter: React.FC = () => {
   const [clients, setClients] = useState<Client[]>([]);
   const [posts, setPosts] = useState<Post[]>([]);
   const [isLoadingClients, setIsLoadingClients] = useState(true);
   const [isLoadingPosts, setIsLoadingPosts] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0); 
   const navigate = useNavigate();
 
@@ -33,6 +45,7 @@ const WebRouter: React.FC = () => {
     const fetchData = async () => {
       setIsLoadingClients(true);
       setIsLoadingPosts(true);
+      setLoadError(null);
       try {
         const [fetchedClients, fetchedPosts] = await Promise.all([
           getClients(),
@@ -41,7 +54,9 @@ const WebRouter: React.FC = () => {
         setClients(fetchedClients);
         setPosts(fetchedPosts);
       } catch (err) {
-        console.error("Failed to load local data", err);
+        const errorMessage = err instanceof Error ? err.message : 'Failed to load data';
+        console.error("Failed to load local data:", err);
+        setLoadError(errorMessage);
       } finally {
         setIsLoadingClients(false);
         setIsLoadingPosts(false);
@@ -55,7 +70,7 @@ const WebRouter: React.FC = () => {
   }, []);
 
   const handleClientAdded = useCallback(() => {
-     handleRefresh();
+    handleRefresh();
   }, [handleRefresh]);
 
   const handlePostScheduled = useCallback(() => {
@@ -74,59 +89,36 @@ const WebRouter: React.FC = () => {
     }
   }, [handleRefresh]);
 
+  // Shared dashboard props
+  const dashboardProps = {
+    clients,
+    posts,
+    onDeletePost: handleDeletePost,
+    isLoadingClients,
+    isLoadingPosts,
+    onDataRefresh: handleRefresh,
+  };
+
   return (
     <div className="flex min-h-screen bg-black flex-col md:flex-row">
       <Navbar clients={clients} />
       <div className="flex-1 flex flex-col overflow-auto">
+        {loadError && (
+          <div className="bg-red-900 text-red-100 p-4 m-4 rounded">
+            <p className="font-semibold">Error loading data:</p>
+            <p className="text-sm">{loadError}</p>
+          </div>
+        )}
         <Routes>
-          <Route path="/" element={
-              <DashboardView
-                clients={clients}
-                posts={posts}
-                onDeletePost={handleDeletePost}
-                isLoadingClients={isLoadingClients}
-                isLoadingPosts={isLoadingPosts}
-                onDataRefresh={handleRefresh}
-              />
-          } />
-          <Route path="/add-client" element={
-            <CreateClientView onClientAdded={handleClientAdded} />
-          } />
-          <Route path="/client/:clientId" element={
-            <ClientDetailWrapper onPostScheduled={handlePostScheduled} />
-          } />
-          <Route path="/templates" element={
-            <TemplatesView />
-          } />
-          <Route path="/content-lab" element={
-            <ContentLabView />
-          } />
-          <Route path="/prompt-guide" element={
-            <PromptGuideView />
-          } />
-          <Route path="/settings" element={
-             <DashboardView
-                clients={clients}
-                posts={posts}
-                onDeletePost={handleDeletePost}
-                isLoadingClients={isLoadingClients}
-                isLoadingPosts={isLoadingPosts}
-                onDataRefresh={handleRefresh}
-              />
-          } />
-          <Route path="/billing" element={
-            <BillingView />
-          } />
-          <Route path="/downloads" element={
-            <DownloadsView />
-          } />
-          <Route path="*" element={
-               <div className="p-6 md:p-10 flex-grow max-w-7xl mx-auto text-center text-gray-400">
-                <h1 className="text-3xl font-bold mb-4 text-white">404 - Page Not Found</h1>
-                <p className="mb-6">The requested page could not be found.</p>
-                <Button variant="primary" onClick={() => navigate('/')}>Go to Dashboard</Button>
-              </div>
-           } />
+          <Route path="/" element={<DashboardView {...dashboardProps} />} />
+          <Route path="/add-client" element={<CreateClientView onClientAdded={handleClientAdded} />} />
+          <Route path="/client/:clientId" element={<ClientDetailWrapper onPostScheduled={handlePostScheduled} />} />
+          <Route path="/templates" element={<TemplatesView />} />
+          <Route path="/content-lab" element={<ContentLabView />} />
+          <Route path="/prompt-guide" element={<PromptGuideView />} />
+          <Route path="/billing" element={<BillingView />} />
+          <Route path="/downloads" element={<DownloadsView />} />
+          <Route path="*" element={<ErrorFallback />} />
         </Routes>
       </div>
     </div>
