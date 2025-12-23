@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import WebRouter from './WebRouter'; // Import the renamed main application component for web
 import AppKitRouter from './AppKitRouter'; // Import the new AppKit-specific router
 import LoadingSpinner from './components/LoadingSpinner';
-import './types'; // Import types to ensure global declarations are picked up
 import { isAppKit } from './utils/appkitUtils'; // Import appkit utilities
 
 const App: React.FC = () => {
@@ -13,10 +12,10 @@ const App: React.FC = () => {
     const initializeApp = async () => {
       try {
         // Check if running in AppKit environment
-        if (isAppKit() && window.appkit) {
+        if (isAppKit() && (window as any).appkit) {
           setIsAppKitEnvironment(true);
           try {
-            await window.appkit.ready;
+            await (window as any).appkit.ready;
             setIsReady(true);
           } catch (error) {
             console.error("AppKit failed to initialize:", error);
@@ -30,9 +29,8 @@ const App: React.FC = () => {
           setIsReady(true);
         }
       } catch (error) {
-        console.error("App initialization error:", error);
+        console.error("Initialization error:", error);
         setIsReady(true);
-        setIsAppKitEnvironment(false);
       }
     };
 
@@ -41,19 +39,13 @@ const App: React.FC = () => {
 
   if (!isReady) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100">
-        <LoadingSpinner size="lg" />
-        <p className="ml-4 text-xl text-gray-700">Initializing app...</p>
+      <div className="flex items-center justify-center min-h-screen bg-black">
+        <LoadingSpinner size="large" />
       </div>
     );
   }
 
-  // Render the appropriate router based on the environment
-  if (isAppKitEnvironment) {
-    return <AppKitRouter />;
-  } else {
-    return <WebRouter />;
-  }
+  return isAppKitEnvironment ? <AppKitRouter /> : <WebRouter />;
 };
 
 export default App;
