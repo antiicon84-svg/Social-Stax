@@ -3,7 +3,11 @@ import type { Config } from 'tailwindcss';
 export default {
   content: [
     "./index.html",
-    "./**/*.{js,ts,jsx,tsx}",
+    "./components/**/*.{js,ts,jsx,tsx}",
+    "./views/**/*.{js,ts,jsx,tsx}",
+    "./App.tsx",
+    "./AppKitRouter.tsx",
+    "./WebRouter.tsx",
   ],
   darkMode: 'class',
   theme: {
