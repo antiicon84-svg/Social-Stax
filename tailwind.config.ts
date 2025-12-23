@@ -5,6 +5,8 @@ export default {
     "./index.html",
     "./components/**/*.{js,ts,jsx,tsx}",
     "./views/**/*.{js,ts,jsx,tsx}",
+    "./services/**/*.{js,ts,jsx,tsx}",
+    "./utils/**/*.{js,ts,jsx,tsx}",
     "./App.tsx",
     "./AppKitRouter.tsx",
     "./WebRouter.tsx",
@@ -32,30 +34,17 @@ export default {
           800: '#1f2937',
           900: '#111827',
           950: '#0a0a0a',
-        }
+        },
       },
       animation: {
-        'glow': 'glow 2s ease-in-out infinite alternate',
-        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
         'fade-in-up': 'fadeInUp 0.5s ease-out forwards',
-        'bounce-in': 'bounceIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards',
       },
       keyframes: {
-        glow: {
-          'from': { boxShadow: '0 0 10px -2px #dc2626' },
-          'to': { boxShadow: '0 0 25px -5px #ef4444' },
-        },
         fadeInUp: {
-          '0%': { opacity: '0', transform: 'translateY(20px)' },
+          '0%': { opacity: '0', transform: 'translateY(10px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
-        bounceIn: {
-          '0%': { opacity: '0', transform: 'scale(0.3)' },
-          '50%': { opacity: '1', transform: 'scale(1.05)' },
-          '70%': { transform: 'scale(0.9)' },
-          '100%': { transform: 'scale(1)' },
-        }
-      }
+      },
     },
   },
   plugins: [],
