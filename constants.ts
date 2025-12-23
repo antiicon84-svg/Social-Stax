@@ -1,23 +1,22 @@
 import { DropdownOption } from './types';
 
-// API Key is now handled via process.env.API_KEY as per security guidelines.
-
+// API Key is now handled via import.meta.env.VITE_API_KEY as per security guidelines.
 export const APP_ID = 'socialstack-ai-manager'; // Unique identifier for your app data path
 
 // REPLACE THIS with your actual Firebase Hosting URL after you create the project
 // Example: 'https://socialstack-manager-123.web.app'
-export const OFFICIAL_WEBSITE_URL = process.env.VITE_FIREBASE_URL || 'https://YOUR-PROJECT-ID.web.app';
+export const OFFICIAL_WEBSITE_URL = import.meta.env.VITE_FIREBASE_URL || 'https://YOUR-PROJECT-ID.web.app';
 
 // Configuration for Firebase services
 // TODO: Replace with your actual Firebase credentials from https://console.firebase.google.com
 // These should ideally come from environment variables in production
 export const FIREBASE_CONFIG = {
-  apiKey: process.env.VITE_FIREBASE_API_KEY || "AIzaSyDummy-placeholder-for-testing",
-  authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN || "social-stax-demo.firebaseapp.com",
-  projectId: process.env.VITE_FIREBASE_PROJECT_ID || "social-stax-demo",
-  storageBucket: process.env.VITE_FIREBASE_STORAGE_BUCKET || "social-stax-demo.appspot.com",
-  messagingSenderId: process.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "1234567890",
-  appId: process.env.VITE_FIREBASE_APP_ID || "1:1234567890:web:abcdef1234567890"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyDummy-placeholder-for-testing",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "social-stax-demo.firebaseapp.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "social-stax-demo",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "social-stax-demo.appspot.com",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "1234567890",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:1234567890:web:abcdef1234567890"
 };
 
 export const INDUSTRY_OPTIONS: DropdownOption[] = [
