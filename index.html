@@ -16,124 +16,34 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        darkMode: 'class',
-        theme: {
-          extend: {
-            fontFamily: {
-              sans: ['Outfit', 'sans-serif'],
-            },
-            colors: {
-              primary: {
-                50: '#fff1f2',
-                100: '#ffe4e6',
-                200: '#fecdd3',
-                300: '#fda4af',
-                400: '#fb7185',
-                500: '#ef4444', // Red 500
-                600: '#dc2626', // Red 600
-                700: '#b91c1c', // Red 700
-                800: '#991b1b', // Red 800
-                900: '#7f1d1d', // Red 900
-              },
-              gray: {
-                800: '#1f2937',
-                900: '#111827',
-                950: '#0a0a0a', // Jet Black accents
-              }
-            },
-            animation: {
-              'glow': 'glow 2s ease-in-out infinite alternate',
-              'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-              'fade-in-up': 'fadeInUp 0.5s ease-out forwards',
-              'bounce-in': 'bounceIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards',
-            },
-            keyframes: {
-              glow: {
-                'from': { boxShadow: '0 0 10px -2px #dc2626' },
-                'to': { boxShadow: '0 0 25px -5px #ef4444' },
-              },
-              fadeInUp: {
-                '0%': { opacity: '0', transform: 'translateY(20px)' },
-                '100%': { opacity: '1', transform: 'translateY(0)' },
-              },
-              bounceIn: {
-                '0%': { opacity: '0', transform: 'scale(0.3)' },
-                '50%': { opacity: '1', transform: 'scale(1.05)' },
-                '70%': { transform: 'scale(0.9)' },
-                '100%': { transform: 'scale(1)' },
-              }
-            }
-          }
-        }
-      }
-    </script>
-    <!-- Import Map - must come before module scripts -->
-    <script type="importmap">
-{
-  "imports": {
-    "react": "https://esm.sh/react@^19.2.3",
-    "react/": "https://esm.sh/react@^19.2.3/",
-    "firebase/": "https://esm.sh/firebase@^12.6.0/",
-    "react-router-dom": "https://esm.sh/react-router-dom@^7.10.1",
-    "lucide-react": "https://esm.sh/lucide-react@^0.561.0",
-    "@google/genai": "https://esm.sh/@google/genai@^1.33.0",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "@appkit/core": "https://esm.sh/@appkit/core@^0.0.1",
-    "@appkit/react": "https://esm.sh/@appkit/react@^0.0.1",
-    "vite": "https://esm.sh/vite@^7.2.7",
-    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2",
-    "@capacitor/cli": "https://esm.sh/@capacitor/cli@^8.0.0"
-  }
-}
-</script>
     <!-- AppKit specific imports -->
     <script type="module" src="https://platform-static.appkit.dev/appkit.js"></script>
+
     <style>
-      body {
-        background-color: #000000;
-        color: #ffffff;
-        /* Jet Black Theme - Subtle Red Glow only */
-        background-image: 
-          radial-gradient(circle at 50% 0%, rgba(220, 38, 38, 0.15) 0px, transparent 60%);
-        background-attachment: fixed;
-        overscroll-behavior-y: none; /* Prevents pull-to-refresh effect on mobile */
-      }
-
-      /* Scrollbar */
-      ::-webkit-scrollbar {
-        width: 8px;
-      }
-      ::-webkit-scrollbar-track {
-        background: #000000;
-      }
-      ::-webkit-scrollbar-thumb {
-        background: #dc2626;
-        border-radius: 4px;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: #ef4444;
-      }
-
-      /* Input Readability Fixes */
-      input, textarea, select {
-        background-color: #ffffff !important;
-        color: #000000 !important;
-        border: 1px solid #e2e8f0;
-      }
-      input::placeholder, textarea::placeholder {
-        color: #94a3b8 !important;
-      }
-      input:focus, textarea:focus, select:focus {
-        border-color: #ef4444 !important;
-        outline: none;
-        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.3);
-      }
+        body {
+            background-color: #000000;
+            color: #ffffff;
+            background-image: radial-gradient(circle at 50% 0%, rgba(220, 38, 38, 0.15) 0px, transparent 60%);
+            background-attachment: fixed;
+            overscroll-behavior-y: none;
+        }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #000000; }
+        ::-webkit-scrollbar-thumb { background: #dc2626; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #ef4444; }
+        input, textarea, select {
+            background-color: #ffffff !important;
+            color: #000000 !important;
+            border: 1px solid #e2e8f0;
+        }
+        input::placeholder, textarea::placeholder { color: #94a3b8 !important; }
+        input:focus, textarea:focus, select:focus {
+            border-color: #ef4444 !important;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.3);
+        }
     </style>
-<link rel="stylesheet" href="/index.css">
+    <link rel="stylesheet" href="/index.css">
 </head>
 <body class="font-sans antialiased text-white selection:bg-red-600 selection:text-white">
     <noscript>You need to enable JavaScript to run this app.</noscript>
