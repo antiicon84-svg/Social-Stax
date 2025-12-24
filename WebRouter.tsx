@@ -1,17 +1,20 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Routes, Route, useNavigate, useParams } from 'react-router-dom';
-
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from './firebase';
 import Navbar from './components/Navbar';
+import LoginView from './views/LoginView';
 import DashboardView from './views/DashboardView';
 import CreateClientView from './views/CreateClientView';
 import ClientDetailView from './views/ClientDetailView';
 import DownloadsView from './views/DownloadsView';
 import TemplatesView from './views/TemplatesView';
-import ContentLabView from './views/ContentLabView'; 
+import ContentLabView from './views/ContentLabView';
 import PromptGuideView from './views/PromptGuideView';
 import BillingView from './views/BillingView';
+import LoadingSpinner from './components/LoadingSpinner';
 import Button from './components/Button';
-import { getClients, getScheduledPosts, deletePost } from './services/dbService'; 
+import { getClients, getScheduledPosts, deletePost } from './services/dbService';
 import { Client, Post } from './types';
 
 const ClientDetailWrapper: React.FC<{ onPostScheduled: () => void }> = ({ onPostScheduled }) => {
@@ -37,12 +40,37 @@ const WebRouter: React.FC = () => {
   const [isLoadingClients, setIsLoadingClients] = useState(true);
   const [isLoadingPosts, setIsLoadingPosts] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [refreshTrigger, setRefreshTrigger] = useState(0); 
-  console.log('[WebRouter] Render', { clients, posts, isLoadingClients, isLoadingPosts, loadError });
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+
   const navigate = useNavigate();
+
+  // Check authentication state
+  useEffect(() => {
+    console.log('[WebRouter] Checking authentication...');
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        console.log('[WebRouter] User authenticated:', user.uid);
+        setCurrentUser(user);
+        setIsAuthenticated(true);
+      } else {
+        console.log('[WebRouter] User not authenticated');
+        setCurrentUser(null);
+        setIsAuthenticated(false);
+        setIsAuthLoading(false);
+      }
+      setIsAuthLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   // Fetch Data
   useEffect(() => {
+    if (!isAuthenticated) return;
+
     const fetchData = async () => {
       console.log('[WebRouter] Fetching data...');
       setIsLoadingClients(true);
@@ -64,8 +92,9 @@ const WebRouter: React.FC = () => {
         setIsLoadingPosts(false);
       }
     };
+
     fetchData();
-  }, [refreshTrigger]);
+  }, [refreshTrigger, isAuthenticated]);
 
   const handleRefresh = useCallback(() => {
     setRefreshTrigger(prev => prev + 1);
@@ -90,6 +119,24 @@ const WebRouter: React.FC = () => {
       }
     }
   }, [handleRefresh]);
+
+  // Show loading spinner while checking authentication
+  if (isAuthLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-black">
+        <LoadingSpinner size="large" />
+      </div>
+    );
+  }
+
+  // Show login if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <Routes>
+        <Route path="*" element={<LoginView />} />
+      </Routes>
+    );
+  }
 
   // Shared dashboard props
   const dashboardProps = {
