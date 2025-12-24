@@ -1,16 +1,28 @@
-import { initializeApp } from 'firebase/app';
-
-import { getAuth, signInWithEmailAndPassword, setPersistence, browserLocalPersistence } from 'firebase/auth';, createUserWithEmailAndPassword
-import { getFirestore, doc, setDoc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
-import { FIREBASE_CONFIG } from '../constants';
+import { auth, db } from '../firebase';
+import {
+  onAuthStateChanged,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  type User as FirebaseUser,
+} from 'firebase/auth';
+import {
+  doc,
+  getDoc,
+  setDoc,
+  Timestamp,
+  collection,
+  query,
+  where,
+  getDocs,
+} from 'firebase/firestore';
+import type { User } from '../types';
 
 // Set up auth state listener
 onAuthStateChanged(auth, async (firebaseUser) => {
   if (firebaseUser) {
-    // User is logged in
     console.log('User is authenticated:', firebaseUser.uid);
   } else {
-    // User is logged out
     console.log('User is logged out');
   }
 });
