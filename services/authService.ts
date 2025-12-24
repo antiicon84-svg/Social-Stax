@@ -74,7 +74,7 @@ export const loginUser = async (email: string, password: string): Promise<User |
 
 // Check if admin
 export const isAdminUser = (email: string): boolean => {
-  return email === import.meta.env.env.VITE_ADMIN_EMAIL;
+  return email === import.meta.env.VITE_ADMIN_EMAIL;
 };
 
 // Create user record
