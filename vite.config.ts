@@ -4,12 +4,20 @@ import react from '@vitejs/plugin-react';
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
+  define: {
+    'process.env': {},
+  },
   build: {
     outDir: 'dist',
     sourcemap: true,
+    minify: 'terser',
   },
   server: {
     port: 3005,
     strictPort: true,
-  }
+    host: true,
+  },
+  optimizeDeps: {
+    exclude: ['lucide-react'],
+  },
 });
