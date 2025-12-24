@@ -37,16 +37,5 @@ export const BRAND_TONE_OPTIONS: DropdownOption[] = [
   { value: 'Educational', label: 'Educational' },
   { value: 'Minimalist', label: 'Minimalist' },
 ];
-export const SOCIAL_PLATFORMS = [
-  'Facebook',
-  'Instagram',
-  'LinkedIn',
-  'Twitter',
-  'TikTok'
-];
-export const POST_FREQUENCY_OPTIONS: DropdownOption[] = [
-  { value: 'Daily', label: 'Daily' },
-  { value: '3 times a week', label: '3 times a week' },
-  { value: 'Weekly', label: 'Weekly' },
-  { value: 'Bi-weekly', label: 'Bi-weekly' },
-];
+
+   export const SOCIAL_PLATFORMS = ['Facebook', 'Instagram', 'LinkedIn'];
