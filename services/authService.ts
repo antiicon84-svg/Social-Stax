@@ -1,8 +1,13 @@
 import { initializeApp } from 'firebase/app';
 
-import { getAuth, signInWithEmailAndPassword, setPersistence, browserLocalPersistence } from 'firebase/auth';, createUserWithEmailAndPassword
-import { getFirestore, doc, setDoc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
-import { FIREBASE_CONFIG } from '../constants';
+import {
+  getAuth 
+  signInWithEmailAndPassword,
+  setPersistence,
+  browserLocalPersistence,
+  createUserWithEmailAndPassword,
+} from 'firebase/auth';
+
 
 // Initialize Firebase
 const app = initializeApp(FIREBASE_CONFIG);
