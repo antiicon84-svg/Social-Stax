@@ -11,11 +11,13 @@ import {
   httpsCallable,
   where,
 } from "firebase/firestore";
-import { functions } from "./firebase"; // Assuming central firebase init
+import { initializeApp, getApp } from "firebase/app";
+import { getFunctions, httpsCallable } from "firebase/functions";
+import { FIREBASE_CONFIG } from "../constants";
 import { Client, Post, UserProfile, FreeAccessGrant } from '../types';
 import { getCurrentUser } from "./authService";
 
-const db = getFirestore(functions.app);
+const db = getFirestore(getApp());
 
 /**
  * DATABASE SERVICE
@@ -185,6 +187,7 @@ export const revokeFreeAccessGrant = async (grantId: string): Promise<void> => {
  * Triggers the manualUsageReset Cloud Function to reset all user usage data.
  * This can only be successfully called by an authenticated admin.
  */
+const functions = getFunctions(getApp());
 export const triggerManualUsageReset = async (): Promise<{ message: string }> => {
   const resetFunction = httpsCallable(functions, 'manualusagereset');
   const result = await resetFunction();
