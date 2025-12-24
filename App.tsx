@@ -3,6 +3,7 @@ import WebRouter from './WebRouter'; // Import the renamed main application comp
 import AppKitRouter from './AppKitRouter'; // Import the new AppKit-specific router
 import LoadingSpinner from './components/LoadingSpinner';
 import { isAppKit } from './utils/appkitUtils'; // Import appkit utilities
+import { AuthProvider } from './AuthContext'; // Import authentication context provider
 
 const App: React.FC = () => {
   const [isReady, setIsReady] = useState(false);
@@ -42,14 +43,20 @@ const App: React.FC = () => {
   if (!isReady) {
     console.log('[App] Not ready, showing spinner');
     return (
+            <AuthProvider>
       <div className="flex items-center justify-center min-h-screen bg-black">
         <LoadingSpinner size="large" />
       </div>
+                    </AuthProvider>
     );
   }
 
   console.log('[App] Ready, rendering', isAppKitEnvironment ? 'AppKitRouter' : 'WebRouter');
-  return isAppKitEnvironment ? <AppKitRouter /> : <WebRouter />;
+  return (
+    <AuthProvider>
+      {isAppKitEnvironment ? <AppKitRouter /> : <WebRouter />}
+    </AuthProvider>
+  )
 };
 
 export default App;
