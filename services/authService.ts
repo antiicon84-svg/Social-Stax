@@ -1,45 +1,71 @@
-import { initializeApp } from 'firebase/app';
+import { auth, db } from '../firebase';
+import {
+  onAuthStateChanged,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  type User as FirebaseUser,
+} from 'firebase/auth';
+import {
+  doc,
+  getDoc,
+  setDoc,
+  Timestamp,
+  collection,
+  query,
+  where,
+  getDocs,
+} from 'firebase/firestore';
+import type { User } from '../types';
 
-import { getAuth, signInWithEmailAndPassword, setPersistence, browserLocalPersistence } from 'firebase/auth';, createUserWithEmailAndPassword
-import { getFirestore, doc, setDoc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
-import { FIREBASE_CONFIG } from '../constants';
-
-// Initialize Firebase
-const app = initializeApp(FIREBASE_CONFIG);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-// Set persistence
-setPersistence(auth, browserLocalPersistence).catch((error) => {
-  console.error('Persistence error:', error);
+// Set up auth state listener
+onAuthStateChanged(auth, async (firebaseUser) => {
+  if (firebaseUser) {
+    // User is logged in
+    console.log('User is authenticated:', firebaseUser.uid);
+  } else {
+    // User is logged out
+    console.log('User is logged out');
+  }
 });
 
-export interface User {
-  uid: string;
-  email: string;
-  role: 'admin' | 'user';
-  createdAt: Date;
-  displayName?: string;
-}
+// Helper function to map Firebase user to app User type
+const mapFirebaseUserToAppUser = async (fbUser: FirebaseUser): Promise<User> => {
+  const ref = doc(db, 'users', fbUser.uid);
+  const snap = await getDoc(ref);
+
+  let createdAt: Date;
+
+  if (snap.exists()) {
+    const data = snap.data();
+    if (data.createdAt instanceof Timestamp) {
+      createdAt = data.createdAt.toDate();
+    } else if (typeof data.createdAt === 'string') {
+      createdAt = new Date(data.createdAt);
+    } else if (data.createdAt instanceof Date) {
+      createdAt = data.createdAt;
+    } else {
+      createdAt = new Date();
+    }
+  } else {
+    createdAt = new Date();
+  }
+
+  return {
+    uid: fbUser.uid,
+    email: fbUser.email ?? '',
+    displayName: fbUser.displayName ?? '',
+    photoURL: fbUser.photoURL ?? '',
+    createdAt,
+  };
+};
 
 // Login function
 export const loginUser = async (email: string, password: string): Promise<User | null> => {
   try {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    const user = userCredential.user;
-
-    // Get user role from Firestore
-    const userDoc = await getDoc(doc(db, 'users', user.uid));
-    const userData = userDoc.data();
-    const role = userData?.role || 'user';
-
-    return {
-      uid: user.uid,
-      email: user.email || '',
-      role,
-      createdAt: user.metadata?.creationTime || new Date(),
-      displayName: user.displayName || undefined
-    };
+    const appUser = await mapFirebaseUserToAppUser(userCredential.user);
+    return appUser;
   } catch (error) {
     console.error('Login error:', error);
     throw error;
@@ -52,33 +78,40 @@ export const isAdminUser = (email: string): boolean => {
 };
 
 // Create user record
-export const createUserRecord = async (uid: string, email: string, isAdmin: boolean = false): Promise<void> => {
+export const createUserRecord = async (
+  uid: string,
+  email: string,
+  isAdmin: boolean = false
+): Promise<void> => {
   try {
     const userRef = doc(db, 'users', uid);
     const trialExpiresAt = new Date();
     trialExpiresAt.setDate(trialExpiresAt.getDate() + 14);
 
-    await setDoc(userRef, {
-      email,
-      role: isAdmin ? 'admin' : 'user',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      // Automatically grant a 14-day trial on signup
-      subscription: {
-        status: 'trial',
-        plan: 'starter',
-        expiresAt: trialExpiresAt,
-        autoRenew: false,
+    await setDoc(
+      userRef,
+      {
+        uid,
+        email,
+        role: isAdmin ? 'admin' : 'user',
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+        subscription: {
+          status: 'trial',
+          plan: 'starter',
+          expiresAt: Timestamp.fromDate(trialExpiresAt),
+          autoRenew: false,
+        },
+        usage: {
+          contentGenerations: 0,
+          imageGenerations: 0,
+          voiceAssistantMinutes: 0,
+          apiCalls: 0,
+          lastReset: Timestamp.now(),
+        },
       },
-      // Initialize usage tracking for the new user
-      usage: {
-        contentGenerations: 0,
-        imageGenerations: 0,
-        voiceAssistantMinutes: 0,
-        apiCalls: 0,
-        lastReset: new Date(),
-      }
-    }, { merge: true });
+      { merge: true }
+    );
   } catch (error) {
     console.error('Error creating user record:', error);
     throw error;
@@ -93,26 +126,40 @@ export const getCurrentUser = () => {
 // Logout
 export const logoutUser = async (): Promise<void> => {
   try {
-    await auth.signOut();
+    await signOut(auth);
   } catch (error) {
     console.error('Logout error:', error);
     throw error;
   }
 };
 
-        // Sign up with email and password
-export async function signUpWithEmail(email: string, password: string, displayName?: string) {
+// Sign up with email and password
+export const signUpWithEmail = async (
+  email: string,
+  password: string,
+  displayName?: string
+): Promise<User> => {
   try {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    return userCredential.user;
+    const user = userCredential.user;
+
+    // Create user record in Firestore
+    await createUserRecord(user.uid, email, false);
+
+    // Map to app User type
+    const appUser = await mapFirebaseUserToAppUser(user);
+    return appUser;
   } catch (error) {
     console.error('Error signing up:', error);
     throw error;
   }
-}
+};
 
 // Sign in with email and password
-export async function signInWithEmail(email: string, password: string) {
+export const signInWithEmail = async (
+  email: string,
+  password: string
+): Promise<FirebaseUser> => {
   try {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     return userCredential.user;
@@ -120,4 +167,4 @@ export async function signInWithEmail(email: string, password: string) {
     console.error('Error signing in:', error);
     throw error;
   }
-}
+};
