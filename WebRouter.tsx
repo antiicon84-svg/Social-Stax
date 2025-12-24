@@ -16,7 +16,6 @@ import LoadingSpinner from './components/LoadingSpinner';
 import Button from './components/Button';
 import { getClients, getScheduledPosts, deletePost } from './services/dbService';
 import { Client, Post } from './types';
-import ProtectedRoute from './components/ProtectedRoute'; // Import route protection component
 
 const ClientDetailWrapper: React.FC<{ onPostScheduled: () => void }> = ({ onPostScheduled }) => {
   const { clientId } = useParams<{ clientId: string }>();
@@ -161,16 +160,17 @@ const WebRouter: React.FC = () => {
           </div>
         )}
         <Routes>
-        <ProtectedRoute>
-          <Route path="/" element={<DashboardView {...dashboardProps} />} />
-          <Route path="/add-client" element={<CreateClientView onClientAdded={handleClientAdded} />} />
-          <Route path="/client/:clientId" element={<ClientDetailWrapper onPostScheduled={handlePostScheduled} />} />
-          <Route path="/templates" element={<TemplatesView />} />
-          <Route path="/content-lab" element={<ContentLabView />} />
-          <Route path="/prompt-guide" element={<PromptGuideView />} />
-          <Route path="/billing" element={<BillingView />} />
-          <Route path="/downloads" element={<DownloadsView />} />
-                  </ProtectedRoute>
+<Routes>
+            <Route path="/" element={<DashboardView {...dashboardProps} />} />
+            <Route path="/add-client" element={<CreateClientView onClientAdded={handleClientAdded} />} />
+            <Route path="/client/:clientId" element={<ClientDetailWrapper onPostScheduled={handlePostScheduled} />} />
+            <Route path="/templates" element={<TemplatesView />} />
+            <Route path="/content-lab" element={<ContentLabView />} />
+            <Route path="/prompt-guide" element={<PromptGuideView />} />
+            <Route path="/billing" element={<BillingView />} />
+            <Route path="/downloads" element={<DownloadsView />} />
+            <Route path="*" element={<ErrorFallback />} />
+          </Routes>
           <Route path="*" element={<ErrorFallback />} />
         </Routes>
       </div>
