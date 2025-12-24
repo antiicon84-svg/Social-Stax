@@ -27,7 +27,12 @@ const AppKitRouter: React.FC = () => {
 
   const [currentHashPath, setCurrentHashPath] = useState(getPathFromHash());
 
-  useEffect(() => {
+useEffect(() => {
+    // Initialize the path immediately
+    const initialPath = getPathFromHash();
+    console.log('[AppKitRouter] Initial path:', initialPath);
+    setCurrentHashPath(initialPath);
+
     const handleHashChange = () => {
       const newPath = getPathFromHash();
       console.log('[AppKitRouter] Hash changed to:', newPath);
@@ -35,10 +40,9 @@ const AppKitRouter: React.FC = () => {
     };
 
     window.addEventListener('hashchange', handleHashChange);
-    console.log('[AppKitRouter] Initial path:', currentHashPath);
-    
+
     return () => window.removeEventListener('hashchange', handleHashChange);
-  }, []);
+  }, [])
 
   useEffect(() => {
     const fetchData = async () => {
@@ -90,7 +94,8 @@ const AppKitRouter: React.FC = () => {
   console.log('[AppKitRouter] Rendering path:', path);
 
   let content;
-  if (path === '/' || path === '/dashboard' || path === '/settings') {
+    const normalizedPath = path.split('?')[0]; // Remove query params
+  if (normalizedPath === '/' || path === '/dashboard' || path === '/settings') {
     content = (
       <DashboardView 
         clients={clients} 

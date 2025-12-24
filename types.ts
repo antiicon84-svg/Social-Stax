@@ -9,12 +9,21 @@ export interface SubscriptionPlan {
   paymentMethod: string | null;
 }
 
+export interface Usage {
+  contentGenerations: number;
+  imageGenerations: number;
+  voiceAssistantMinutes: number;
+  apiCalls: number;
+  lastReset: Date;
+}
+
 export interface UserProfile {
   uid?: string;
   email: string;
-  name: string;
-  isAdmin?: boolean;
+  name?: string; // Name can be optional
+  role: 'admin' | 'user'; // Use role instead of isAdmin for consistency
   subscription?: SubscriptionPlan;
+  usage?: Usage; // Add usage tracking to the user's profile
   cloudConfig?: {
     googleDrive?: {
       connected: boolean;
@@ -129,6 +138,21 @@ export interface DropdownOption {
 }
 
 export type AIGenerationType = 'text' | 'visual';
+
+/**
+ * Represents a free access grant given to a user by an admin.
+ * This is stored in the 'free_access' collection.
+ */
+export interface FreeAccessGrant {
+  id?: string; // Document ID from Firestore
+  userId: string; // The UID of the user receiving the grant
+  userEmail: string; // The email of the user for easy identification
+  plan: 'starter' | 'pro' | 'enterprise'; // The plan level granted
+  expiresAt: Date | null; // Null for lifetime access
+  grantedAt: Date;
+  customLimits?: Partial<Usage>; // For admin-defined custom usage limits
+  grantedBy?: string; // UID of the admin who granted it
+}
 
 // Declare global AppKit interface for native environment features
 declare global {

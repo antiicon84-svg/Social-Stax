@@ -13,23 +13,30 @@ Thank you for your interest in contributing to Social-Stax! This document provid
 ### Development Setup
 
 1. **Clone the repository**
+
+   
+   
    ```bash
    git clone https://github.com/antiicon84-svg/Social-Stax.git
    cd Social-Stax
    ```
 
 2. **Install dependencies**
+
+   
    ```bash
    npm install
    ```
 
 3. **Setup environment variables**
+
    ```bash
    cp .env.example .env.local
    # Edit .env.local with your development credentials
    ```
 
 4. **Start development server**
+
    ```bash
    npm run dev
    ```
@@ -90,7 +97,7 @@ If you find a bug:
 2. **Provide examples** - How would it be used?
 3. **Discuss alternatives** - Are there other approaches?
 
-## 🔄 Pull Request Process
+p## 🔄 Pull Request Process
 
 1. **Create a feature branch**
    ```bash
