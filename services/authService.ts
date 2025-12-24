@@ -54,11 +54,29 @@ export const isAdminUser = (email: string): boolean => {
 export const createUserRecord = async (uid: string, email: string, isAdmin: boolean = false): Promise<void> => {
   try {
     const userRef = doc(db, 'users', uid);
+    const trialExpiresAt = new Date();
+    trialExpiresAt.setDate(trialExpiresAt.getDate() + 14);
+
     await setDoc(userRef, {
       email,
       role: isAdmin ? 'admin' : 'user',
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
+      // Automatically grant a 14-day trial on signup
+      subscription: {
+        status: 'trial',
+        plan: 'starter',
+        expiresAt: trialExpiresAt,
+        autoRenew: false,
+      },
+      // Initialize usage tracking for the new user
+      usage: {
+        contentGenerations: 0,
+        imageGenerations: 0,
+        voiceAssistantMinutes: 0,
+        apiCalls: 0,
+        lastReset: new Date(),
+      }
     }, { merge: true });
   } catch (error) {
     console.error('Error creating user record:', error);
