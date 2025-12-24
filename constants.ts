@@ -37,3 +37,5 @@ export const BRAND_TONE_OPTIONS: DropdownOption[] = [
   { value: 'Educational', label: 'Educational' },
   { value: 'Minimalist', label: 'Minimalist' },
 ];
+
+   export const SOCIAL_PLATFORMS = ['Facebook', 'Instagram', 'LinkedIn'];
