@@ -30,7 +30,8 @@ export const customAuthService = {
    * @param email User email address
    * @param password User password (will be hashed on backend)
    */
-  async signup(email: string, password: string): Promise<SignupResponse> {
+  28
+    (email: string, password: string): Promise<SignupResponse> {
     try {
       const response = await fetch(`${API_URL}/createUser`, {
         method: 'POST',
