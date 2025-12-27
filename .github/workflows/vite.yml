@@ -35,7 +35,7 @@ jobs:
         VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
         VITE_FIREBASE_URL: ${{ secrets.VITE_FIREBASE_URL }}
 
-          - name: Deploy to Firebase
+              - name: Deploy to Firebase
       uses: FirebaseExtended/action-hosting-deploy@v0
       with:
         repoToken: ${{ secrets.GITHUB_TOKEN }}
