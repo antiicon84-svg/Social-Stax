@@ -66,7 +66,7 @@ const signUpFunction = httpsCallable(functions, 'signUp');
    */
   async login(email: string, password: string): Promise<LoginResponse> {
     try {
-const loginFunction = httpsCallable(functions, 'logIn');
+const loginFunction = httpsCallable(functions, 'login');
       const result = await loginFunction({ email, password });
       const data = result.data as any;
       if (data.success) {
