@@ -1,0 +1,74 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===================================================
+    // USERS COLLECTION - Secure Password Storage
+    // ===================================================
+    match /users/{userId} {
+      // Only the user can read their own profile
+      allow read: if request.auth.uid == userId;
+      
+      // Only the user can write to their own profile
+      allow write: if request.auth.uid == userId;
+      
+      // Passwords are never readable or writable directly
+      // Password field is protected at sub-collection level
+      match /private/{document=**} {
+        allow read: if false; // No one can read password hash
+        allow write: if false; // Password only set via Cloud Function
+      }
+    }
+
+    // ===================================================
+    // PROJECTS COLLECTION
+    // ===================================================
+    match /projects/{projectId} {
+      // Users can only read projects they own
+      allow read: if resource.data.userId == request.auth.uid;
+      
+      // Users can create new projects
+      allow create: if request.auth.uid != null &&
+                       request.resource.data.userId == request.auth.uid;
+      
+      // Users can update only their own projects
+      allow update: if resource.data.userId == request.auth.uid;
+      
+      // Users can delete only their own projects
+      allow delete: if resource.data.userId == request.auth.uid;
+    }
+
+    // ===================================================
+    // POSTS COLLECTION
+    // ===================================================
+    match /posts/{postId} {
+      // Users can read public posts
+      allow read: if resource.data.isPublic == true ||
+                     resource.data.userId == request.auth.uid;
+      
+      // Authenticated users can create posts
+      allow create: if request.auth.uid != null &&
+                       request.resource.data.userId == request.auth.uid;
+      
+      // Users can only update their own posts
+      allow update: if resource.data.userId == request.auth.uid;
+      
+      // Users can only delete their own posts
+      allow delete: if resource.data.userId == request.auth.uid;
+    }
+
+    // ===================================================
+    // RATE LIMITING COLLECTION (For brute force protection)
+    // ===================================================
+    match /rateLimiting/{ipAddress} {
+      allow read, write: if false; // Only backend can access
+    }
+
+    // ===================================================
+    // DEFAULT DENY
+    // ===================================================
+    // Any collection not explicitly allowed is DENIED
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
