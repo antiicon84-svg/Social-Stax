@@ -6,7 +6,7 @@
       "**/.*",
       "**/node_modules/**"
     ]
-  }
+  },
     "functions": [{
     "source": "functions",
     "codebase": "default",
