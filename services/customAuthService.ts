@@ -1,15 +1,34 @@
 import { getApp } from 'firebase/app';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 
-// Initialize Firebase Functions
-const app = getApp();
-const functions = getFunctions(app);
+/**
+ * ===================================================
+ * Custom Authentication Service for Social Stax
+ * ===================================================
+ * Provides secure email/password authentication with JWT tokens.
+ * Uses Firebase Cloud Functions for backend authentication.
+ * Includes comprehensive error handling for Firebase initialization failures.
+ */
 
+// Initialize Firebase Functions with error handling
+let functions: ReturnType<typeof getFunctions> | null = null;
 
-// Custom Authentication Service for Social Stax
-// Provides secure email/password authentication with JWT tokens
+try {
+  const app = getApp();
+  functions = getFunctions(app);
+} catch (error: any) {
+  console.error('Failed to initialize Firebase Functions:', error);
+  if (error.code === 'auth/api-key-not-valid' || error.message.includes('apiKey')) {
+    console.error(
+      'Firebase API key configuration error. Check:',
+      '1. VITE_FIREBASE_API_KEY environment variable is set',
+      '2. The API key is not empty or a placeholder',
+      '3. GitHub Secrets are properly configured for CI/CD'
+    );
+  }
+}
 
-
+// Response interfaces
 export interface SignupResponse {
   success: boolean;
   message: string;
@@ -31,30 +50,69 @@ export interface CurrentUser {
   email: string | null;
 }
 
+/**
+ * Helper function to safely call Cloud Functions
+ */
+const callCloudFunction = async (functionName: string, data: any) => {
+  if (!functions) {
+    throw new Error(
+      `Firebase Functions not initialized. Cannot call ${functionName}. Check your Firebase configuration.`
+    );
+  }
+  
+  try {
+    const fn = httpsCallable(functions, functionName);
+    const result = await fn(data);
+    return result.data;
+  } catch (error: any) {
+    console.error(`Cloud Function ${functionName} error:`, error);
+    
+    // Handle specific Firebase errors
+    if (error.code === 'functions/unavailable') {
+      throw new Error('Cloud Functions are not available. Check your Firebase configuration.');
+    }
+    if (error.code === 'functions/unauthenticated') {
+      throw new Error('Authentication failed. Please check your credentials.');
+    }
+    if (error.message?.includes('auth/api-key-not-valid')) {
+      throw new Error('Firebase API key is invalid. Check your environment variables.');
+    }
+    
+    throw error;
+  }
+};
+
+/**
+ * Custom Authentication Service
+ */
 export const customAuthService = {
   /**
    * Sign up a new user with email and password
    * @param email User email address
-   * @param password User password (will be hashed on backend)
+   * @param password User password (hashed on backend)
    */
-    async signUp(email: string, password: string): Promise<SignupResponse> {
+  async signUp(email: string, password: string): Promise<SignupResponse> {
     try {
-const signUpFunction = httpsCallable(functions, 'signUp');
-      const result = await signUpFunction({ email, password });
-      const data = result.data as any;
-
+      if (!email || !password) {
+        throw new Error('Email and password are required');
+      }
+      
+      const result = await callCloudFunction('signUp', { email, password });
+      const data = result as any;
+      
       if (data.success) {
-        // Store user info locally
         localStorage.setItem('user_id', data.userId);
         localStorage.setItem('user_email', email);
+        if (data.token) {
+          localStorage.setItem('auth_token', data.token);
+        }
       }
-
       return data;
     } catch (error: any) {
       console.error('Signup error:', error);
       return {
         success: false,
-        message: error.message || 'Signup failed. Please try again.',
+        message: error.message || 'Sign up failed. Please try again.',
       };
     }
   },
@@ -66,15 +124,20 @@ const signUpFunction = httpsCallable(functions, 'signUp');
    */
   async login(email: string, password: string): Promise<LoginResponse> {
     try {
-const loginFunction = httpsCallable(functions, 'login');
-      const result = await loginFunction({ email, password });
-      const data = result.data as any;
+      if (!email || !password) {
+        throw new Error('Email and password are required');
+      }
+      
+      const result = await callCloudFunction('login', { email, password });
+      const data = result as any;
+      
       if (data.success) {
-        // Store user info locally
         localStorage.setItem('user_id', data.userId);
         localStorage.setItem('user_email', email);
+        if (data.token) {
+          localStorage.setItem('auth_token', data.token);
+        }
       }
-
       return data;
     } catch (error: any) {
       console.error('Login error:', error);
@@ -90,26 +153,12 @@ const loginFunction = httpsCallable(functions, 'login');
    */
   async logout(): Promise<{ success: boolean }> {
     try {
-      await fetch(`${API_URL}/logoutUser`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-      });
-
-      // Clear local storage
       localStorage.removeItem('user_id');
       localStorage.removeItem('user_email');
       localStorage.removeItem('auth_token');
-
       return { success: true };
     } catch (error) {
       console.error('Logout error:', error);
-      // Clear local storage anyway
-      localStorage.removeItem('user_id');
-      localStorage.removeItem('user_email');
-      localStorage.removeItem('auth_token');
       return { success: false };
     }
   },
@@ -132,14 +181,18 @@ const loginFunction = httpsCallable(functions, 'login');
   },
 
   /**
-   * Verify token is still valid (optional - for extra security)
+   * Verify token is still valid
    */
   async verifyToken(): Promise<boolean> {
     try {
-const verifyFunction = httpsCallable(functions, 'verifyToken');
-      const result = await verifyFunction({ token: localStorage.getItem('auth_token') });
-      const data = result.data as any;
-            return data.valid === true;
+      const token = localStorage.getItem('auth_token');
+      if (!token) {
+        return false;
+      }
+      
+      const result = await callCloudFunction('verifyToken', { token });
+      const data = result as any;
+      return data.valid === true;
     } catch (error) {
       console.error('Token verification error:', error);
       return false;
