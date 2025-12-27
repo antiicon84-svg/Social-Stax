@@ -1,7 +1,14 @@
+import { getApp } from 'firebase/app';
+import { getFunctions, httpsCallable } from 'firebase/functions';
+
+// Initialize Firebase Functions
+const app = getApp();
+const functions = getFunctions(app);
+
+
 // Custom Authentication Service for Social Stax
 // Provides secure email/password authentication with JWT tokens
 
-const API_URL = 'https://us-central1-elegant-fort-482119-t4.cloudfunctions.net';
 
 export interface SignupResponse {
   success: boolean;
@@ -32,16 +39,9 @@ export const customAuthService = {
    */
     async signUp(email: string, password: string): Promise<SignupResponse> {
     try {
-      const response = await fetch(`${API_URL}/createUser`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-        credentials: 'include', // Include cookies
-      });
-
-      const data = await response.json();
+const signUpFunction = httpsCallable(functions, 'signUp');
+      const result = await signUpFunction({ email, password });
+      const data = result.data as any;
 
       if (data.success) {
         // Store user info locally
@@ -66,17 +66,9 @@ export const customAuthService = {
    */
   async login(email: string, password: string): Promise<LoginResponse> {
     try {
-      const response = await fetch(`${API_URL}/loginUser`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-        credentials: 'include', // Include cookies for JWT token
-      });
-
-      const data = await response.json();
-
+const loginFunction = httpsCallable(functions, 'logIn');
+      const result = await loginFunction({ email, password });
+      const data = result.data as any;
       if (data.success) {
         // Store user info locally
         localStorage.setItem('user_id', data.userId);
@@ -144,16 +136,10 @@ export const customAuthService = {
    */
   async verifyToken(): Promise<boolean> {
     try {
-      const response = await fetch(`${API_URL}/verifyToken`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-      });
-
-      const data = await response.json();
-      return data.valid === true;
+const verifyFunction = httpsCallable(functions, 'verifyToken');
+      const result = await verifyFunction({ token: localStorage.getItem('auth_token') });
+      const data = result.data as any;
+            return data.valid === true;
     } catch (error) {
       console.error('Token verification error:', error);
       return false;
