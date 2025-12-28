@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
+<<<<<<< HEAD
 import Button from '@/components/Button';
 import { generateContent } from '@/services/aiService';
+=======
+import Button from '../src/components/Button';
+import { generateContent } from '../services/aiService';
+>>>>>>> 04720cce76e66c6ec5b470eda2247cc602c75907
 import { 
   FlaskConical, 
   Sparkles, 
