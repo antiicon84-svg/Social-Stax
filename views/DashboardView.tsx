@@ -32,37 +32,8 @@ const DashboardView: React.FC<DashboardViewProps> = ({
 
  {/* Usage Display Section */}
  <div className="mb-8">
- <UsageDisplay uid={''} email={''} plan={''} /><T>(
-   userProfile: UserProfile,
-   usageType: UsageType,
-   aiFunction: (...args: any[]) => Promise<T>,
-   amount: number = 1
- ) => {
-   return async (...args: any[]): Promise<T> => {
-     if (!userProfile.uid) {
-       throw new Error('User profile must have a UID to track usage.');
-     }
- 
-     // Check if the user has enough quota
-     const hasQuota = await canPerformAction(userProfile, usageType, amount);
-     if (!hasQuota) {
-       const currentUsage = (await getUserUsage(userProfile.uid))?.[usageType] || 0;
-       throw new Error(
-         `Insufficient quota for ${usageType}. Current usage: .`
-       );
-     }
- 
-     // Execute the AI function
-     const result = await aiFunction(...args);
- 
-     // Increment usage upon successful completion
-     await incrementUsage(userProfile.uid, usageType, amount);
- 
-     return result;
-   };
- };
- 
- ```
+ <UsageDisplay uid={''} email={''} plan={''} />
+ </div>
  ```typescript
  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
   <div className="bg-gray-900 rounded-xl p-6 border border-gray-800">
