@@ -34,7 +34,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({
  <div className="mb-8">
  <UsageDisplay uid={''} email={''} plan={''} />
  </div>
- ```typescript
+
  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
   <div className="bg-gray-900 rounded-xl p-6 border border-gray-800">
   <h2 className="text-xl font-semibold mb-4 text-red-500">Subscription Status</h2>
