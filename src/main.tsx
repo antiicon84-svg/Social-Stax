@@ -3,7 +3,8 @@ import ReactDOM from 'react-dom/client';
 import { HashRouter, MemoryRouter } from 'react-router-dom';
 import App from './App';
 import ErrorBoundary from './components/ErrorBoundary';
-import '../index.css'; // Essential for styling and preventing layout shiftsimport { isAppKit } from './utils/appkitUtils';
+import '~/index.css'; // Essential for styling and preventing layout shifts
+import { isAppKit } from '~/utils/appkitUtils';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {

@@ -1,17 +1,17 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import Navbar from '../components/Navbar';
-import LoadingSpinner from '../components/LoadingSpinner';
-import DashboardView from '../../views/DashboardView';
-import CreateClientView from '../../views/CreateClientView';
-import ClientDetailView from '../../views/ClientDetailView';
-import TemplatesView from '../../views/TemplatesView';
-import ContentLabView from '../../views/ContentLabView';
-import PromptGuideView from '../../views/PromptGuideView';
-import DownloadsView from '../../views/DownloadsView';
-import BillingView from '../../views/BillingView';
-import Button from '../components/Button';
-import { getClients, getScheduledPosts, deletePost } from '../../services/dbService';
-import { Client, Post } from '../types';
+import Navbar from '@/components/Navbar';
+import LoadingSpinner from '@/components/LoadingSpinner';
+import DashboardView from '~/views/DashboardView';
+import CreateClientView from '~/views/CreateClientView';
+import ClientDetailView from '~/views/ClientDetailView';
+import TemplatesView from '~/views/TemplatesView';
+import ContentLabView from '~/views/ContentLabView';
+import PromptGuideView from '~/views/PromptGuideView';
+import DownloadsView from '~/views/DownloadsView';
+import BillingView from '~/views/BillingView';
+import Button from '@/components/Button';
+import { getClients, getScheduledPosts, deletePost } from '@/services/dbService';
+import { Client, Post } from '@/types';
 
 const AppKitRouter: React.FC = () => {
   const [clients, setClients] = useState<Client[]>([]);

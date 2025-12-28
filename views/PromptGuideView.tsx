@@ -19,8 +19,8 @@ import {
   Fingerprint, 
   CheckCircle 
 } from 'lucide-react';
-import Button from '../components/Button';
-import { analyzePromptCoherence, enhancePromptWithAI } from '../services/aiService';
+import Button from '@/components/Button';
+import { analyzePromptCoherence, enhancePromptWithAI } from '@/services/aiService';
 
 interface PromptItem {
   label: string;

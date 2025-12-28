@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { createFreeAccessGrant, revokeFreeAccessGrant, getFreeAccessGrants } from '../services/freeAccessService';
+import { createFreeAccessGrant, revokeFreeAccessGrant, getFreeAccessGrants } from '@/services/freeAccessService';
 import Button from './Button';
 
 const AdminPanel: React.FC = () => {

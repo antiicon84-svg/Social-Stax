@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { createCheckoutSession } from "../services/stripeService";
+import { createCheckoutSession } from "@/services/stripeService";
 
 /**
  * @file components/PricingPage.tsx

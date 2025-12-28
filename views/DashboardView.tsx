@@ -1,8 +1,8 @@
 import React from 'react';
-import { Client, Post } from '../types';
-import LoadingSpinner from '../../src/components/LoadingSpinner';
-import Button from '../../src/components/Button';
-import UsageDisplay from '../../src/components/UsageDisplay';
+import { Client, Post } from '@/types';
+import LoadingSpinner from '@/components/LoadingSpinner';
+import Button from '@/components/Button';
+import UsageDisplay from '@/components/UsageDisplay';
 
 interface DashboardViewProps {
  clients: Client[];

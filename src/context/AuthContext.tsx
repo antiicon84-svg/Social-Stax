@@ -1,8 +1,9 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-// import customAuthService from './services/customAuthService';
+import customAuthService from '../services/customAuthService';
+
 interface CurrentUser {
   userId: string | null;
-    // email: string | null;
+  email: string | null;
 }
 
 interface AuthContextType {
@@ -23,20 +24,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   });
 
   // Check auth state on mount
-  // useEffect(() => {
-    // const user = customAuthService.getCurrentUser();
-    // setCurrentUser(user);
-    // setLoading(false);
-  // }, []);
+  useEffect(() => {
+    const user = customAuthService.getCurrentUser();
+    setCurrentUser(user);
+    setLoading(false);
+  }, []);
 
   const signUp = async (email: string, password: string) => {
     try {
-      // const result = await customAuthService.signUp(email, password);
+      const result = await customAuthService.signUp(email, password);
       if (result.success) {
-        // const user = customAuthService.getCurrentUser();
+        const user = customAuthService.getCurrentUser();
         setCurrentUser(user);
       } else {
-        throw new Error(result.error || 'Sign up failed');
+        throw new Error(result.message || 'Sign up failed');
       }
     } catch (error: any) {
       throw new Error(error.message);
@@ -50,7 +51,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         const user = customAuthService.getCurrentUser();
         setCurrentUser(user);
       } else {
-        throw new Error(result.error || 'Login failed');
+        throw new Error(result.message || 'Login failed');
       }
     } catch (error: any) {
       throw new Error(error.message);
