@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Routes, Route, useNavigate, useParams } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
-import { auth } from './firebase';
-import Navbar from './components/Navbar';
+import { auth } from '../config/firebase';
+import Navbar from '../components/Navbar';
 import LoginView from './views/LoginView';
 import DashboardView from './views/DashboardView';
 import CreateClientView from './views/CreateClientView';
