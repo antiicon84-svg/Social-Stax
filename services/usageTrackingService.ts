@@ -1,5 +1,5 @@
 import { getDoc, setDoc, updateDoc, doc } from 'firebase/firestore';
-import { db } from '../firebase';
+import { db_instance as db } from '@/config/firebase';
 import { UserProfile, Usage } from '../types';
 
 // Default usage limits per plan

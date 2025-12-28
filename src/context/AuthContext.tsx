@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import customAuthService from '../services/customAuthService';
+import customAuthService from '../../services/customAuthService';
 
 interface CurrentUser {
   userId: string | null;

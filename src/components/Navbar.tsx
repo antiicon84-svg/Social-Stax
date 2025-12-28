@@ -13,8 +13,8 @@ import {
  LogOut
 } from 'lucide-react';
 import { signOut } from 'firebase/auth';
-import { auth } from '../config/firebase';
-import { Client } from '../types';
+import { auth_instance as auth } from '@/config/firebase';
+import { Client } from '~/types';
 
 interface NavbarProps {
  clients: Client[];

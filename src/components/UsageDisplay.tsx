@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getUserQuotaDisplay } from '@/services/aiUsageSafeWrapper';
+import { getUserQuotaDisplay } from '~/services/aiUsageSafeWrapper';
 
 interface UsageDisplayProps {
   uid: string;

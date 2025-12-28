@@ -1,17 +1,9 @@
 import React, { useState, useEffect } from 'react';
-<<<<<<< HEAD
-import { getClientById, savePost } from '@/services/dbService';
-import { Client, Post } from '@/types';
+import { getClientById, savePost } from '~/services/dbService';
+import { Client, Post } from '~/types';
 import { SOCIAL_PLATFORMS } from '@/config/constants';
 import Button from '@/components/Button';
 import LoadingSpinner from '@/components/LoadingSpinner';
-=======
-import { getClientById, savePost } from '../services/dbService';
-import { Client, Post } from '../types';
-import { SOCIAL_PLATFORMS } from '../src/config/constants';
-import Button from '../src/components/Button';
-import LoadingSpinner from '../src/components/LoadingSpinner';
->>>>>>> 04720cce76e66c6ec5b470eda2247cc602c75907
 
 interface ClientDetailViewProps {
   clientId: string;

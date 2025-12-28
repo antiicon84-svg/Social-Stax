@@ -10,8 +10,8 @@ import PromptGuideView from '~/views/PromptGuideView';
 import DownloadsView from '~/views/DownloadsView';
 import BillingView from '~/views/BillingView';
 import Button from '@/components/Button';
-import { getClients, getScheduledPosts, deletePost } from '@/services/dbService';
-import { Client, Post } from '@/types';
+import { getClients, getScheduledPosts, deletePost } from '~/services/dbService';
+import { Client, Post } from '~/types';
 
 const AppKitRouter: React.FC = () => {
   const [clients, setClients] = useState<Client[]>([]);

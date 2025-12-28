@@ -1,4 +1,4 @@
-import { auth, db } from '../firebase';
+import { auth_instance as auth, db_instance as db } from '@/config/firebase';
 import {
   onAuthStateChanged,
   createUserWithEmailAndPassword,

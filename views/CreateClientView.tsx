@@ -1,16 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-<<<<<<< HEAD
-import { saveClient } from '@/services/dbService';
-import { analyzeWebsite } from '@/services/aiService';
+import { saveClient } from '~/services/dbService';
+import { analyzeWebsite } from '~/services/aiService';
 import { INDUSTRY_OPTIONS, BRAND_TONE_OPTIONS } from '@/config/constants';
 import Button from '@/components/Button';
-=======
-import { saveClient } from '../services/dbService';
-import { analyzeWebsite } from '../services/aiService';
-import { INDUSTRY_OPTIONS, BRAND_TONE_OPTIONS } from '../src/config/constants';
-import Button from '../src/components/Button';
->>>>>>> 04720cce76e66c6ec5b470eda2247cc602c75907
 import { 
   Globe, 
   Upload, 
@@ -25,7 +18,7 @@ import {
   MessageCircle,
   StickyNote
 } from 'lucide-react';
-import { ClientType, Client } from '@/types';
+import { ClientType, Client } from '~/types';
 
 interface CreateClientViewProps {
   onClientAdded: () => void;
