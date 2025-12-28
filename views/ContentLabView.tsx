@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import Button from '../components/Button';
-import { generateContent } from '../services/aiService';
+import Button from '../../src/components/Button';
+import { generateContent } from '../../services/aiService';
 import { 
   FlaskConical, 
   Sparkles, 
