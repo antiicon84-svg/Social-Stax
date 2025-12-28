@@ -99,7 +99,3 @@ export const firebaseApp = app;
 export const auth_instance = auth;
 export const db_instance = db;
 
-// Legacy exports (kept for backward compatibility with existing code)
-if (app) {
-  module.exports.default = { app, auth, db };
-}
