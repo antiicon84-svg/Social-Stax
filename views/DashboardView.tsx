@@ -3,6 +3,7 @@ import { Client, Post } from '~/types';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import Button from '@/components/Button';
 import UsageDisplay from '@/components/UsageDisplay';
+import { useAuth } from '../context/AuthContext'; // Added import for useAuth
 
 interface DashboardViewProps {
  clients: Client[];
@@ -23,6 +24,8 @@ const DashboardView: React.FC<DashboardViewProps> = ({
 }) => {
  console.log('[DashboardView] Render', { clients, posts, isLoadingClients, isLoadingPosts });
 
+  const { currentUser, loading } = useAuth(); // Using useAuth hook
+
  return (
  <div className="p-6 md:p-10 max-w-7xl mx-auto w-full">
  <div className="flex justify-between items-center mb-8">
@@ -32,7 +35,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({
 
  {/* Usage Display Section */}
  <div className="mb-8">
- <UsageDisplay uid={''} email={''} plan={''} />
+ <UsageDisplay uid={currentUser.userId || ''} email={currentUser.email || ''} plan={''} />
  </div>
 
  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
