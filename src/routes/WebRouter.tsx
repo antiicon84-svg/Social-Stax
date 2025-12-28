@@ -159,7 +159,6 @@ const WebRouter: React.FC = () => {
           </div>
         )}
         <Routes>
-<Routes>
             <Route path="/" element={<DashboardView {...dashboardProps} />} />
             <Route path="/add-client" element={<CreateClientView onClientAdded={handleClientAdded} />} />
             <Route path="/client/:clientId" element={<ClientDetailWrapper onPostScheduled={handlePostScheduled} />} />
@@ -168,10 +167,8 @@ const WebRouter: React.FC = () => {
             <Route path="/prompt-guide" element={<PromptGuideView />} />
             <Route path="/billing" element={<BillingView />} />
             <Route path="/downloads" element={<DownloadsView />} />
-            <Route path="*" element={<ErrorFallback />} />
-          </Routes>
           <Route path="*" element={<ErrorFallback />} />
-        </Routes>
+          </Routes>
       </div>
     </div>
   );
