@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import WebRouter from './routes/WebRouter'; // Import the renamed main application component for web
 import AppKitRouter from './routes/AppKitRouter'; // Import the new AppKit-specific router
 import LoadingSpinner from './components/LoadingSpinner';
-import { isAppKit } from './utils/appkitUtils'; // Import appkit utilities
+import { isAppKit } from '../utils/appkitUtils'; // Import appkit utilities
 import { AuthProvider } from './context/AuthContext'; // Import authentication context provider
 
 const App: React.FC = () => {
