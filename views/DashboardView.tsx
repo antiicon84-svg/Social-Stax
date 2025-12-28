@@ -3,7 +3,7 @@ import { Client, Post } from '~/types';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import Button from '@/components/Button';
 import UsageDisplay from '@/components/UsageDisplay';
-import { useAuth } from '../context/AuthContext'; // Added import for useAuth
+import { useAuth } from '../src/context/AuthContext'; // Added import for useAuth
 
 interface DashboardViewProps {
  clients: Client[];
@@ -35,7 +35,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({
 
  {/* Usage Display Section */}
  <div className="mb-8">
- <UsageDisplay uid={currentUser.userId || ''} email={currentUser.email || ''} plan={''} />
+ <UsageDisplay uid={currentUser?.userId || ''} email={currentUser?.email || ''} plan={''} />
  </div>
 
  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -78,7 +78,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({
  <div key={post.id} className="p-3 bg-gray-800 rounded border border-gray-700 flex justify-between items-center">
  <div>
  <p className="text-sm text-white line-clamp-1">{post.content}</p>
- <p className="text-xs text-gray-400">{post.platform} • {new Date(post.scheduledDate).toLocaleDateString()}</p>
+ <p className="text-xs text-gray-400">{post.platform} • {new Date(post.scheduledAt).toLocaleDateString()}</p>
  </div>
  <Button 
  variant="danger" 

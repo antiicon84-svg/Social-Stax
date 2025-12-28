@@ -1,4 +1,4 @@
-import { DropdownOption } from './types';
+import { DropdownOption } from '~/types';
 
 export const APP_ID = 'socialstack-ai-manager';
 

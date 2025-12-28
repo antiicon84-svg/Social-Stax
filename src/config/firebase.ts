@@ -1,6 +1,7 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
+import { getFunctions } from 'firebase/functions';
 import { FIREBASE_CONFIG } from './constants';
 
 /**
@@ -49,12 +50,14 @@ const validateConfig = () => {
 let app: ReturnType<typeof initializeApp> | null = null;
 let auth: ReturnType<typeof getAuth> | null = null;
 let db: ReturnType<typeof getFirestore> | null = null;
+let functions: ReturnType<typeof getFunctions> | null = null;
 
 try {
   if (validateConfig()) {
     app = initializeApp(FIREBASE_CONFIG);
     auth = getAuth(app);
     db = getFirestore(app);
+    functions = getFunctions(app);
     console.log('Firebase initialized successfully');
   } else {
     console.warn('Firebase initialization skipped due to missing configuration');
@@ -94,8 +97,16 @@ export const getFirebaseDB = () => {
   return db;
 };
 
+export const getFirebaseFunctions = () => {
+  if (!functions) {
+    throw new Error('Firebase Functions has not been initialized. Check your environment variables.');
+  }
+  return functions;
+};
+
 // Default exports for backward compatibility
 export const firebaseApp = app;
 export const auth_instance = auth;
 export const db_instance = db;
+export const functions_instance = functions;
 

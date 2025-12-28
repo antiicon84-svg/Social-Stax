@@ -129,7 +129,7 @@ const WebRouter: React.FC = () => {
   if (isAuthLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-black">
-        <LoadingSpinner size="large" />
+        <LoadingSpinner size="lg" />
       </div>
     );
   }

@@ -1,5 +1,5 @@
-import { getApp } from 'firebase/app';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { httpsCallable } from 'firebase/functions';
+import { getFirebaseFunctions } from '../src/config/firebase';
 
 /**
  * ===================================================
@@ -9,24 +9,6 @@ import { getFunctions, httpsCallable } from 'firebase/functions';
  * Uses Firebase Cloud Functions for backend authentication.
  * Includes comprehensive error handling for Firebase initialization failures.
  */
-
-// Initialize Firebase Functions with error handling
-let functions: ReturnType<typeof getFunctions> | null = null;
-
-try {
-  const app = getApp();
-  functions = getFunctions(app);
-} catch (error: any) {
-  console.error('Failed to initialize Firebase Functions:', error);
-  if (error.code === 'auth/api-key-not-valid' || error.message.includes('apiKey')) {
-    console.error(
-      'Firebase API key configuration error. Check:',
-      '1. VITE_FIREBASE_API_KEY environment variable is set',
-      '2. The API key is not empty or a placeholder',
-      '3. GitHub Secrets are properly configured for CI/CD'
-    );
-  }
-}
 
 // Response interfaces
 export interface SignupResponse {
@@ -54,13 +36,8 @@ export interface CurrentUser {
  * Helper function to safely call Cloud Functions
  */
 const callCloudFunction = async (functionName: string, data: any) => {
-  if (!functions) {
-    throw new Error(
-      `Firebase Functions not initialized. Cannot call ${functionName}. Check your Firebase configuration.`
-    );
-  }
-  
   try {
+    const functions = getFirebaseFunctions();
     const fn = httpsCallable(functions, functionName);
     const result = await fn(data);
     return result.data;

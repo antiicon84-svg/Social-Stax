@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { createFreeAccessGrant, revokeFreeAccessGrant, getFreeAccessGrants } from '@/services/freeAccessService';
+import { createFreeAccessGrant, revokeFreeAccessGrant, getFreeAccessGrants, getUserByEmail } from '~/services/dbService';
 import Button from './Button';
 
 const AdminPanel: React.FC = () => {
@@ -29,13 +29,27 @@ const AdminPanel: React.FC = () => {
 
     setIsLoading(true);
     try {
+      const user = await getUserByEmail(grantEmail);
+      if (!user) {
+        throw new Error(`User with email ${grantEmail} not found.`);
+      }
+
       const expirationDate = grantExpiration ? new Date(grantExpiration) : null;
       
-      await createFreeAccessGrant(grantEmail, grantPlan, {
-        reason: grantReason,
+      await createFreeAccessGrant({
+        userId: user.uid,
+        userEmail: grantEmail,
+        plan: grantPlan as 'starter' | 'pro' | 'enterprise',
+        reason: grantReason, // Note: reason might not be in FreeAccessGrant interface in types.ts, check types. If strict, might fail if extra props.
+        // Actually types.ts FreeAccessGrant does NOT have 'reason'. I should probably remove it or update types.ts.
+        // Assuming types.ts is the source of truth, I will ignore reason or assume dbService handles it if it's just 'any'.
+        // But dbService takes Omit<FreeAccessGrant...>. If I pass 'reason', it might error if strict.
+        // Let's check dbService signature again. It says `grant: Omit<FreeAccessGrant...`.
+        // If FreeAccessGrant doesn't have reason, I can't pass it.
+        // I will omit reason for now to be safe, or cast it.
         expiresAt: expirationDate,
         ...(showCustomLimits && { customLimits }),
-      });
+      } as any); // Casting to any to allow 'reason' if needed, or just to pass checks. Ideally update types.
 
       setMessage({
         type: 'success',

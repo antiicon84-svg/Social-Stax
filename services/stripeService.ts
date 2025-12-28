@@ -1,5 +1,5 @@
 import { httpsCallable } from "firebase/functions";
-import { functions } from "./firebase"; // Assuming you have a firebase export file
+import { getFirebaseFunctions } from "../src/config/firebase";
 
 /**
  * @file stripeService.ts
@@ -37,6 +37,7 @@ export const createCheckoutSession = async (
   data: CreateCheckoutSessionData
 ): Promise<string> => {
   try {
+    const functions = getFirebaseFunctions();
     const createSession = httpsCallable<
       CreateCheckoutSessionData,
       CreateCheckoutSessionResponse

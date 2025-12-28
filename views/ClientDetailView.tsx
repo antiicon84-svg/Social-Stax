@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getClientById, savePost } from '~/services/dbService';
-import { Client, Post } from '~/types';
+import { Client, Post, SocialPlatform } from '~/types';
 import { SOCIAL_PLATFORMS } from '@/config/constants';
 import Button from '@/components/Button';
 import LoadingSpinner from '@/components/LoadingSpinner';
@@ -33,10 +33,12 @@ const ClientDetailView: React.FC<ClientDetailViewProps> = ({ clientId, onPostSch
     const newPost: Post = {
       id: '',
       clientId: client.id,
+      ownerEmail: client.ownerEmail, // Add missing required property
       content: `Generated post about ${postTopic} for ${client.name} on ${selectedPlatform}`,
-      platform: selectedPlatform,
-      scheduledDate: new Date().toISOString(),
-      status: 'scheduled'
+      platform: selectedPlatform as SocialPlatform,
+      scheduledAt: new Date(),
+      status: 'scheduled',
+      createdAt: new Date(), // Add missing required property
     };
 
     await savePost(newPost);
@@ -52,7 +54,7 @@ const ClientDetailView: React.FC<ClientDetailViewProps> = ({ clientId, onPostSch
     <div className="p-6 md:p-10 max-w-4xl mx-auto w-full text-white">
       <div className="mb-8">
         <h1 className="text-4xl font-bold mb-2">{client.name}</h1>
-        <p className="text-red-500 font-medium">{client.industry} • {client.tone} Tone</p>
+        <p className="text-red-500 font-medium">{client.industry} • {client.brandTone} Tone</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -87,7 +89,7 @@ const ClientDetailView: React.FC<ClientDetailViewProps> = ({ clientId, onPostSch
           <textarea 
             className="w-full bg-black border border-gray-700 rounded-lg p-3 text-white h-48 outline-none focus:border-red-600"
             placeholder="Detailed guidelines for this client..."
-            defaultValue={client.guidelines}
+            defaultValue={client.additionalNotes || ''}
           />
           <Button variant="secondary" className="mt-4 w-full">Save Guidelines</Button>
         </div>

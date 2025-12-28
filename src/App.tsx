@@ -45,7 +45,7 @@ const App: React.FC = () => {
     return (
             <AuthProvider>
       <div className="flex items-center justify-center min-h-screen bg-black">
-        <LoadingSpinner size="large" />
+        <LoadingSpinner size="lg" />
       </div>
                     </AuthProvider>
     );
