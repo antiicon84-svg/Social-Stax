@@ -14,7 +14,7 @@ import PromptGuideView from '../../views/PromptGuideView';
 import BillingView from '../../views/BillingView';
 import LoadingSpinner from '../components/LoadingSpinner';
 import Button from '../components/Button';
-import { getClients, getScheduledPosts, deletePost } from '../../services/ddbService';
+import { getClients, getScheduledPosts, deletePost } from '../../services/dbService';
 import { Client, Post } from '../types';
 const ClientDetailWrapper: React.FC<{ onPostScheduled: () => void }> = ({ onPostScheduled }) => {
   const { clientId } = useParams<{ clientId: string }>();
