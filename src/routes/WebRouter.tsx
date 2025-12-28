@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Routes, Route, useNavigate, useParams } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
-import { auth } from '@/config/firebase';
+import { getFirebaseAuth } from '@/config/firebase';
 import Navbar from '@/components/Navbar';
 import LoginView from '~/views/LoginView';
 import DashboardView from '~/views/DashboardView';
@@ -48,22 +48,28 @@ const WebRouter: React.FC = () => {
 
   // Check authentication state
   useEffect(() => {
-    console.log('[WebRouter] Checking authentication...');
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        console.log('[WebRouter] User authenticated:', user.uid);
-        setCurrentUser(user);
-        setIsAuthenticated(true);
-      } else {
-        console.log('[WebRouter] User not authenticated');
-        setCurrentUser(null);
-        setIsAuthenticated(false);
+    try {
+      const auth = getFirebaseAuth();
+      console.log('[WebRouter] Checking authentication...');
+      const unsubscribe = onAuthStateChanged(auth, (user) => {
+        if (user) {
+          console.log('[WebRouter] User authenticated:', user.uid);
+          setCurrentUser(user);
+          setIsAuthenticated(true);
+        } else {
+          console.log('[WebRouter] User not authenticated');
+          setCurrentUser(null);
+          setIsAuthenticated(false);
+        }
         setIsAuthLoading(false);
-      }
-      setIsAuthLoading(false);
-    });
+      });
 
-    return () => unsubscribe();
+      return () => unsubscribe();
+    } catch (error) {
+      console.error('[WebRouter] Firebase auth error:', error);
+      setIsAuthLoading(false);
+      setIsAuthenticated(false);
+    }
   }, []);
 
   // Fetch Data
