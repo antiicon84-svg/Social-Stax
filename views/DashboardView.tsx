@@ -31,48 +31,9 @@ const DashboardView: React.FC<DashboardViewProps> = ({
  </div>
 
  {/* Usage Display Section */}
- <div className="mb-8">
- <UsageDisplay /><T>(
-   userProfile: UserProfile,
-   usageType: UsageType,
-   aiFunction: (...args: any[]) => Promise<T>,
-   amount: number = 1
- ) => {
-   return async (...args: any[]): Promise<T> => {
-     if (!userProfile.uid) {
-       throw new Error('User profile must have a UID to track usage.');
-     }
- 
-     // Check if the user has enough quota
-     const hasQuota = await canPerformAction(userProfile, usageType, amount);
-     if (!hasQuota) {
-       const currentUsage = (await getUserUsage(userProfile.uid))?.[usageType] || 0;
-       throw new Error(
-         `Insufficient quota for ${usageType}. Current usage: .`
-       );
-     }
- 
-     // Execute the AI function
-     const result = await aiFunction(...args);
- 
-     // Increment usage upon successful completion
-     await incrementUsage(userProfile.uid, usageType, amount);
- 
-     return result;
-   };
- };
- 
- ```
- ```typescript
- <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-  <div className="bg-gray-900 rounded-xl p-6 border border-gray-800">
-  <h2 className="text-xl font-semibold mb-4 text-red-500">Subscription Status</h2>
-  <p className="text-gray-300">Plan: Pro</p>
-  <p className="text-gray-300">Renews: 2024-12-01</p>
-  <button className="mt-4 px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-white text-sm">Manage Subscription</button>
-  </div>
- </div>
-
+   <div className="mb-8">
+     <UsageDisplay />
+   </div>
  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
  <section className="bg-gray-900 rounded-xl p-6 border border-gray-800">
  <h2 className="text-xl font-semibold mb-4 text-red-500">Active Clients</h2>

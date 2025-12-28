@@ -14,6 +14,8 @@ export interface Usage {
   imageGenerations: number;
   voiceAssistantMinutes: number;
   apiCalls: number;
+  aiAnalysis: number;
+  emailCampaigns: number;
   lastReset: Date;
 }
 
@@ -21,6 +23,8 @@ export interface UserProfile {
   uid?: string;
   email: string;
   name?: string; // Name can be optional
+  displayName?: string;
+  photoURL?: string;
   role: 'admin' | 'user'; // Use role instead of isAdmin for consistency
   subscription?: SubscriptionPlan;
   usage?: Usage; // Add usage tracking to the user's profile

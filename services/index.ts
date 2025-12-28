@@ -1,7 +1,7 @@
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import * as admin from "firebase-admin";
 import * as logger from "firebase-functions/logger";
-import { onCall } from "firebase-functions/v2/https";
+import { onCall, HttpsError } from "firebase-functions/v2/https";
 
 admin.initializeApp();
 const db = admin.firestore();
@@ -60,14 +60,14 @@ export const resetmonthlyusage = onSchedule("0 0 1 * *", async (event) => { // P
 export const manualusagereset = onCall(async (request) => {
   // 1. Authenticate the request
   if (!request.auth) {
-    throw new https.HttpsError("unauthenticated", "The function must be called while authenticated.");
+    throw new HttpsError("unauthenticated", "The function must be called while authenticated.");
   }
 
   // 2. Verify the caller is an admin
   const adminUid = request.auth.uid;
   const adminUserDoc = await db.collection("users").doc(adminUid).get();
   if (adminUserDoc.data()?.role !== "admin") {
-    throw new https.HttpsError("permission-denied", "Only admins can trigger a manual usage reset.");
+    throw new HttpsError("permission-denied", "Only admins can trigger a manual usage reset.");
   }
 
   logger.info(`Manual usage reset triggered by admin: ${adminUid}`, { structuredData: true });

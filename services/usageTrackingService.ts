@@ -1,6 +1,6 @@
 import { getDoc, setDoc, updateDoc, doc } from 'firebase/firestore';
 import { db_instance as db } from '@/config/firebase';
-import { UserProfile, Usage } from '../types';
+import { UserProfile, Usage } from '~/types';
 
 // Default usage limits per plan
 const USAGE_LIMITS = {
@@ -86,6 +86,8 @@ const initializeUserUsage = async (uid: string, initialUsage: Partial<Usage> = {
  imageGenerations: initialUsage.imageGenerations || 0,
  aiAnalysis: initialUsage.aiAnalysis || 0,
  emailCampaigns: initialUsage.emailCampaigns || 0,
+ voiceAssistantMinutes: 0,
+ apiCalls: 0,
  lastReset: new Date(),
  };
 
@@ -133,6 +135,8 @@ export const resetUserUsage = async (uid: string): Promise<void> => {
  imageGenerations: 0,
  aiAnalysis: 0,
  emailCampaigns: 0,
+ voiceAssistantMinutes: 0,
+ apiCalls: 0,
  lastReset: new Date(),
  };
 

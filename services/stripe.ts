@@ -1,22 +1,16 @@
-import * as functions from "firebase-functions";
+import { onCall, HttpsError } from "firebase-functions/v2/https";
+import { onRequest } from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
 import Stripe from "stripe";
+import { defineString } from 'firebase-functions/params';
 
-/**
- * @file functions/src/stripe.ts
- * @description Firebase Cloud Functions for handling Stripe payments.
- *
- * Before deploying, make sure to:
- * 1. Initialize your Firebase project with `firebase init functions`.
- * 2. Install the Stripe Node.js library: `npm install stripe` in the `functions` directory.
- * 3. Set your Stripe secret key as a Firebase environment variable:
- *    `firebase functions:config:set stripe.secret="sk_test_YOUR_SECRET_KEY"`
- * 4. Set your Stripe webhook secret: `firebase functions:config:set stripe.webhooksecret="whsec_..."`
- */
+const stripeSecretKey = defineString('STRIPE_SECRET_KEY');
+const stripeWebhookSecret = defineString('STRIPE_WEBHOOK_SECRET');
+
 
 // Initialize Stripe with the secret key from Firebase environment configuration
-const stripe = new Stripe(functions.config().stripe.secret, {
-  apiVersion: "2024-04-10",
+const stripe = new Stripe(stripeSecretKey.value(), {
+    apiVersion: "2024-06-20" as any,
 });
 
 /**
@@ -30,148 +24,148 @@ const stripe = new Stripe(functions.config().stripe.secret, {
  * @returns {Promise<string>} The Stripe Customer ID.
  */
 const getOrCreateStripeCustomer = async (
-  userId: string,
-  email: string
+    userId: string,
+    email: string
 ): Promise<string> => {
-  const userDocRef = admin.firestore().collection("users").doc(userId);
-  const userSnapshot = await userDocRef.get();
-  const userData = userSnapshot.data();
+    const userDocRef = admin.firestore().collection("users").doc(userId);
+    const userSnapshot = await userDocRef.get();
+    const userData = userSnapshot.data();
 
-  if (userData?.stripeCustomerId) {
-    return userData.stripeCustomerId;
-  }
+    if (userData?.stripeCustomerId) {
+        return userData.stripeCustomerId;
+    }
 
-  // Create a new Stripe customer
-  const customer = await stripe.customers.create({
-    email: email,
-    metadata: {
-      firebaseUID: userId,
-    },
-  });
+    // Create a new Stripe customer
+    const customer = await stripe.customers.create({
+        email: email,
+        metadata: {
+            firebaseUID: userId,
+        },
+    });
 
-  // Save the new Stripe customer ID to the user's Firestore document
-  await userDocRef.update({
-    stripeCustomerId: customer.id,
-  });
+    // Save the new Stripe customer ID to the user's Firestore document
+    await userDocRef.update({
+        stripeCustomerId: customer.id,
+    });
 
-  return customer.id;
+    return customer.id;
 };
 
 /**
  * Creates a Stripe Checkout session for a one-time payment or subscription.
  * This is an HttpsCallable function, invoked from the client-side `stripeService`.
  */
-export const createCheckoutSession = functions.https.onCall(
-  async (data, context) => {
-    // Ensure the user is authenticated
-    if (!context.auth) {
-      throw new functions.https.HttpsError(
-        "unauthenticated",
-        "You must be logged in to make a purchase."
-      );
+export const createCheckoutSession = onCall(
+    async (request) => {
+        // Ensure the user is authenticated
+        if (!request.auth) {
+            throw new HttpsError(
+                "unauthenticated",
+                "You must be logged in to make a purchase."
+            );
+        }
+
+        const { priceId, successUrl, cancelUrl } = request.data;
+        const userId = request.auth.uid;
+        const userEmail = request.auth.token.email || "";
+
+        try {
+            const customerId = await getOrCreateStripeCustomer(userId, userEmail);
+
+            // Create a Stripe Checkout session
+            const session = await stripe.checkout.sessions.create({
+                payment_method_types: ["card"],
+                mode: "subscription", // Or "payment" for one-time purchases
+                customer: customerId,
+                line_items: [{ price: priceId, quantity: 1 }],
+                success_url: successUrl,
+                cancel_url: cancelUrl,
+            });
+
+            return { sessionId: session.id };
+        } catch (error) {
+            console.error("Stripe Checkout Session creation failed:", error);
+            throw new HttpsError("internal", "Unable to create checkout session.");
+        }
     }
-
-    const { priceId, successUrl, cancelUrl } = data;
-    const userId = context.auth.uid;
-    const userEmail = context.auth.token.email || "";
-
-    try {
-      const customerId = await getOrCreateStripeCustomer(userId, userEmail);
-
-      // Create a Stripe Checkout session
-      const session = await stripe.checkout.sessions.create({
-        payment_method_types: ["card"],
-        mode: "subscription", // Or "payment" for one-time purchases
-        customer: customerId,
-        line_items: [{ price: priceId, quantity: 1 }],
-        success_url: successUrl,
-        cancel_url: cancelUrl,
-      });
-
-      return { sessionId: session.id };
-    } catch (error) {
-      console.error("Stripe Checkout Session creation failed:", error);
-      throw new functions.https.HttpsError("internal", "Unable to create checkout session.");
-    }
-  }
 );
 
 /**
  * A Stripe webhook handler to process subscription events.
  * This is an HTTP-triggered function that Stripe will call.
  */
-export const stripeWebhook = functions.https.onRequest(async (req, res) => {
-  const sig = req.headers["stripe-signature"] as string;
-  // Get the webhook signing secret from Firebase config.
-  const endpointSecret = functions.config().stripe.webhooksecret;
+export const stripeWebhook = onRequest(async (req, res) => {
+    const sig = req.headers["stripe-signature"] as string;
+    // Get the webhook signing secret from Firebase config.
+    const endpointSecret = stripeWebhookSecret.value();
 
-  let event: Stripe.Event;
+    let event: Stripe.Event;
 
-  try {
-    // Verify the event came from Stripe
-    event = stripe.webhooks.constructEvent(req.rawBody, sig, endpointSecret);
-  } catch (err: any) {
-    console.error("Webhook signature verification failed.", err.message);
-    res.status(400).send(`Webhook Error: ${err.message}`);
-    return;
-  }
-
-  // Handle the event
-  switch (event.type) {
-    case "checkout.session.completed": {
-      const session = event.data.object as Stripe.Checkout.Session;
-      console.log(`Processing checkout.session.completed for session ${session.id}`);
-
-      if (!session.customer) {
-        console.error("Webhook Error: Checkout session completed without a customer ID.");
-        break;
-      }
-
-      // Retrieve customer to get Firebase UID from metadata
-      const customer = await stripe.customers.retrieve(session.customer as string) as Stripe.Customer;
-      const userId = customer.metadata.firebaseUID;
-
-      if (!userId) {
-        console.error("Webhook Error: Customer object is missing firebaseUID metadata.");
-        break;
-      }
-
-      // Update the user's document in Firestore
-      const userDocRef = admin.firestore().collection("users").doc(userId);
-      await userDocRef.update({
-        stripeSubscriptionId: session.subscription,
-        subscriptionStatus: "active", // or 'trialing' if you have trials
-      });
-
-      console.log(`Successfully updated subscription for user ${userId}.`);
-      break;
+    try {
+        // Verify the event came from Stripe
+        event = stripe.webhooks.constructEvent(req.rawBody, sig, endpointSecret);
+    } catch (err: any) {
+        console.error("Webhook signature verification failed.", err.message);
+        res.status(400).send(`Webhook Error: ${err.message}`);
+        return;
     }
 
-    case "customer.subscription.deleted": {
-      const subscription = event.data.object as Stripe.Subscription;
-      console.log(`Processing customer.subscription.deleted for subscription ${subscription.id}`);
+    // Handle the event
+    switch (event.type) {
+        case "checkout.session.completed": {
+            const session = event.data.object as Stripe.Checkout.Session;
+            console.log(`Processing checkout.session.completed for session ${session.id}`);
 
-      // Find user by subscription ID and update their status
-      const usersRef = admin.firestore().collection("users");
-      const q = usersRef.where("stripeSubscriptionId", "==", subscription.id);
-      const querySnapshot = await q.get();
+            if (!session.customer) {
+                console.error("Webhook Error: Checkout session completed without a customer ID.");
+                break;
+            }
 
-      if (querySnapshot.empty) {
-        console.error(`Webhook Error: No user found with subscription ID ${subscription.id}`);
-        break;
-      }
+            // Retrieve customer to get Firebase UID from metadata
+            const customer = await stripe.customers.retrieve(session.customer as string) as Stripe.Customer;
+            const userId = customer.metadata.firebaseUID;
 
-      querySnapshot.forEach(async (doc) => {
-        await doc.ref.update({ subscriptionStatus: "cancelled" });
-        console.log(`Successfully cancelled subscription for user ${doc.id}.`);
-      });
-      break;
+            if (!userId) {
+                console.error("Webhook Error: Customer object is missing firebaseUID metadata.");
+                break;
+            }
+
+            // Update the user's document in Firestore
+            const userDocRef = admin.firestore().collection("users").doc(userId);
+            await userDocRef.update({
+                stripeSubscriptionId: session.subscription,
+                subscriptionStatus: "active", // or 'trialing' if you have trials
+            });
+
+            console.log(`Successfully updated subscription for user ${userId}.`);
+            break;
+        }
+
+        case "customer.subscription.deleted": {
+            const subscription = event.data.object as Stripe.Subscription;
+            console.log(`Processing customer.subscription.deleted for subscription ${subscription.id}`);
+
+            // Find user by subscription ID and update their status
+            const usersRef = admin.firestore().collection("users");
+            const q = usersRef.where("stripeSubscriptionId", "==", subscription.id);
+            const querySnapshot = await q.get();
+
+            if (querySnapshot.empty) {
+                console.error(`Webhook Error: No user found with subscription ID ${subscription.id}`);
+                break;
+            }
+
+            querySnapshot.forEach(async (doc) => {
+                await doc.ref.update({ subscriptionStatus: "cancelled" });
+                console.log(`Successfully cancelled subscription for user ${doc.id}.`);
+            });
+            break;
+        }
+
+        default:
+            console.log(`Unhandled event type ${event.type}`);
     }
 
-    default:
-      console.log(`Unhandled event type ${event.type}`);
-  }
-
-  // Return a 200 response to acknowledge receipt of the event
-  res.status(200).send();
+    // Return a 200 response to acknowledge receipt of the event
+    res.status(200).send();
 });

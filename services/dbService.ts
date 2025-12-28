@@ -13,7 +13,7 @@ import {
 import { initializeApp, getApp } from "firebase/app";
 import { getFunctions, httpsCallable } from "firebase/functions";
 import { FIREBASE_CONFIG } from '../src/config/constants';
-import { Client, Post, UserProfile, FreeAccessGrant } from '../src/types'
+import { Client, Post, UserProfile, FreeAccessGrant } from '~/types';
   import { getCurrentUser } from "./authService";
 
 const db = getFirestore(getApp());

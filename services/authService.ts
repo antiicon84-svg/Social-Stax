@@ -16,7 +16,7 @@ import {
   where,
   getDocs,
 } from 'firebase/firestore';
-import type { User } from '../types';
+import type { UserProfile as User } from '../types';
 
 // Set up auth state listener
 onAuthStateChanged(auth, async (firebaseUser) => {
@@ -33,6 +33,7 @@ const mapFirebaseUserToAppUser = async (fbUser: FirebaseUser): Promise<User> => 
   const snap = await getDoc(ref);
 
   let createdAt: Date;
+  let role: 'admin' | 'user' = 'user';
 
   if (snap.exists()) {
     const data = snap.data();
@@ -45,6 +46,9 @@ const mapFirebaseUserToAppUser = async (fbUser: FirebaseUser): Promise<User> => 
     } else {
       createdAt = new Date();
     }
+    if (data.role === 'admin') {
+      role = 'admin';
+    }
   } else {
     createdAt = new Date();
   }
@@ -55,6 +59,7 @@ const mapFirebaseUserToAppUser = async (fbUser: FirebaseUser): Promise<User> => 
     displayName: fbUser.displayName ?? '',
     photoURL: fbUser.photoURL ?? '',
     createdAt,
+    role,
   };
 };
 
