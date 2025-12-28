@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { getClientById, savePost } from ''../services/dbService';
-import { Client, Post } from '../'../src/types';
+import { getClientById, savePost } from '../services/dbService';
+import { Client, Post } from '../types';
 import { SOCIAL_PLATFORMS } from '../src/config/constants';
 import Button from '../src/components/Button';
 import LoadingSpinner from '../src/components/LoadingSpinner';
@@ -13,7 +13,7 @@ interface ClientDetailViewProps {
 const ClientDetailView: React.FC<ClientDetailViewProps> = ({ clientId, onPostScheduled }) => {
   const [client, setClient] = useState<Client | null>(null);
   const [loading, setLoading] = useState(true);
-  const [postTopic, setPostPostTopic] = useState('');
+  const [postTopic, setPostTopic] = useState('');
   const [selectedPlatform, setSelectedPlatform] = useState(SOCIAL_PLATFORMS[0]);
 
   useEffect(() => {
@@ -41,7 +41,7 @@ const ClientDetailView: React.FC<ClientDetailViewProps> = ({ clientId, onPostSch
 
     await savePost(newPost);
     alert('Post scheduled successfully!');
-    setPostPostTopic('');
+    setPostTopic('');
     onPostScheduled();
   };
 
@@ -63,7 +63,7 @@ const ClientDetailView: React.FC<ClientDetailViewProps> = ({ clientId, onPostSch
               <label className="block text-sm text-gray-400 mb-1">Topic</label>
               <textarea 
                 value={postTopic}
-                onChange={(e) => setPostPostTopic(e.target.value)}
+                onChange={(e) => setPostTopic(e.target.value)}
                 className="w-full bg-black border border-gray-700 rounded-lg p-3 text-white h-24 outline-none focus:border-red-600"
                 placeholder="What should the post be about?"
               />
