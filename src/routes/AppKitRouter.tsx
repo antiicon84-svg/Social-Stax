@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import Navbar from './components/Navbar';
+import Navbar from '../components/Navbar';
 import LoadingSpinner from './components/LoadingSpinner';
 import DashboardView from './views/DashboardView';
 import CreateClientView from './views/CreateClientView';
