@@ -3,18 +3,18 @@ import { Routes, Route, useNavigate, useParams } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../config/firebase';
 import Navbar from '../components/Navbar';
-import LoginView from './views/LoginView';
-import DashboardView from './views/DashboardView';
-import CreateClientView from './views/CreateClientView';
-import ClientDetailView from './views/ClientDetailView';
-import DownloadsView from './views/DownloadsView';
-import TemplatesView from './views/TemplatesView';
-import ContentLabView from './views/ContentLabView';
-import PromptGuideView from './views/PromptGuideView';
-import BillingView from './views/BillingView';
+import LoginView from '../../views/LoginView';
+import DashboardView from '../../views/DashboardView';
+import CreateClientView from '../../views/CreateClientView';
+import ClientDetailView from '../../views/ClientDetailView';
+import DownloadsView from '../../views/DownloadsView';
+import TemplatesView from '../../views/TemplatesView';
+import ContentLabView from '../../views/ContentLabView';
+import PromptGuideView from '../../views/PromptGuideView';
+import BillingView from '../../views/BillingView';
 import LoadingSpinner from './components/LoadingSpinner';
 import Button from './components/Button';
-import { getClients, getScheduledPosts, deletePost } from './services/dbService';
+import { getClients, getScheduledPosts, deletePost } from '../../services/doService';
 import { Client, Post } from './types';
 
 const ClientDetailWrapper: React.FC<{ onPostScheduled: () => void }> = ({ onPostScheduled }) => {
