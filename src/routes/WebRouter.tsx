@@ -12,10 +12,10 @@ import TemplatesView from '../../views/TemplatesView';
 import ContentLabView from '../../views/ContentLabView';
 import PromptGuideView from '../../views/PromptGuideView';
 import BillingView from '../../views/BillingView';
-import LoadingSpinner from './components/LoadingSpinner';
-import Button from './components/Button';
+import LoadingSpinner from ../components/LoadingSpinner';
+import Button from ../components/Button';
 import { getClients, getScheduledPosts, deletePost } from '../../services/doService';
-import { Client, Post } from './types';
+import { Client, Post } from../types';
 
 const ClientDetailWrapper: React.FC<{ onPostScheduled: () => void }> = ({ onPostScheduled }) => {
   const { clientId } = useParams<{ clientId: string }>();
