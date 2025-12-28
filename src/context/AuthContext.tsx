@@ -1,5 +1,11 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import customAuthService from '../../services/customAuthService';
+import { 
+  loginUser, 
+  signUpWithEmail, 
+  logoutUser 
+} from '~/services/authService';
+import { onAuthStateChanged } from 'firebase/auth';
+import { getFirebaseAuth } from '@/config/firebase';
 
 interface CurrentUser {
   userId: string | null;
@@ -9,6 +15,7 @@ interface CurrentUser {
 interface AuthContextType {
   currentUser: CurrentUser;
   loading: boolean;
+  isAuthenticated: boolean;
   signUp: (email: string, password: string) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -23,22 +30,31 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     email: null
   });
 
-  // Check auth state on mount
+  // Check auth state on mount using Firebase Native Auth
   useEffect(() => {
-    const user = customAuthService.getCurrentUser();
-    setCurrentUser(user);
-    setLoading(false);
+    const auth = getFirebaseAuth();
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setCurrentUser({
+          userId: user.uid,
+          email: user.email
+        });
+      } else {
+        setCurrentUser({
+          userId: null,
+          email: null
+        });
+      }
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const signUp = async (email: string, password: string) => {
     try {
-      const result = await customAuthService.signUp(email, password);
-      if (result.success) {
-        const user = customAuthService.getCurrentUser();
-        setCurrentUser(user);
-      } else {
-        throw new Error(result.message || 'Sign up failed');
-      }
+      await signUpWithEmail(email, password);
+      // State update is handled by onAuthStateChanged
     } catch (error: any) {
       throw new Error(error.message);
     }
@@ -46,13 +62,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const login = async (email: string, password: string) => {
     try {
-      const result = await customAuthService.login(email, password);
-      if (result.success) {
-        const user = customAuthService.getCurrentUser();
-        setCurrentUser(user);
-      } else {
-        throw new Error(result.message || 'Login failed');
-      }
+      await loginUser(email, password);
+      // State update is handled by onAuthStateChanged
     } catch (error: any) {
       throw new Error(error.message);
     }
@@ -60,11 +71,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const logout = async () => {
     try {
-      await customAuthService.logout();
-      setCurrentUser({
-        userId: null,
-        email: null
-      });
+      await logoutUser();
+      // State update is handled by onAuthStateChanged
     } catch (error: any) {
       throw new Error(error.message);
     }
@@ -73,6 +81,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const value: AuthContextType = {
     currentUser,
     loading,
+    isAuthenticated: !!currentUser.userId,
     signUp,
     login,
     logout

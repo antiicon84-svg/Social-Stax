@@ -17,6 +17,7 @@ import { Client, Post, UserProfile, FreeAccessGrant } from '../types'
 
 const db = getFirestore(getApp());
 
+
 /**
  * DATABASE SERVICE
  * Interacts with Firebase Firestore for data persistence.
