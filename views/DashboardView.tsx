@@ -30,7 +30,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({
  <div className="p-6 md:p-10 max-w-7xl mx-auto w-full">
  <div className="flex justify-between items-center mb-8">
  <h1 className="text-3xl font-bold text-white">Dashboard</h1>
- <Button onclick={onDataRefresh} variant="secondary">Refresh Data</Button>
+ <Button onClick={onDataRefresh} variant="secondary">Refresh Data</Button>
  </div>
 
  {/* Usage Display Section */}
@@ -78,7 +78,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({
  <div key={post.id} className="p-3 bg-gray-800 rounded border border-gray-700 flex justify-between items-center">
  <div>
  <p className="text-sm text-white line-clamp-1">{post.content}</p>
- <p className="text-xs text-gray-400">{post.platform} • {new Date(post.scheduledDate).toLocaleDateString()}</p>
+ <p className="text-xs text-gray-400">{post.platform} • {new Date(post.scheduledAt).toLocaleDateString()}</p>
  </div>
  <Button 
  variant="danger" 

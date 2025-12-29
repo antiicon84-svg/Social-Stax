@@ -1,7 +1,9 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { 
-  customAuthService 
-} from '~/services/customAuthService';
+  signUpWithEmail,
+  loginUser,
+  logoutUser
+} from '~/services/authService';
 import { 
   onAuthStateChanged 
 } from 'firebase/auth';
@@ -53,12 +55,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const signUp = async (email: string, password: string) => {
     try {
-      const response = await customAuthService.signUp(email, password);
-      if (!response.success) {
-        throw new Error(response.message);
-      }
-      // Note: customAuthService handles signInWithCustomToken, 
-      // so onAuthStateChanged will update the state automatically.
+      await signUpWithEmail(email, password);
+      // onAuthStateChanged will handle the state update
     } catch (error: any) {
       console.error('Sign Up Error:', error);
       throw new Error(error.message || 'Failed to sign up');
@@ -67,10 +65,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const login = async (email: string, password: string) => {
     try {
-      const response = await customAuthService.login(email, password);
-      if (!response.success) {
-        throw new Error(response.message);
-      }
+      await loginUser(email, password);
+      // onAuthStateChanged will handle the state update
     } catch (error: any) {
       console.error('Login Error:', error);
       throw new Error(error.message || 'Failed to login');
@@ -79,7 +75,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const logout = async () => {
     try {
-      await customAuthService.logout();
+      await logoutUser();
     } catch (error: any) {
       throw new Error(error.message);
     }
