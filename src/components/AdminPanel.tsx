@@ -1,8 +1,12 @@
 import React, { useState } from 'react';
 import { createFreeAccessGrant, revokeFreeAccessGrant, getFreeAccessGrants, getUserByEmail } from '~/services/dbService';
 import Button from './Button';
+import { Lock } from 'lucide-react';
 
 const AdminPanel: React.FC = () => {
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
+  const [adminPassword, setAdminPassword] = useState('');
+  
   const [activeTab, setActiveTab] = useState<'grant' | 'manage'>('grant');
   const [grantEmail, setGrantEmail] = useState('');
   const [grantPlan, setGrantPlan] = useState('starter');
@@ -19,6 +23,37 @@ const AdminPanel: React.FC = () => {
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [grants, setGrants] = useState<any[]>([]);
   const [isLoadingGrants, setIsLoadingGrants] = useState(false);
+
+  const handleAdminLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (adminPassword === 'admin123') {
+        setIsAdminAuthenticated(true);
+    } else {
+        alert('Incorrect Password');
+    }
+  };
+
+  if (!isAdminAuthenticated) {
+    return (
+        <div className="flex items-center justify-center min-h-[60vh]">
+            <form onSubmit={handleAdminLogin} className="bg-gray-900 p-8 rounded-2xl border border-gray-800 text-center max-w-sm w-full">
+                <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-6 text-red-500">
+                    <Lock size={32} />
+                </div>
+                <h2 className="text-2xl font-bold text-white mb-2">Admin Access</h2>
+                <p className="text-gray-400 mb-6 text-sm">Please enter the admin password to continue.</p>
+                <input 
+                    type="password" 
+                    placeholder="Enter Password" 
+                    className="w-full bg-black border border-gray-700 rounded-xl px-4 py-3 text-white mb-4 focus:ring-2 focus:ring-red-600 outline-none"
+                    value={adminPassword}
+                    onChange={(e) => setAdminPassword(e.target.value)}
+                />
+                <Button type="submit" className="w-full">Access Panel</Button>
+            </form>
+        </div>
+    );
+  }
 
   const handleGrantAccess = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,16 +75,10 @@ const AdminPanel: React.FC = () => {
         userId: user.uid,
         userEmail: grantEmail,
         plan: grantPlan as 'starter' | 'pro' | 'enterprise',
-        reason: grantReason, // Note: reason might not be in FreeAccessGrant interface in types.ts, check types. If strict, might fail if extra props.
-        // Actually types.ts FreeAccessGrant does NOT have 'reason'. I should probably remove it or update types.ts.
-        // Assuming types.ts is the source of truth, I will ignore reason or assume dbService handles it if it's just 'any'.
-        // But dbService takes Omit<FreeAccessGrant...>. If I pass 'reason', it might error if strict.
-        // Let's check dbService signature again. It says `grant: Omit<FreeAccessGrant...`.
-        // If FreeAccessGrant doesn't have reason, I can't pass it.
-        // I will omit reason for now to be safe, or cast it.
+        reason: grantReason, 
         expiresAt: expirationDate,
         ...(showCustomLimits && { customLimits }),
-      } as any); // Casting to any to allow 'reason' if needed, or just to pass checks. Ideally update types.
+      } as any); 
 
       setMessage({
         type: 'success',
@@ -99,9 +128,12 @@ const AdminPanel: React.FC = () => {
   return (
     <div className="w-full max-w-4xl mx-auto p-6">
       {/* Header */}
-      <div className="mb-8">
-        <h2 className="text-3xl font-bold text-white mb-2">🛡️ Admin Panel</h2>
-        <p className="text-gray-400">Manage free access grants and user quotas</p>
+      <div className="mb-8 flex justify-between items-center">
+        <div>
+            <h2 className="text-3xl font-bold text-white mb-2">🛡️ Admin Panel</h2>
+            <p className="text-gray-400">Manage free access grants and user quotas</p>
+        </div>
+        <Button variant="secondary" onClick={() => setIsAdminAuthenticated(false)} size="sm">Logout</Button>
       </div>
 
       {/* Message Alert */}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Mic, MicOff, Volume2, X } from 'lucide-react';
+import { Mic, MicOff, Volume2, X, AlertTriangle } from 'lucide-react';
 
 interface SpeechRecognition extends EventTarget {
   continuous: boolean;
@@ -26,6 +26,9 @@ const VoiceAssistant: React.FC = () => {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [lastCommand, setLastCommand] = useState('');
+  const [isSupported, setIsSupported] = useState(true);
+  const [showSupportWarning, setShowSupportWarning] = useState(true);
+  
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
@@ -56,8 +59,10 @@ const VoiceAssistant: React.FC = () => {
       };
 
       recognitionRef.current = recognition;
+      setIsSupported(true);
     } else {
       console.warn('Speech Recognition API not supported in this browser.');
+      setIsSupported(false);
     }
 
     return () => {
@@ -113,6 +118,11 @@ const VoiceAssistant: React.FC = () => {
   };
 
   const toggleListening = () => {
+    if (!isSupported) {
+      alert("Voice commands are not supported in this browser. Please use Chrome or Edge.");
+      return;
+    }
+    
     if (isListening) {
       recognitionRef.current?.stop();
     } else {
@@ -123,13 +133,22 @@ const VoiceAssistant: React.FC = () => {
     }
   };
 
-  if (!recognitionRef.current) {
+  if (!isSupported) {
+    if (!showSupportWarning) return null;
     return (
-      <div className="fixed bottom-6 right-6 z-50 group">
-         <div className="bg-gray-900/90 text-gray-400 px-4 py-2 rounded-xl border border-gray-800 text-xs max-w-[150px] text-center mb-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-            Voice commands not supported in this browser
+      <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end animate-in slide-in-from-bottom-5">
+         <div className="bg-gray-900 border border-red-900/50 p-4 rounded-xl shadow-2xl max-w-[250px] mb-2 relative">
+            <button onClick={() => setShowSupportWarning(false)} className="absolute top-2 right-2 text-gray-500 hover:text-white">
+                <X size={14} />
+            </button>
+            <div className="flex items-center gap-2 text-red-400 mb-2 font-bold text-sm">
+                <AlertTriangle size={16} /> Not Supported
+            </div>
+            <p className="text-xs text-gray-400">
+                Voice commands require a modern browser like Google Chrome or Microsoft Edge.
+            </p>
          </div>
-         <div className="p-4 rounded-full bg-gray-800 border border-gray-700 opacity-50 cursor-not-allowed">
+         <div className="p-4 rounded-full bg-gray-800 border border-gray-700 opacity-50 cursor-not-allowed" title="Voice Assistant Not Supported">
             <MicOff className="text-gray-500" size={24} />
          </div>
       </div>

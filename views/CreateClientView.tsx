@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { saveClient } from '~/services/dbService';
 import { analyzeWebsite } from '~/services/aiService';
+import { getCurrentUser } from '~/services/authService';
 import { INDUSTRY_OPTIONS, BRAND_TONE_OPTIONS } from '@/config/constants';
 import Button from '@/components/Button';
 import { 
@@ -70,9 +71,12 @@ const CreateClientView: React.FC<CreateClientViewProps> = ({ onClientAdded }) =>
     e.preventDefault();
     if (!name) return alert('Please enter a client name');
 
+    const currentUser = getCurrentUser();
+    if (!currentUser?.email) return alert('You must be logged in to create a client.');
+
     const newClient: Client = {
       id: Date.now().toString(),
-      ownerEmail: 'user@example.com',
+      ownerEmail: currentUser.email,
       name,
       clientType,
       industry,

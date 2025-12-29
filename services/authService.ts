@@ -146,8 +146,11 @@ export const signUpWithEmail = async (
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
+    // Check if user should be admin
+    const isAdmin = isAdminUser(email);
+
     // Create user record in Firestore
-    await createUserRecord(user.uid, email, false);
+    await createUserRecord(user.uid, email, isAdmin);
 
     // Map to app User type
     const appUser = await mapFirebaseUserToAppUser(user);
