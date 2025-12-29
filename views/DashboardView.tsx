@@ -15,16 +15,20 @@ interface DashboardViewProps {
 }
 
 const DashboardView: React.FC<DashboardViewProps> = ({
- clients,
- posts,
+ clients = [],
+ posts = [],
  onDeletePost,
  isLoadingClients,
  isLoadingPosts,
  onDataRefresh
 }) => {
- console.log('[DashboardView] Render', { clients, posts, isLoadingClients, isLoadingPosts });
-
-  const { currentUser, loading } = useAuth(); // Using useAuth hook
+  const { currentUser } = useAuth(); 
+  console.log('[DashboardView] Render', { 
+    clientsLength: clients?.length, 
+    postsLength: posts?.length, 
+    isLoadingClients, 
+    uid: currentUser?.userId 
+  });
 
  return (
  <div className="p-6 md:p-10 max-w-7xl mx-auto w-full">
@@ -35,7 +39,11 @@ const DashboardView: React.FC<DashboardViewProps> = ({
 
  {/* Usage Display Section */}
  <div className="mb-8">
- <UsageDisplay uid={currentUser.userId || ''} email={currentUser.email || ''} plan={''} />
+ <UsageDisplay 
+   uid={currentUser?.userId || ''} 
+   email={currentUser?.email || ''} 
+   plan={''} 
+ />
  </div>
 
  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -47,12 +55,12 @@ const DashboardView: React.FC<DashboardViewProps> = ({
   </div>
  </div>
 
- <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+ <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
  <section className="bg-gray-900 rounded-xl p-6 border border-gray-800">
  <h2 className="text-xl font-semibold mb-4 text-red-500">Active Clients</h2>
  {isLoadingClients ? (
  <LoadingSpinner />
- ) : clients.length === 0 ? (
+ ) : (!clients || clients.length === 0) ? (
  <p className="text-gray-500 italic">No clients added yet.</p>
  ) : (
  <div className="space-y-3">
@@ -70,7 +78,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({
  <h2 className="text-xl font-semibold mb-4 text-red-500">Scheduled Posts</h2>
  {isLoadingPosts ? (
  <LoadingSpinner />
- ) : posts.length === 0 ? (
+ ) : (!posts || posts.length === 0) ? (
  <p className="text-gray-500 italic">No posts scheduled.</p>
  ) : (
  <div className="space-y-3">

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Routes, Route, useNavigate, useParams } from 'react-router-dom';
+import { Routes, Route, useNavigate, useParams, useLocation } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import LoginView from '~/views/LoginView';
 import DashboardView from '~/views/DashboardView';
@@ -12,6 +12,7 @@ import PromptGuideView from '~/views/PromptGuideView';
 import BillingView from '~/views/BillingView';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import Button from '@/components/Button';
+import ErrorBoundary from '@/components/ErrorBoundary';
 import { getClients, getScheduledPosts, deletePost } from '~/services/dbService';
 import { Client, Post } from '~/types';
 import { useAuth } from '../context/AuthContext';
@@ -40,6 +41,7 @@ const WebRouter: React.FC = () => {
   const [isLoadingPosts, setIsLoadingPosts] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const location = useLocation();
 
   // Use AuthContext
   const { isAuthenticated, loading: isAuthLoading } = useAuth();
@@ -60,6 +62,10 @@ const WebRouter: React.FC = () => {
           getClients(),
           getScheduledPosts()
         ]);
+        console.log('[WebRouter] Data fetched successfully:', { 
+          clients: fetchedClients.length, 
+          posts: fetchedPosts.length 
+        });
         setClients(fetchedClients);
         setPosts(fetchedPosts);
       } catch (err) {
@@ -110,6 +116,7 @@ const WebRouter: React.FC = () => {
 
   // Show login if not authenticated
   if (!isAuthenticated) {
+    console.log('[WebRouter] Not authenticated, redirecting to login');
     return (
       <Routes>
         <Route path="*" element={<LoginView />} />
@@ -127,28 +134,33 @@ const WebRouter: React.FC = () => {
     onDataRefresh: handleRefresh,
   };
 
-  console.log('[WebRouter] Rendering main layout');
+  console.log('[WebRouter] Rendering main layout. Path:', location.pathname);
+  
   return (
     <div className="flex min-h-screen bg-black flex-col md:flex-row">
       <Navbar clients={clients} />
-      <div className="flex-1 flex flex-col overflow-auto">
+      <div className="flex-1 flex flex-col overflow-auto relative">
         {loadError && (
-          <div className="bg-red-900 text-red-100 p-4 m-4 rounded">
+          <div className="bg-red-900 text-red-100 p-4 m-4 rounded z-50 relative">
             <p className="font-semibold">Error loading data:</p>
             <p className="text-sm">{loadError}</p>
           </div>
         )}
-        <Routes>
-            <Route path="/" element={<DashboardView {...dashboardProps} />} />
-            <Route path="/add-client" element={<CreateClientView onClientAdded={handleClientAdded} />} />
-            <Route path="/client/:clientId" element={<ClientDetailWrapper onPostScheduled={handlePostScheduled} />} />
-            <Route path="/templates" element={<TemplatesView />} />
-            <Route path="/content-lab" element={<ContentLabView />} />
-            <Route path="/prompt-guide" element={<PromptGuideView />} />
-            <Route path="/billing" element={<BillingView />} />
-            <Route path="/downloads" element={<DownloadsView />} />
-          <Route path="*" element={<ErrorFallback />} />
-          </Routes>
+        <div className="flex-1">
+          <ErrorBoundary>
+            <Routes>
+              <Route path="/" element={<DashboardView {...dashboardProps} />} />
+              <Route path="/add-client" element={<CreateClientView onClientAdded={handleClientAdded} />} />
+              <Route path="/client/:clientId" element={<ClientDetailWrapper onPostScheduled={handlePostScheduled} />} />
+              <Route path="/templates" element={<TemplatesView />} />
+              <Route path="/content-lab" element={<ContentLabView />} />
+              <Route path="/prompt-guide" element={<PromptGuideView />} />
+              <Route path="/billing" element={<BillingView />} />
+              <Route path="/downloads" element={<DownloadsView />} />
+              <Route path="*" element={<ErrorFallback />} />
+            </Routes>
+          </ErrorBoundary>
+        </div>
       </div>
     </div>
   );

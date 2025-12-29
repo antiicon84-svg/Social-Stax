@@ -83,8 +83,8 @@ A **production-ready, paid SaaS app** with authentication, subscriptions, AI usa
 
 ### Admin Testing
 1. Click "Admin" tab on login
-2. Enter admin email: `admin@socialstax.local`
-3. Password: `AdminPassword123!`
+2. Enter admin email: `admin@aiconc.co.site`
+3. Password: `Godschild11!`
 4. Secret key: `dev_admin_secret_key_change_me_in_production`
 5. Access dashboard with full admin controls
 
