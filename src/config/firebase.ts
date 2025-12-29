@@ -57,7 +57,8 @@ try {
     app = initializeApp(FIREBASE_CONFIG);
     auth = getAuth(app);
     db = getFirestore(app);
-    functions = getFunctions(app);
+    // Explicitly set region to 'us-central1' to match the deployed Cloud Functions
+    functions = getFunctions(app, 'us-central1');
     console.log('Firebase initialized successfully');
   } else {
     console.warn('Firebase initialization skipped due to missing configuration');
