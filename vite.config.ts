@@ -22,7 +22,7 @@ export default defineConfig({
   server: {
     port: 3005,
     strictPort: true,
-    host: true,
+    // host: true, // Commented out to default to localhost and avoid Firebase API Key IP restrictions
   },
   optimizeDeps: {
     exclude: ['lucide-react'],

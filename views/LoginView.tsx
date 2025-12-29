@@ -33,7 +33,19 @@ const LoginView: React.FC = () => {
       }
       navigate('/');
     } catch (err: any) {
-      setError(err.message || 'Authentication failed');
+      console.error('Authentication Error:', err);
+      let errorMessage = err.message || 'Authentication failed';
+      
+      // Handle specific Firebase security error
+      if (err.code === 'auth/requests-from-referer-blocked' || err.message.includes('requests-from-referer')) {
+        errorMessage = 'Security Error: Your IP is blocked by Firebase. Please try accessing the app via http://localhost:3005 instead of the network IP.';
+      } else if (err.code === 'auth/email-already-in-use') {
+        errorMessage = 'Email already in use. Please login instead.';
+      } else if (err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
+        errorMessage = 'Invalid email or password.';
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

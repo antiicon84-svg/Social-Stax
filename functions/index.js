@@ -55,12 +55,8 @@ exports.signUp = functions.https.onCall(async (data, context) => {
       quotaResetAt: admin.firestore.FieldValue.serverTimestamp()
     });
 
-    // Generate JWT token
-    const token = jwt.sign(
-      { userId: userRef.id, email, role: 'user' },
-      JWT_SECRET,
-      { expiresIn: '7d' }
-    );
+    // Generate Firebase Custom Token
+    const token = await admin.auth().createCustomToken(userRef.id, { role: 'user' });
 
     return {
       success: true,
@@ -124,12 +120,8 @@ exports.login = functions.https.onCall(async (data, context) => {
       });
     }
 
-    // Generate JWT token
-    const token = jwt.sign(
-      { userId, email, role: userData.role, plan: subscription.plan },
-      JWT_SECRET,
-      { expiresIn: '7d' }
-    );
+    // Generate Firebase Custom Token
+    const token = await admin.auth().createCustomToken(userId, { role: userData.role, plan: subscription.plan });
 
     return {
       success: true,

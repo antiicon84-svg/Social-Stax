@@ -1,10 +1,9 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { 
-  loginUser, 
-  signUpWithEmail, 
   logoutUser 
 } from '~/services/authService';
-import { onAuthStateChanged } from 'firebase/auth';
+import customAuthService from '~/services/customAuthService';
+import { onAuthStateChanged, signInWithCustomToken } from 'firebase/auth';
 import { getFirebaseAuth } from '@/config/firebase';
 
 interface CurrentUser {
@@ -53,18 +52,38 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const signUp = async (email: string, password: string) => {
     try {
-      await signUpWithEmail(email, password);
-      // State update is handled by onAuthStateChanged
+      // 1. Call Custom Auth (Cloud Function) to bypass IP restriction & create user in our DB
+      const result = await customAuthService.signUp(email, password);
+      
+      if (!result.success || !result.token) {
+        throw new Error(result.message || 'Sign up failed');
+      }
+
+      // 2. Sign in with the returned Custom Token to establish native Firebase session
+      const auth = getFirebaseAuth();
+      await signInWithCustomToken(auth, result.token);
+      
     } catch (error: any) {
+      console.error('Hybrid Sign Up Error:', error);
       throw new Error(error.message);
     }
   };
 
   const login = async (email: string, password: string) => {
     try {
-      await loginUser(email, password);
-      // State update is handled by onAuthStateChanged
+      // 1. Call Custom Auth (Cloud Function) to bypass IP restriction & verify credentials
+      const result = await customAuthService.login(email, password);
+
+      if (!result.success || !result.token) {
+        throw new Error(result.message || 'Login failed');
+      }
+
+      // 2. Sign in with the returned Custom Token to establish native Firebase session
+      const auth = getFirebaseAuth();
+      await signInWithCustomToken(auth, result.token);
+
     } catch (error: any) {
+      console.error('Hybrid Login Error:', error);
       throw new Error(error.message);
     }
   };
