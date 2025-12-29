@@ -8,16 +8,20 @@ import {
   onAuthStateChanged 
 } from 'firebase/auth';
 import { getFirebaseAuth } from '@/config/firebase';
+import { getUserProfile } from '~/services/dbService';
+import { UserProfile } from '~/types';
 
 interface CurrentUser {
   userId: string | null;
   email: string | null;
+  profile: UserProfile | null;
 }
 
 interface AuthContextType {
   currentUser: CurrentUser;
   loading: boolean;
   isAuthenticated: boolean;
+  isAdmin: boolean;
   signUp: (email: string, password: string) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -29,22 +33,44 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<CurrentUser>({
     userId: null,
-    email: null
+    email: null,
+    profile: null
   });
 
   // Check auth state on mount using Firebase Native Auth
   useEffect(() => {
     const auth = getFirebaseAuth();
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
+        // Fetch user profile
+        let profile: UserProfile | null = null;
+        try {
+          // We need to wait a bit if it's a new signup for the profile to be created
+          // But usually getUserProfile handles null gracefully or we can retry
+          // For now, simple fetch
+          // Note: getUserProfile uses getAuthenticatedUid which relies on getCurrentUser from authService
+          // But here we are inside onAuthStateChanged, so authService might not be updated yet?
+          // Actually dbService.getUserProfile calls getAuthenticatedUid() -> getCurrentUser()
+          // We should probably pass the uid directly if dbService allowed, but it doesn't.
+          // However, firebase auth state is global.
+          profile = await getUserProfile().catch(e => {
+            console.warn("Failed to fetch profile", e);
+            return null;
+          });
+        } catch (err) {
+            console.error(err);
+        }
+
         setCurrentUser({
           userId: user.uid,
-          email: user.email
+          email: user.email,
+          profile
         });
       } else {
         setCurrentUser({
           userId: null,
-          email: null
+          email: null,
+          profile: null
         });
       }
       setLoading(false);
@@ -85,6 +111,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     currentUser,
     loading,
     isAuthenticated: !!currentUser.userId,
+    isAdmin: currentUser.profile?.role === 'admin',
     signUp,
     login,
     logout

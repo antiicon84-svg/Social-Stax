@@ -10,9 +10,11 @@ import TemplatesView from '~/views/TemplatesView';
 import ContentLabView from '~/views/ContentLabView';
 import PromptGuideView from '~/views/PromptGuideView';
 import BillingView from '~/views/BillingView';
+import AdminPanel from '@/components/AdminPanel';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import Button from '@/components/Button';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import VoiceAssistant from '@/components/VoiceAssistant';
 import { getClients, getScheduledPosts, deletePost } from '~/services/dbService';
 import { Client, Post } from '~/types';
 import { useAuth } from '../context/AuthContext';
@@ -138,6 +140,7 @@ const WebRouter: React.FC = () => {
   
   return (
     <div className="flex min-h-screen bg-black flex-col md:flex-row">
+      <VoiceAssistant />
       <Navbar clients={clients} />
       <div className="flex-1 flex flex-col overflow-auto relative">
         {loadError && (
@@ -157,6 +160,7 @@ const WebRouter: React.FC = () => {
               <Route path="/prompt-guide" element={<PromptGuideView />} />
               <Route path="/billing" element={<BillingView />} />
               <Route path="/downloads" element={<DownloadsView />} />
+              <Route path="/admin" element={<AdminPanel />} />
               <Route path="*" element={<ErrorFallback />} />
             </Routes>
           </ErrorBoundary>

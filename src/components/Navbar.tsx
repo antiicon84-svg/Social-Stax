@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
 import { 
  LayoutDashboard, 
  UserPlus, 
@@ -10,10 +11,10 @@ import {
  CreditCard,
  Users,
  ChevronRight,
- LogOut
+ LogOut,
+ Shield
 } from 'lucide-react';
 import { signOut } from 'firebase/auth';
-import { auth_instance as auth } from '@/config/firebase';
 import { Client } from '~/types';
 
 interface NavbarProps {
@@ -23,11 +24,12 @@ interface NavbarProps {
 const Navbar: React.FC<NavbarProps> = ({ clients }) => {
  const location = useLocation();
  const navigate = useNavigate();
+ const { isAdmin, logout } = useAuth();
  const path = location.pathname;
 
  const handleLogout = async () => {
  try {
- await signOut(auth);
+ await logout();
  navigate('/login');
  } catch (error) {
  console.error('Logout failed:', error);
@@ -43,6 +45,10 @@ const Navbar: React.FC<NavbarProps> = ({ clients }) => {
  { name: 'Prompt Guide', path: '/prompt-guide', icon: HelpCircle },
  { name: 'Billing', path: '/billing', icon: CreditCard },
  ];
+
+ if (isAdmin) {
+   navItems.push({ name: 'Admin Panel', path: '/admin', icon: Shield });
+ }
 
  const isActive = (itemPath: string) => path === itemPath;
 

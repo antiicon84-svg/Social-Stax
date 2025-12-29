@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import Button from '@/components/Button';
-import { generateContent } from '~/services/aiService';
+import { generateContent, enhancePromptWithAI } from '~/services/aiService';
+import { savePost } from '~/services/dbService';
+import { getCurrentUser } from '~/services/authService';
+import { Post } from '~/types';
 import { 
   FlaskConical, 
   Sparkles, 
@@ -11,28 +14,68 @@ import {
   Linkedin,
   Twitter,
   Facebook,
-  Send
+  Send,
+  Image as ImageIcon,
+  Video,
+  FileText,
+  Save
 } from 'lucide-react';
 
 const ContentLabView: React.FC = () => {
+  const [activeTab, setActiveTab] = useState<'text' | 'image' | 'video'>('text');
   const [topic, setTopic] = useState('');
   const [platform, setPlatform] = useState('Instagram');
   const [result, setResult] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleGenerate = async () => {
     if (!topic) return alert('Please enter a topic or prompt');
     setIsLoading(true);
     setResult('');
     try {
-      const output = await generateContent(topic, platform);
-      setResult(output);
+      if (activeTab === 'text') {
+        const output = await generateContent(topic, platform);
+        setResult(output);
+      } else {
+        // For Image and Video, we currently generate a detailed prompt/brief
+        const enhanced = await enhancePromptWithAI(topic, activeTab);
+        setResult(typeof enhanced === 'string' ? enhanced : `**Enhanced Prompt:**\n${enhanced.enhancedPrompt}\n\n**Technical Parameters:**\n${enhanced.technicalParams}`);
+      }
     } catch (error) {
       console.error(error);
       alert('Failed to generate content. Please try again.');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleSaveDraft = async () => {
+    if (!result) return;
+    const user = getCurrentUser();
+    if (!user) return alert('You must be logged in to save drafts.');
+    
+    setIsSaving(true);
+    try {
+      const newPost: Post = {
+        id: '', // dbService handles ID generation
+        clientId: 'global', // 'global' or allow user to select client. For now 'global' or user's own draft
+        ownerEmail: user.email || '',
+        platform: platform as any,
+        content: result,
+        status: 'draft',
+        scheduledAt: new Date(),
+        createdAt: new Date(),
+        format: activeTab === 'video' ? 'Reel' : activeTab === 'image' ? 'Feed' : undefined
+      };
+      await savePost(newPost);
+      alert('Saved to drafts!');
+    } catch (error) {
+      console.error('Failed to save draft:', error);
+      alert('Failed to save draft.');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -57,6 +100,28 @@ const ContentLabView: React.FC = () => {
           <h1 className="text-3xl font-bold text-white">Content Lab</h1>
         </div>
         <p className="text-gray-400">Experiment with AI to generate high-performing social media content.</p>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex gap-4 mb-8 border-b border-gray-800 pb-1">
+        {[
+          { id: 'text', label: 'Text Post', icon: FileText },
+          { id: 'image', label: 'Image Gen', icon: ImageIcon },
+          { id: 'video', label: 'Video Gen', icon: Video },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id as any)}
+            className={`flex items-center gap-2 px-4 py-2 text-sm font-bold transition-colors relative top-[1px] ${
+              activeTab === tab.id
+                ? 'text-red-500 border-b-2 border-red-500'
+                : 'text-gray-500 hover:text-white'
+            }`}
+          >
+            <tab.icon size={16} />
+            {tab.label}
+          </button>
+        ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
@@ -130,7 +195,10 @@ const ContentLabView: React.FC = () => {
                     {result}
                   </div>
                 </div>
-                <div className="mt-8 pt-6 border-t border-gray-900 flex justify-end">
+                <div className="mt-8 pt-6 border-t border-gray-900 flex justify-end gap-3">
+                  <Button variant="ghost" onClick={handleSaveDraft} isLoading={isSaving} className="gap-2 text-gray-400 hover:text-white">
+                    <Save size={14} /> Save Draft
+                  </Button>
                   <Button variant="secondary" size="sm" className="gap-2">
                     <Send size={14} /> Use in Campaign
                   </Button>

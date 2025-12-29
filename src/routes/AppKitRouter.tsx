@@ -9,6 +9,7 @@ import ContentLabView from '~/views/ContentLabView';
 import PromptGuideView from '~/views/PromptGuideView';
 import DownloadsView from '~/views/DownloadsView';
 import BillingView from '~/views/BillingView';
+import VoiceAssistant from '@/components/VoiceAssistant';
 import Button from '@/components/Button';
 import { getClients, getScheduledPosts, deletePost } from '~/services/dbService';
 import { Client, Post } from '~/types';
@@ -133,6 +134,7 @@ useEffect(() => {
 
   return (
     <div className="flex min-h-screen bg-black flex-col md:flex-row">
+      <VoiceAssistant />
       <Navbar clients={clients} />
       <div className="flex-1 flex flex-col overflow-auto">
         {content}
