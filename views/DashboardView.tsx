@@ -3,8 +3,7 @@ import { Client, Post } from '~/types';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import Button from '@/components/Button';
 import UsageDisplay from '@/components/UsageDisplay';
-import { useAuth } from '../context/AuthContext'; // Added import for useAuth
-import { useUsage } from '../context/UsageContext';
+import { useAuth } from '@/context/AuthContext';
 
 interface DashboardViewProps {
  clients: Client[];
