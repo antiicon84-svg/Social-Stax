@@ -2,9 +2,13 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { 
   logoutUser 
 } from '~/services/authService';
-import customAuthService from '~/services/customAuthService';
-import { onAuthStateChanged, signInWithCustomToken } from 'firebase/auth';
-import { getFirebaseAuth } from '@/config/firebase';
+import { 
+  onAuthStateChanged, 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword 
+} from 'firebase/auth';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { getFirebaseAuth, getFirebaseDB } from '@/config/firebase';
 
 interface CurrentUser {
   userId: string | null;
@@ -52,38 +56,50 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const signUp = async (email: string, password: string) => {
     try {
-      // 1. Call Custom Auth (Cloud Function) to bypass IP restriction & create user in our DB
-      const result = await customAuthService.signUp(email, password);
-      
-      if (!result.success || !result.token) {
-        throw new Error(result.message || 'Sign up failed');
-      }
-
-      // 2. Sign in with the returned Custom Token to establish native Firebase session
       const auth = getFirebaseAuth();
-      await signInWithCustomToken(auth, result.token);
-      
+      // 1. Create user with standard Firebase Auth
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // 2. Create user document in Firestore (Client-side)
+      // This works because firestore.rules allows write: if request.auth.uid == userId
+      const db = getFirebaseDB();
+      await setDoc(doc(db, 'users', user.uid), {
+        email: user.email,
+        createdAt: serverTimestamp(),
+        role: 'user',
+        status: 'active'
+      });
+
+      // Note: Subscriptions should ideally be handled by a backend trigger on user creation
+      // or we can initialize a default one here if rules allow 'subscriptions' write.
+      // For now, we'll stick to just the user profile to ensure basic login works.
+
     } catch (error: any) {
-      console.error('Hybrid Sign Up Error:', error);
+      console.error('Sign Up Error:', error);
+      // Handle Firebase Auth specific error codes for better messages
+      if (error.code === 'auth/email-already-in-use') {
+        throw new Error('This email is already registered.');
+      }
+      if (error.code === 'auth/weak-password') {
+        throw new Error('Password should be at least 6 characters.');
+      }
       throw new Error(error.message);
     }
   };
 
   const login = async (email: string, password: string) => {
     try {
-      // 1. Call Custom Auth (Cloud Function) to bypass IP restriction & verify credentials
-      const result = await customAuthService.login(email, password);
-
-      if (!result.success || !result.token) {
-        throw new Error(result.message || 'Login failed');
-      }
-
-      // 2. Sign in with the returned Custom Token to establish native Firebase session
       const auth = getFirebaseAuth();
-      await signInWithCustomToken(auth, result.token);
-
+      await signInWithEmailAndPassword(auth, email, password);
     } catch (error: any) {
-      console.error('Hybrid Login Error:', error);
+      console.error('Login Error:', error);
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+        throw new Error('Invalid email or password.');
+      }
+      if (error.code === 'auth/too-many-requests') {
+        throw new Error('Too many failed attempts. Please try again later.');
+      }
       throw new Error(error.message);
     }
   };
