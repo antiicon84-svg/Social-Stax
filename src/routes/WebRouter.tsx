@@ -19,6 +19,8 @@ import { getClients, getScheduledPosts, deletePost } from '~/services/dbService'
 import { Client, Post } from '~/types';
 import { useAuth } from '../context/AuthContext';
 
+import SettingsView from '~/views/SettingsView';
+
 const ClientDetailWrapper: React.FC<{ onPostScheduled: () => void }> = ({ onPostScheduled }) => {
   const { clientId } = useParams<{ clientId: string }>();
   if (!clientId) return null;
@@ -160,6 +162,7 @@ const WebRouter: React.FC = () => {
               <Route path="/prompt-guide" element={<PromptGuideView />} />
               <Route path="/billing" element={<BillingView />} />
               <Route path="/downloads" element={<DownloadsView />} />
+              <Route path="/settings" element={<SettingsView />} />
               <Route path="/admin" element={<AdminPanel />} />
               <Route path="*" element={<ErrorFallback />} />
             </Routes>

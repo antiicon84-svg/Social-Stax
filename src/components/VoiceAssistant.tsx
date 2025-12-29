@@ -123,7 +123,18 @@ const VoiceAssistant: React.FC = () => {
     }
   };
 
-  if (!recognitionRef.current) return null; // Don't render if not supported
+  if (!recognitionRef.current) {
+    return (
+      <div className="fixed bottom-6 right-6 z-50 group">
+         <div className="bg-gray-900/90 text-gray-400 px-4 py-2 rounded-xl border border-gray-800 text-xs max-w-[150px] text-center mb-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+            Voice commands not supported in this browser
+         </div>
+         <div className="p-4 rounded-full bg-gray-800 border border-gray-700 opacity-50 cursor-not-allowed">
+            <MicOff className="text-gray-500" size={24} />
+         </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2 group">

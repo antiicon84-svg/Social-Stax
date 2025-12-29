@@ -9,6 +9,7 @@ import ContentLabView from '~/views/ContentLabView';
 import PromptGuideView from '~/views/PromptGuideView';
 import DownloadsView from '~/views/DownloadsView';
 import BillingView from '~/views/BillingView';
+import SettingsView from '~/views/SettingsView';
 import VoiceAssistant from '@/components/VoiceAssistant';
 import Button from '@/components/Button';
 import { getClients, getScheduledPosts, deletePost } from '~/services/dbService';
@@ -119,6 +120,8 @@ useEffect(() => {
     content = <DownloadsView />;
   } else if (path === '/billing') {
     content = <BillingView />;
+  } else if (path === '/settings') {
+    content = <SettingsView />;
   } else if (path.startsWith('/client/')) {
     const clientId = path.split('/')[2];
     content = <ClientDetailView clientId={clientId} onPostScheduled={handlePostScheduled} />;

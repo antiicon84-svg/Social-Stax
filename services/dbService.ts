@@ -183,6 +183,16 @@ export const revokeFreeAccessGrant = async (grantId: string): Promise<void> => {
 };
 
 /**
+ * DEVELOPMENT ONLY: Sets the current user's role to 'admin'.
+ * This should be removed in production or secured via Rules.
+ */
+export const dev_setCurrentUserAsAdmin = async (): Promise<void> => {
+  const uid = getAuthenticatedUid();
+  const userRef = doc(db, "users", uid);
+  await setDoc(userRef, { role: 'admin' }, { merge: true });
+};
+
+/**
  * Triggers the manualUsageReset Cloud Function to reset all user usage data.
  * This can only be successfully called by an authenticated admin.
  */

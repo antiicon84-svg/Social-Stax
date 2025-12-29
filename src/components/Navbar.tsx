@@ -12,7 +12,8 @@ import {
  Users,
  ChevronRight,
  LogOut,
- Shield
+ Shield,
+ Settings
 } from 'lucide-react';
 import { signOut } from 'firebase/auth';
 import { Client } from '~/types';
@@ -44,6 +45,7 @@ const Navbar: React.FC<NavbarProps> = ({ clients }) => {
  { name: 'Downloads', path: '/downloads', icon: Download },
  { name: 'Prompt Guide', path: '/prompt-guide', icon: HelpCircle },
  { name: 'Billing', path: '/billing', icon: CreditCard },
+ { name: 'Settings', path: '/settings', icon: Settings },
  ];
 
  if (isAdmin) {
