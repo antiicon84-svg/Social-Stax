@@ -1,14 +1,11 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { 
-  logoutUser 
-} from '~/services/authService';
+  customAuthService 
+} from '~/services/customAuthService';
 import { 
-  onAuthStateChanged, 
-  signInWithEmailAndPassword, 
-  createUserWithEmailAndPassword 
+  onAuthStateChanged 
 } from 'firebase/auth';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { getFirebaseAuth, getFirebaseDB } from '@/config/firebase';
+import { getFirebaseAuth } from '@/config/firebase';
 
 interface CurrentUser {
   userId: string | null;
@@ -56,58 +53,33 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const signUp = async (email: string, password: string) => {
     try {
-      const auth = getFirebaseAuth();
-      // 1. Create user with standard Firebase Auth
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-
-      // 2. Create user document in Firestore (Client-side)
-      // This works because firestore.rules allows write: if request.auth.uid == userId
-      const db = getFirebaseDB();
-      await setDoc(doc(db, 'users', user.uid), {
-        email: user.email,
-        createdAt: serverTimestamp(),
-        role: 'user',
-        status: 'active'
-      });
-
-      // Note: Subscriptions should ideally be handled by a backend trigger on user creation
-      // or we can initialize a default one here if rules allow 'subscriptions' write.
-      // For now, we'll stick to just the user profile to ensure basic login works.
-
+      const response = await customAuthService.signUp(email, password);
+      if (!response.success) {
+        throw new Error(response.message);
+      }
+      // Note: customAuthService handles signInWithCustomToken, 
+      // so onAuthStateChanged will update the state automatically.
     } catch (error: any) {
       console.error('Sign Up Error:', error);
-      // Handle Firebase Auth specific error codes for better messages
-      if (error.code === 'auth/email-already-in-use') {
-        throw new Error('This email is already registered.');
-      }
-      if (error.code === 'auth/weak-password') {
-        throw new Error('Password should be at least 6 characters.');
-      }
-      throw new Error(error.message);
+      throw new Error(error.message || 'Failed to sign up');
     }
   };
 
   const login = async (email: string, password: string) => {
     try {
-      const auth = getFirebaseAuth();
-      await signInWithEmailAndPassword(auth, email, password);
+      const response = await customAuthService.login(email, password);
+      if (!response.success) {
+        throw new Error(response.message);
+      }
     } catch (error: any) {
       console.error('Login Error:', error);
-      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
-        throw new Error('Invalid email or password.');
-      }
-      if (error.code === 'auth/too-many-requests') {
-        throw new Error('Too many failed attempts. Please try again later.');
-      }
-      throw new Error(error.message);
+      throw new Error(error.message || 'Failed to login');
     }
   };
 
   const logout = async () => {
     try {
-      await logoutUser();
-      // State update is handled by onAuthStateChanged
+      await customAuthService.logout();
     } catch (error: any) {
       throw new Error(error.message);
     }

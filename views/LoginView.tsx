@@ -34,18 +34,9 @@ const LoginView: React.FC = () => {
       navigate('/');
     } catch (err: any) {
       console.error('Authentication Error:', err);
-      let errorMessage = err.message || 'Authentication failed';
-      
-      // Handle specific Firebase security error
-      if (err.code === 'auth/requests-from-referer-blocked' || err.message.includes('requests-from-referer')) {
-        errorMessage = 'Security Error: Your IP is blocked by Firebase. Please try accessing the app via http://localhost:3005 instead of the network IP.';
-      } else if (err.code === 'auth/email-already-in-use') {
-        errorMessage = 'Email already in use. Please login instead.';
-      } else if (err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
-        errorMessage = 'Invalid email or password.';
-      }
-      
-      setError(errorMessage);
+      // Our custom auth service returns clear error messages
+      // We can display them directly to the user
+      setError(err.message || 'Authentication failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -134,7 +125,7 @@ const LoginView: React.FC = () => {
             disabled={loading}
             className="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-lg font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed mt-6"
           >
-            {loading ? 'Processing...' : isSignUp ? 'Create Account' : 'Sign In'}
+            {loading ? (isSignUp ? 'Creating Account...' : 'Signing In...') : (isSignUp ? 'Create Account' : 'Sign In')}
           </button>
         </form>
 

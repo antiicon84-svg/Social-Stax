@@ -1,5 +1,6 @@
 import { httpsCallable } from 'firebase/functions';
-import { getFirebaseFunctions } from '../src/config/firebase';
+import { signInWithCustomToken, signOut } from 'firebase/auth';
+import { getFirebaseFunctions, auth_instance as auth } from '../src/config/firebase';
 
 /**
  * ===================================================
@@ -77,12 +78,9 @@ export const customAuthService = {
       const result = await callCloudFunction('signUp', { email, password });
       const data = result as any;
       
-      if (data.success) {
-        localStorage.setItem('user_id', data.userId);
-        localStorage.setItem('user_email', email);
-        if (data.token) {
-          localStorage.setItem('auth_token', data.token);
-        }
+      if (data.success && data.token) {
+        // Sign in to Firebase Client SDK with the custom token
+        await signInWithCustomToken(auth, data.token);
       }
       return data;
     } catch (error: any) {
@@ -108,12 +106,9 @@ export const customAuthService = {
       const result = await callCloudFunction('login', { email, password });
       const data = result as any;
       
-      if (data.success) {
-        localStorage.setItem('user_id', data.userId);
-        localStorage.setItem('user_email', email);
-        if (data.token) {
-          localStorage.setItem('auth_token', data.token);
-        }
+      if (data.success && data.token) {
+        // Sign in to Firebase Client SDK with the custom token
+        await signInWithCustomToken(auth, data.token);
       }
       return data;
     } catch (error: any) {
@@ -130,9 +125,7 @@ export const customAuthService = {
    */
   async logout(): Promise<{ success: boolean }> {
     try {
-      localStorage.removeItem('user_id');
-      localStorage.removeItem('user_email');
-      localStorage.removeItem('auth_token');
+      await signOut(auth);
       return { success: true };
     } catch (error) {
       console.error('Logout error:', error);
@@ -144,9 +137,10 @@ export const customAuthService = {
    * Get the currently logged-in user
    */
   getCurrentUser(): CurrentUser {
+    const user = auth.currentUser;
     return {
-      userId: localStorage.getItem('user_id'),
-      email: localStorage.getItem('user_email'),
+      userId: user?.uid || null,
+      email: user?.email || null,
     };
   },
 
@@ -154,22 +148,22 @@ export const customAuthService = {
    * Check if user is authenticated
    */
   isAuthenticated(): boolean {
-    return !!localStorage.getItem('user_id');
+    return !!auth.currentUser;
   },
 
   /**
    * Verify token is still valid
+   * Note: With Firebase Auth integration, checking currentUser is usually sufficient,
+   * but we can keep this for specific backend token checks if needed.
    */
   async verifyToken(): Promise<boolean> {
     try {
-      const token = localStorage.getItem('auth_token');
-      if (!token) {
-        return false;
-      }
+      const user = auth.currentUser;
+      if (!user) return false;
       
-      const result = await callCloudFunction('verifyToken', { token });
-      const data = result as any;
-      return data.valid === true;
+      // Force refresh token to ensure validity
+      await user.getIdToken(true);
+      return true;
     } catch (error) {
       console.error('Token verification error:', error);
       return false;
