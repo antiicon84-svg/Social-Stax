@@ -23,11 +23,18 @@ const DashboardView: React.FC<DashboardViewProps> = ({
  onDataRefresh
 }) => {
   const { currentUser } = useAuth(); 
+  
+  const plan = currentUser?.profile?.subscription?.plan || 'free';
+  const renewalDate = currentUser?.profile?.subscription?.expiresAt 
+    ? new Date(currentUser.profile.subscription.expiresAt).toLocaleDateString() 
+    : 'Lifetime / Free';
+
   console.log('[DashboardView] Render', { 
     clientsLength: clients?.length, 
     postsLength: posts?.length, 
     isLoadingClients, 
-    uid: currentUser?.userId 
+    uid: currentUser?.userId,
+    plan
   });
 
  return (
@@ -42,15 +49,15 @@ const DashboardView: React.FC<DashboardViewProps> = ({
  <UsageDisplay 
    uid={currentUser?.userId || ''} 
    email={currentUser?.email || ''} 
-   plan={''} 
+   plan={plan} 
  />
  </div>
 
  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
   <div className="bg-gray-900 rounded-xl p-6 border border-gray-800">
   <h2 className="text-xl font-semibold mb-4 text-red-500">Subscription Status</h2>
-  <p className="text-gray-300">Plan: Pro</p>
-  <p className="text-gray-300">Renews: 2024-12-01</p>
+  <p className="text-gray-300">Plan: {plan.charAt(0).toUpperCase() + plan.slice(1)}</p>
+  <p className="text-gray-300">Renews: {renewalDate}</p>
   <button className="mt-4 px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-white text-sm">Manage Subscription</button>
   </div>
  </div>

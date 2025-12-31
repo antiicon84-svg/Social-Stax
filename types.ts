@@ -3,7 +3,7 @@ export type ClientType = 'Brand' | 'Influencer';
 
 export interface SubscriptionPlan {
   status: 'trial' | 'active' | 'cancelled' | 'expired';
-  plan: 'starter' | 'pro' | 'enterprise';
+  plan: 'free' | 'starter' | 'pro' | 'enterprise';
   expiresAt: Date;
   autoRenew: boolean;
   paymentMethod: string | null;
