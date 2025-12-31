@@ -108,6 +108,8 @@ useEffect(() => {
         onDataRefresh={handleRefresh}
       />
     );
+  } else if (path === '/clients') {
+    content = <AllClientsView />;
   } else if (path === '/add-client') {
     content = <CreateClientView onClientAdded={handleClientAdded} />;
   } else if (path === '/templates') {
