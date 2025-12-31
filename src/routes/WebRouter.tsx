@@ -155,6 +155,7 @@ const WebRouter: React.FC = () => {
           <ErrorBoundary>
             <Routes>
               <Route path="/" element={<DashboardView {...dashboardProps} />} />
+              <Route path="/clients" element={<AllClientsView />} />
               <Route path="/add-client" element={<CreateClientView onClientAdded={handleClientAdded} />} />
               <Route path="/client/:clientId" element={<ClientDetailWrapper onPostScheduled={handlePostScheduled} />} />
               <Route path="/templates" element={<TemplatesView />} />

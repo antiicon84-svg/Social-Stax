@@ -38,15 +38,16 @@ const Navbar: React.FC<NavbarProps> = ({ clients }) => {
  };
 
  const navItems = [
- { name: 'Dashboard', path: '/', icon: LayoutDashboard },
- { name: 'Add Client', path: '/add-client', icon: UserPlus },
- { name: 'Templates', path: '/templates', icon: FileText },
- { name: 'Content Lab', path: '/content-lab', icon: FlaskConical },
- { name: 'Downloads', path: '/downloads', icon: Download },
- { name: 'Prompt Guide', path: '/prompt-guide', icon: HelpCircle },
- { name: 'Billing', path: '/billing', icon: CreditCard },
- { name: 'Settings', path: '/settings', icon: Settings },
- ];
+    { name: 'Dashboard', path: '/', icon: LayoutDashboard },
+    { name: 'All Clients', path: '/clients', icon: Users },
+    { name: 'Add Client', path: '/add-client', icon: UserPlus },
+    { name: 'Content Lab', path: '/content-lab', icon: FlaskConical },
+    { name: 'Prompt Guide', path: '/prompt-guide', icon: HelpCircle },
+    { name: 'Templates', path: '/templates', icon: FileText },
+    { name: 'Downloads', path: '/downloads', icon: Download },
+    { name: 'Billing', path: '/billing', icon: CreditCard },
+    { name: 'Settings', path: '/settings', icon: Settings },
+  ];
 
  if (isAdmin) {
    navItems.push({ name: 'Admin Panel', path: '/admin', icon: Shield });
