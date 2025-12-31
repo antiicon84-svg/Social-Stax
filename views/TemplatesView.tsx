@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Copy, Briefcase, Camera, Image as ImageIcon, Check, Monitor, Building2, ShoppingBag, Share2, Film } from 'lucide-react';
-import Button from '../components/Button';
+import Button from '@/components/Button';
 
 interface Template {
   id: string;

@@ -3,6 +3,7 @@ import { Routes, Route, useNavigate, useParams, useLocation } from 'react-router
 import Navbar from '@/components/Navbar';
 import LoginView from '~/views/LoginView';
 import DashboardView from '~/views/DashboardView';
+import AllClientsView from '~/views/AllClientsView';
 import CreateClientView from '~/views/CreateClientView';
 import ClientDetailView from '~/views/ClientDetailView';
 import DownloadsView from '~/views/DownloadsView';

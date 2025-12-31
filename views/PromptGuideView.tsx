@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Search, Copy, Check, Video, Camera, Zap, Palette, Move, Sparkles, Scissors, Smile, Layers, Image as ImageIcon, X, Trash2, Wand2, Fingerprint, CheckCircle } from 'lucide-react';
-import Button from '../components/Button';
-import { analyzePromptCoherence, enhancePromptWithAI } from '../services/aiService';
+import Button from '@/components/Button';
+import { analyzePromptCoherence, enhancePromptWithAI } from '~/services/aiService';
 
 // Types used internally
 interface PromptItem {
