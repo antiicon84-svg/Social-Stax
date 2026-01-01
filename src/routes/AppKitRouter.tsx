@@ -5,8 +5,7 @@ import DashboardView from '~/views/DashboardView';
 import AllClientsView from '~/views/AllClientsView';
 import CreateClientView from '~/views/CreateClientView';
 import ClientDetailView from '~/views/ClientDetailView';
-import TemplatesView from '~/views/TemplatesView';
-import ContentLabView from '~/views/ContentLabView';
+import ContentLab from '@/components/ContentLab/ContentLab';
 import PromptGuideView from '~/views/PromptGuideView';
 import DownloadsView from '~/views/DownloadsView';
 import BillingView from '~/views/BillingView';
@@ -116,7 +115,7 @@ useEffect(() => {
   } else if (path === '/templates') {
     content = <TemplatesView />;
   } else if (path === '/content-lab') {
-    content = <ContentLabView />;
+    content = <ContentLab />;
   } else if (path === '/prompt-guide') {
     content = <PromptGuideView />;
   } else if (path === '/downloads') {

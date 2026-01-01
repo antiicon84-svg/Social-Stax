@@ -152,9 +152,9 @@ const IMAGE_CATEGORIES: PromptCategory[] = [
     id: 'texture',
     title: 'Texture & Quality',
     icon: Sparkles,
-    color: 'text-cyan-400',
-    bg: 'bg-cyan-900/20',
-    border: 'border-cyan-500/30',
+    color: 'text-red-400',
+    bg: 'bg-red-900/20',
+    border: 'border-red-500/30',
     type: 'image',
     items: [
         { label: '8K', prompt: '8k resolution, highly detailed' },

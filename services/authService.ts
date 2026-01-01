@@ -1,18 +1,9 @@
-import { auth_instance as auth, db_instance as db } from '@/config/firebase';
-import {
-  onAuthStateChanged,
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  signInAnonymously,
-  updateProfile,
-  signOut,
-  type User as FirebaseUser,
-} from 'firebase/auth';
 import {
   doc,
   getDoc,
   setDoc,
   Timestamp,
+  serverTimestamp,
 } from 'firebase/firestore';
 import type { UserProfile as User } from '../types';
 
@@ -111,8 +102,13 @@ export const createUserRecord = async (
         email,
         displayName,
         role: isAdmin ? 'admin' : 'user',
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now(),
+        planTier: 'free',
+        credits: 100,
+        creditsUsed: 0,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        autoDeleteGeneratedContent: false,
+        storageUsed: 0,
         subscription: {
           status: 'trial',
           plan: 'starter',
@@ -124,7 +120,7 @@ export const createUserRecord = async (
           imageGenerations: 0,
           voiceAssistantMinutes: 0,
           apiCalls: 0,
-          lastReset: Timestamp.now(),
+          lastReset: serverTimestamp(),
         },
       },
       { merge: true }

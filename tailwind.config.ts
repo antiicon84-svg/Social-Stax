@@ -18,6 +18,12 @@ export default {
         sans: ['Outfit', 'sans-serif'],
       },
       colors: {
+        red: {
+          primary: '#FF4757',
+          accent: '#FF6B7A',
+          dark: '#E63946',
+          light: '#FFE5E7',
+        },
         primary: {
           50: '#fff1f2',
           100: '#ffe4e6',
