@@ -2,7 +2,8 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { 
   signUpWithEmail,
   loginUser,
-  logoutUser
+  logoutUser,
+  loginGuest as loginGuestService
 } from '~/services/authService';
 import { 
   onAuthStateChanged 
@@ -22,8 +23,9 @@ interface AuthContextType {
   loading: boolean;
   isAuthenticated: boolean;
   isAdmin: boolean;
-  signUp: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, displayName?: string) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
+  loginGuest: () => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -79,9 +81,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return () => unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string) => {
+  const signUp = async (email: string, password: string, displayName?: string) => {
     try {
-      await signUpWithEmail(email, password);
+      await signUpWithEmail(email, password, displayName);
       // onAuthStateChanged will handle the state update
     } catch (error: any) {
       console.error('Sign Up Error:', error);
@@ -96,6 +98,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } catch (error: any) {
       console.error('Login Error:', error);
       throw new Error(error.message || 'Failed to login');
+    }
+  };
+
+  const loginGuest = async () => {
+    try {
+      await loginGuestService();
+    } catch (error: any) {
+      console.error('Guest Login Error:', error);
+      throw new Error(error.message || 'Failed to login as guest');
     }
   };
 
@@ -114,6 +125,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     isAdmin: currentUser.profile?.role === 'admin',
     signUp,
     login,
+    loginGuest,
     logout
   };
 

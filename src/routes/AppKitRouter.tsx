@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import Navbar from '@/components/Navbar';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import DashboardView from '~/views/DashboardView';
+import AllClientsView from '~/views/AllClientsView';
 import CreateClientView from '~/views/CreateClientView';
 import ClientDetailView from '~/views/ClientDetailView';
 import TemplatesView from '~/views/TemplatesView';

@@ -3,6 +3,8 @@ import {
   onAuthStateChanged,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  signInAnonymously,
+  updateProfile,
   signOut,
   type User as FirebaseUser,
 } from 'firebase/auth';
@@ -11,10 +13,6 @@ import {
   getDoc,
   setDoc,
   Timestamp,
-  collection,
-  query,
-  where,
-  getDocs,
 } from 'firebase/firestore';
 import type { UserProfile as User } from '../types';
 
@@ -75,6 +73,20 @@ export const loginUser = async (email: string, password: string): Promise<User |
   }
 };
 
+// Guest Login function
+export const loginGuest = async (): Promise<User | null> => {
+  try {
+    const userCredential = await signInAnonymously(auth);
+    // Create a basic user record for the guest
+    await createUserRecord(userCredential.user.uid, 'guest@socialstax.app', false, 'Guest User');
+    const appUser = await mapFirebaseUserToAppUser(userCredential.user);
+    return appUser;
+  } catch (error) {
+    console.error('Guest login error:', error);
+    throw error;
+  }
+};
+
 // Check if admin
 export const isAdminUser = (email: string): boolean => {
   return email === import.meta.env.VITE_ADMIN_EMAIL;
@@ -84,7 +96,8 @@ export const isAdminUser = (email: string): boolean => {
 export const createUserRecord = async (
   uid: string,
   email: string,
-  isAdmin: boolean = false
+  isAdmin: boolean = false,
+  displayName: string = ''
 ): Promise<void> => {
   try {
     const userRef = doc(db, 'users', uid);
@@ -96,6 +109,7 @@ export const createUserRecord = async (
       {
         uid,
         email,
+        displayName,
         role: isAdmin ? 'admin' : 'user',
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now(),
@@ -146,11 +160,16 @@ export const signUpWithEmail = async (
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
+    // Update profile with display name if provided
+    if (displayName) {
+      await updateProfile(user, { displayName });
+    }
+
     // Check if user should be admin
     const isAdmin = isAdminUser(email);
 
     // Create user record in Firestore
-    await createUserRecord(user.uid, email, isAdmin);
+    await createUserRecord(user.uid, email, isAdmin, displayName);
 
     // Map to app User type
     const appUser = await mapFirebaseUserToAppUser(user);
