@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Mic, MicOff, Volume2, X, AlertTriangle } from 'lucide-react';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 
 interface SpeechRecognition extends EventTarget {
   continuous: boolean;
@@ -10,7 +11,6 @@ interface SpeechRecognition extends EventTarget {
   stop: () => void;
   abort: () => void;
   onresult: (event: any) => void;
-  onend: (event: any) => void;
   onerror: (event: any) => void;
 }
 
@@ -27,165 +27,150 @@ const VoiceAssistant: React.FC = () => {
   const [transcript, setTranscript] = useState('');
   const [lastCommand, setLastCommand] = useState('');
   const [isSupported, setIsSupported] = useState(true);
-  const [showSupportWarning, setShowSupportWarning] = useState(true);
-  
+  const [showSupportWarning, setShowSupportWarning] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
-  const navigate = useNavigate();
-  const location = useLocation();
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    // Initialize Speech Recognition
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (SpeechRecognition) {
-      const recognition = new SpeechRecognition();
-      recognition.continuous = false;
-      recognition.interimResults = false;
-      recognition.lang = 'en-US';
-
-      recognition.onresult = (event: any) => {
-        const text = event.results[0][0].transcript;
-        setTranscript(text);
-        processCommand(text);
-      };
-
-      recognition.onend = () => {
-        setIsListening(false);
-      };
-
-      recognition.onerror = (event: any) => {
-        console.error('Speech recognition error', event.error);
-        setIsListening(false);
-        // Don't speak on error to avoid loops
-      };
-
-      recognitionRef.current = recognition;
-      setIsSupported(true);
-    } else {
-      console.warn('Speech Recognition API not supported in this browser.');
+    const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognitionAPI) {
       setIsSupported(false);
+      setShowSupportWarning(true);
+      return;
     }
 
-    return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.abort();
-      }
-      window.speechSynthesis.cancel();
+    const recognition = new SpeechRecognitionAPI();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+
+    recognition.onresult = async (event: any) => {
+      const text = event.results[0][0].transcript;
+      setTranscript(text);
+      setIsListening(false);
+      
+      // Call the Cloud Function with the audio
+      await processVoiceCommand(text);
     };
+
+    recognition.onerror = (event: any) => {
+      console.error('Speech recognition error:', event.error);
+      setIsListening(false);
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognitionRef.current = recognition;
   }, []);
 
-  const speak = (text: string) => {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.onstart = () => setIsSpeaking(true);
-      utterance.onend = () => setIsSpeaking(false);
-      window.speechSynthesis.speak(utterance);
+  const processVoiceCommand = async (audioData: string) => {
+    try {
+      setIsProcessing(true);
+      const functions = getFunctions();
+      const geminiVoiceAssistant = httpsCallable(functions, 'geminiVoiceAssistant');
+
+      // Send the voice input to the backend
+      const response = await geminiVoiceAssistant({
+        audioContent: audioData,
+        mimeType: 'audio/webm'
+      });
+
+      const result = response.data as any;
+      
+      if (result.success && result.audio) {
+        setLastCommand(result.text);
+        // Play the response audio
+        playAudio(result.audio, result.mimeType);
+      }
+    } catch (error) {
+      console.error('Error processing voice command:', error);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
-  const processCommand = (text: string) => {
-    const command = text.toLowerCase();
-    setLastCommand(command);
-
-    if (command.includes('dashboard') || command.includes('home')) {
-      speak('Navigating to Dashboard');
-      navigate('/');
-    } else if (command.includes('content lab') || command.includes('create content')) {
-      speak('Opening Content Lab');
-      navigate('/content-lab');
-    } else if (command.includes('add client') || command.includes('new client')) {
-      speak('Opening Add Client page');
-      navigate('/add-client');
-    } else if (command.includes('templates')) {
-      speak('Showing Templates');
-      navigate('/templates');
-    } else if (command.includes('prompt') || command.includes('guide')) {
-      speak('Opening Prompt Guide');
-      navigate('/prompt-guide');
-    } else if (command.includes('billing') || command.includes('subscription')) {
-      speak('Opening Billing');
-      navigate('/billing');
-    } else if (command.includes('downloads')) {
-      speak('Going to Downloads');
-      navigate('/downloads');
-    } else if (command.includes('hello') || command.includes('hi')) {
-        speak('Hello! I am your Social Stax assistant. How can I help you today?');
-    } else if (command.includes('help')) {
-        speak('I can help you navigate. Try saying "Go to Content Lab" or "Add Client".');
-    } else {
-      speak("I heard " + text + ", but I'm not sure what to do.");
+  const playAudio = (audioBase64: string, mimeType: string) => {
+    try {
+      const audio = new Audio(`data:${mimeType};base64,${audioBase64}`);
+      setIsSpeaking(true);
+      audio.onended = () => setIsSpeaking(false);
+      audio.play().catch(err => console.error('Error playing audio:', err));
+    } catch (error) {
+      console.error('Error playing audio:', error);
     }
   };
 
   const toggleListening = () => {
-    if (!isSupported) {
-      alert("Voice commands are not supported in this browser. Please use Chrome or Edge.");
-      return;
-    }
-    
+    if (!isSupported || isProcessing) return;
+
     if (isListening) {
       recognitionRef.current?.stop();
+      setIsListening(false);
     } else {
       setTranscript('');
+      setLastCommand('');
       recognitionRef.current?.start();
       setIsListening(true);
-      speak("Listening...");
     }
   };
 
-  if (!isSupported) {
-    if (!showSupportWarning) return null;
+  if (!isSupported && showSupportWarning) {
     return (
-      <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end animate-in slide-in-from-bottom-5">
-         <div className="bg-gray-900 border border-red-900/50 p-4 rounded-xl shadow-2xl max-w-[250px] mb-2 relative">
-            <button onClick={() => setShowSupportWarning(false)} className="absolute top-2 right-2 text-gray-500 hover:text-white">
-                <X size={14} />
-            </button>
-            <div className="flex items-center gap-2 text-red-400 mb-2 font-bold text-sm">
-                <AlertTriangle size={16} /> Not Supported
-            </div>
-            <p className="text-xs text-gray-400">
-                Voice commands require a modern browser like Google Chrome or Microsoft Edge.
-            </p>
-         </div>
-         <div className="p-4 rounded-full bg-gray-800 border border-gray-700 opacity-50 cursor-not-allowed" title="Voice Assistant Not Supported">
-            <MicOff className="text-gray-500" size={24} />
-         </div>
+      <div className="fixed bottom-8 right-8 bg-red-900 text-white p-4 rounded-lg shadow-lg max-w-xs flex items-start gap-3 z-50">
+        <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+        <div>
+          <p className="font-semibold">Voice Assistant Not Supported</p>
+          <p className="text-sm mt-1">Your browser doesn't support speech recognition. Please use Chrome, Edge, or Safari.</p>
+          <button
+            onClick={() => setShowSupportWarning(false)}
+            className="mt-2 text-sm underline hover:no-underline"
+          >
+            Dismiss
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2 group">
-      {/* Transcript Bubble */}
-      {(isListening || transcript) && (
-        <div className="bg-black/90 text-white px-4 py-2 rounded-xl border border-gray-800 mb-2 max-w-xs shadow-lg backdrop-blur-sm animate-in fade-in slide-in-from-bottom-2">
-          <p className="text-sm font-mono text-green-400">
-            {isListening ? '> Listening...' : `> ${transcript}`}
-          </p>
+    <div className="fixed bottom-8 right-8 z-50">
+      <button
+        onClick={toggleListening}
+        disabled={isProcessing || isSpeaking}
+        className={`rounded-full p-4 shadow-lg transition-all ${
+          isListening
+            ? 'bg-red-600 hover:bg-red-700 animate-pulse'
+            : isProcessing || isSpeaking
+            ? 'bg-gray-400 cursor-not-allowed'
+            : 'bg-cyan-500 hover:bg-cyan-600'
+        } text-white`}
+        title={isListening ? 'Stop listening' : isProcessing ? 'Processing...' : 'Start voice assistant'}
+      >
+        {isListening ? (
+          <MicOff className="w-6 h-6" />
+        ) : isProcessing ? (
+          <Mic className="w-6 h-6 opacity-50" />
+        ) : (
+          <Mic className="w-6 h-6" />
+        )}
+      </button>
+
+      {transcript && (
+        <div className="absolute bottom-20 right-0 bg-white text-gray-800 p-3 rounded-lg shadow-lg max-w-xs text-sm">
+          <p className="font-semibold mb-1">You said:</p>
+          <p>{transcript}</p>
         </div>
       )}
 
-      {/* Button */}
-      <button
-        onClick={toggleListening}
-        className={`p-4 rounded-full shadow-2xl transition-all transform active:scale-95 ${
-          isListening 
-            ? 'bg-red-600 animate-pulse ring-4 ring-red-600/30' 
-            : isSpeaking
-              ? 'bg-blue-600 ring-4 ring-blue-600/30'
-              : 'bg-gray-900 border border-gray-700 hover:bg-gray-800 hover:border-red-500/50'
-        }`}
-        title="Voice Assistant"
-      >
-        {isListening ? (
-          <Mic className="text-white" size={24} />
-        ) : isSpeaking ? (
-          <Volume2 className="text-white" size={24} />
-        ) : (
-          <MicOff className="text-gray-400 group-hover:text-white transition-colors" size={24} />
-        )}
-      </button>
+      {lastCommand && (
+        <div className="absolute bottom-20 right-0 bg-blue-50 text-blue-900 p-3 rounded-lg shadow-lg max-w-xs text-sm">
+          <p className="font-semibold mb-1">Assistant:</p>
+          <p>{lastCommand}</p>
+        </div>
+      )}
     </div>
   );
 };
