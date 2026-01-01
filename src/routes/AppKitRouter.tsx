@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import DashboardView from '~/views/DashboardView';
@@ -6,22 +6,26 @@ import AllClientsView from '~/views/AllClientsView';
 import CreateClientView from '~/views/CreateClientView';
 import ClientDetailView from '~/views/ClientDetailView';
 import TemplatesView from '~/views/TemplatesView';
-import ContentLab from '@/components/ContentLab/ContentLab';
+import ContentLabView from '~/views/ContentLabView';
 import PromptGuideView from '~/views/PromptGuideView';
 import DownloadsView from '~/views/DownloadsView';
 import BillingView from '~/views/BillingView';
 import SettingsView from '~/views/SettingsView';
 import VoiceAssistant from '@/components/VoiceAssistant';
 import Button from '@/components/Button';
-import { getClients, getScheduledPosts, deletePost } from '~/services/dbService';
-import { Client, Post } from '~/types';
+import { useClientData } from '@/hooks/useClientData';
 
 const AppKitRouter: React.FC = () => {
-  const [clients, setClients] = useState<Client[]>([]);
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [isLoadingClients, setIsLoadingClients] = useState(true);
-  const [isLoadingPosts, setIsLoadingPosts] = useState(true);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const {
+    clients,
+    posts,
+    isLoadingClients,
+    isLoadingPosts,
+    handleRefresh,
+    handleClientAdded,
+    handlePostScheduled,
+    handleDeletePost
+  } = useClientData(true);
   
   const getPathFromHash = () => {
     const hash = window.location.hash.substring(1) || '/';
@@ -30,8 +34,7 @@ const AppKitRouter: React.FC = () => {
 
   const [currentHashPath, setCurrentHashPath] = useState(getPathFromHash());
 
-useEffect(() => {
-    // Initialize the path immediately
+  useEffect(() => {
     const initialPath = getPathFromHash();
     console.log('[AppKitRouter] Initial path:', initialPath);
     setCurrentHashPath(initialPath);
@@ -45,60 +48,14 @@ useEffect(() => {
     window.addEventListener('hashchange', handleHashChange);
 
     return () => window.removeEventListener('hashchange', handleHashChange);
-  }, [])
-
-  useEffect(() => {
-    const fetchData = async () => {
-      console.log('[AppKitRouter] Fetching data...');
-      setIsLoadingClients(true);
-      setIsLoadingPosts(true);
-      try {
-        const [fetchedClients, fetchedPosts] = await Promise.all([
-          getClients(),
-          getScheduledPosts()
-        ]);
-        setClients(fetchedClients);
-        setPosts(fetchedPosts);
-      } catch (err) {
-        console.error("[AppKitRouter] Failed to load local data", err);
-      } finally {
-        setIsLoadingClients(false);
-        setIsLoadingPosts(false);
-      }
-    };
-    fetchData();
-  }, [refreshTrigger]);
-
-  const handleRefresh = useCallback(() => {
-    setRefreshTrigger(prev => prev + 1);
   }, []);
-
-  const handleClientAdded = useCallback(() => {
-    handleRefresh();
-  }, [handleRefresh]);
-
-  const handlePostScheduled = useCallback(() => {
-    handleRefresh();
-  }, [handleRefresh]);
-
-  const handleDeletePost = useCallback(async (postId: string) => {
-    if (window.confirm('Are you sure you want to delete this post?')) {
-      try {
-        await deletePost(postId);
-        handleRefresh();
-      } catch (error) {
-        console.error('[AppKitRouter] Error deleting post:', error);
-        alert('Failed to delete post. Please try again.');
-      }
-    }
-  }, [handleRefresh]);
 
   const path = currentHashPath;
   console.log('[AppKitRouter] Rendering path:', path);
 
   let content;
-    const normalizedPath = path.split('?')[0]; // Remove query params
-  if (normalizedPath === '/' || normalizedPath === '/dashboard' || normalizedPath === '/settings') {
+  const normalizedPath = path.split('?')[0];
+  if (normalizedPath === '/' || normalizedPath === '/dashboard') {
     content = (
       <DashboardView 
         clients={clients} 
@@ -116,7 +73,7 @@ useEffect(() => {
   } else if (normalizedPath === '/templates') {
     content = <TemplatesView />;
   } else if (normalizedPath === '/content-lab') {
-    content = <ContentLab />;
+    content = <ContentLabView />;
   } else if (normalizedPath === '/prompt-guide') {
     content = <PromptGuideView />;
   } else if (normalizedPath === '/downloads') {

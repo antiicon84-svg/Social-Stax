@@ -3,13 +3,7 @@ import type { Config } from 'tailwindcss';
 export default {
   content: [
     "./index.html",
-    "./components/**/*.{js,ts,jsx,tsx}",
-    "./views/**/*.{js,ts,jsx,tsx}",
-    "./services/**/*.{js,ts,jsx,tsx}",
-    "./utils/**/*.{js,ts,jsx,tsx}",
-    "./App.tsx",
-    "./AppKitRouter.tsx",
-    "./WebRouter.tsx",
+    "./src/**/*.{js,ts,jsx,tsx}",
   ],
   darkMode: 'class',
   theme: {

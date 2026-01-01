@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useEffect } from 'react';
 import { Routes, Route, useNavigate, useParams, useLocation } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import LoginView from '~/views/LoginView';
@@ -16,8 +16,7 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import Button from '@/components/Button';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import VoiceAssistant from '@/components/VoiceAssistant';
-import { getClients, getScheduledPosts, deletePost } from '~/services/dbService';
-import { Client, Post } from '~/types';
+import { useClientData } from '@/hooks/useClientData';
 import { useAuth } from '../context/AuthContext';
 
 import SettingsView from '~/views/SettingsView';
@@ -40,77 +39,27 @@ const ErrorFallback: React.FC = () => {
 };
 
 const WebRouter: React.FC = () => {
-  const [clients, setClients] = useState<Client[]>([]);
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [isLoadingClients, setIsLoadingClients] = useState(true);
-  const [isLoadingPosts, setIsLoadingPosts] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
   const location = useLocation();
-
-  // Use AuthContext
-  const { isAuthenticated, loading: isAuthLoading } = useAuth();
-
   const navigate = useNavigate();
+  const { isAuthenticated, loading: isAuthLoading } = useAuth();
+  const {
+    clients,
+    posts,
+    isLoadingClients,
+    isLoadingPosts,
+    loadError,
+    handleRefresh,
+    handleClientAdded,
+    handlePostScheduled,
+    handleDeletePost
+  } = useClientData(isAuthenticated);
 
-  // Fetch Data
   useEffect(() => {
-    if (!isAuthenticated) return;
-
-    const fetchData = async () => {
-      console.log('[WebRouter] Fetching data...');
-      setIsLoadingClients(true);
-      setIsLoadingPosts(true);
-      setLoadError(null);
-      try {
-        const [fetchedClients, fetchedPosts] = await Promise.all([
-          getClients(),
-          getScheduledPosts()
-        ]);
-        console.log('[WebRouter] Data fetched successfully:', { 
-          clients: fetchedClients.length, 
-          posts: fetchedPosts.length 
-        });
-        setClients(fetchedClients);
-        setPosts(fetchedPosts);
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Failed to load data';
-        console.error("Failed to load local data:", err);
-        setLoadError(errorMessage);
-      } finally {
-        setIsLoadingClients(false);
-        setIsLoadingPosts(false);
-      }
-    };
-
-    fetchData();
-  }, [refreshTrigger, isAuthenticated]);
-
-  const handleRefresh = useCallback(() => {
-    setRefreshTrigger(prev => prev + 1);
-  }, []);
-
-  const handleClientAdded = useCallback(() => {
-    handleRefresh();
-  }, [handleRefresh]);
-
-  const handlePostScheduled = useCallback(() => {
-    handleRefresh();
-  }, [handleRefresh]);
-
-  const handleDeletePost = useCallback(async (postId: string) => {
-    if (window.confirm('Are you sure you want to delete this post?')) {
-      try {
-        await deletePost(postId);
-        handleRefresh();
-      } catch (error) {
-        console.error('Error deleting post:', error);
-        alert('Failed to delete post. Please try again.');
-      }
+    if (!isAuthLoading && !isAuthenticated) {
+      navigate('/login');
     }
-  }, [handleRefresh]);
+  }, [isAuthenticated, isAuthLoading, navigate]);
 
-  // Show loading spinner while checking authentication
   if (isAuthLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-black">
@@ -119,9 +68,7 @@ const WebRouter: React.FC = () => {
     );
   }
 
-  // Show login if not authenticated
   if (!isAuthenticated) {
-    console.log('[WebRouter] Not authenticated, redirecting to login');
     return (
       <Routes>
         <Route path="*" element={<LoginView />} />
@@ -129,7 +76,6 @@ const WebRouter: React.FC = () => {
     );
   }
 
-  // Shared dashboard props
   const dashboardProps = {
     clients,
     posts,
