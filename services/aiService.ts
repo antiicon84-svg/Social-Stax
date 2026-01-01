@@ -3,8 +3,8 @@ import { GOOGLE_API_KEY } from "@/config/constants";
 
 const genAI = new GoogleGenerativeAI(GOOGLE_API_KEY);
 
-// Use gemini-1.5-flash for low-cost generation
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+// Use gemini-2.0-flash for low-cost generation
+const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
 /**
  * Enhances a given prompt using AI
