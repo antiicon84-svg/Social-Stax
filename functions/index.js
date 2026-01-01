@@ -355,3 +355,78 @@ exports.getQuotaStatus = functions.https.onCall(async (data, context) => {
 });
 
 module.exports = exports;
+
+// Gemini 2.0 Audio - Voice Assistant (Secure Backend)
+exports.geminiVoiceAssistant = functions.https.onCall(async (data, context) => {
+  // Verify user is authenticated
+  if (!context.auth) {
+    throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
+  }
+
+  try {
+    const { audioContent, mimeType = 'audio/webm' } = data;
+
+    if (!audioContent) {
+      throw new functions.https.HttpsError('invalid-argument', 'Audio content is required');
+    }
+
+    // Import Gemini SDK
+    const { GoogleGenerativeAI } = require('@google/generative-ai');
+    const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
+
+    // Use Gemini 2.0 Flash model with audio capabilities
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+
+    // Prepare the audio part
+    const audioPart = {
+      inlineData: {
+        data: audioContent, // Base64 encoded audio
+        mimeType: mimeType
+      }
+    };
+
+    // Send to Gemini with audio
+    const result = await model.generateContent([
+      {
+        text: 'You are a helpful voice assistant. Listen to the user\'s voice input and provide a natural, concise response. Respond in a conversational manner.'
+      },
+      audioPart
+    ]);
+
+    const responseText = result.response.text();
+
+    // Convert response to speech using Google Cloud Text-to-Speech
+    const textToSpeech = require('@google-cloud/text-to-speech');
+    const ttsClient = new textToSpeech.TextToSpeechClient();
+
+    const synthesizeRequest = {
+      input: { text: responseText },
+      voice: {
+        languageCode: 'en-US',
+        name: 'en-US-Neural2-C', // Natural-sounding voice
+        ssmlGender: 'FEMALE'
+      },
+      audioConfig: {
+        audioEncoding: 'MP3',
+        pitch: 0,
+        speakingRate: 1
+      }
+    };
+
+    const [response] = await ttsClient.synthesizeSpeech(synthesizeRequest);
+    const audioBuffer = response.audioContent;
+
+    return {
+      success: true,
+      text: responseText,
+      audio: audioBuffer.toString('base64'),
+      mimeType: 'audio/mpeg',
+      timestamp: new Date().toISOString()
+    };
+  } catch (error) {
+    console.error('Gemini Voice Assistant error:', error);
+    throw new functions.https.HttpsError('internal', 'Voice assistant error: ' + error.message);
+  }
+});
+
+module.exports = exports;
