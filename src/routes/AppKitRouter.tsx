@@ -98,7 +98,7 @@ useEffect(() => {
 
   let content;
     const normalizedPath = path.split('?')[0]; // Remove query params
-  if (normalizedPath === '/' || path === '/dashboard' || path === '/settings') {
+  if (normalizedPath === '/' || normalizedPath === '/dashboard' || normalizedPath === '/settings') {
     content = (
       <DashboardView 
         clients={clients} 
@@ -109,21 +109,21 @@ useEffect(() => {
         onDataRefresh={handleRefresh}
       />
     );
-  } else if (path === '/clients') {
+  } else if (normalizedPath === '/clients') {
     content = <AllClientsView />;
-  } else if (path === '/add-client') {
+  } else if (normalizedPath === '/add-client') {
     content = <CreateClientView onClientAdded={handleClientAdded} />;
-  } else if (path === '/templates') {
+  } else if (normalizedPath === '/templates') {
     content = <TemplatesView />;
-  } else if (path === '/content-lab') {
+  } else if (normalizedPath === '/content-lab') {
     content = <ContentLab />;
-  } else if (path === '/prompt-guide') {
+  } else if (normalizedPath === '/prompt-guide') {
     content = <PromptGuideView />;
-  } else if (path === '/downloads') {
+  } else if (normalizedPath === '/downloads') {
     content = <DownloadsView />;
-  } else if (path === '/billing') {
+  } else if (normalizedPath === '/billing') {
     content = <BillingView />;
-  } else if (path === '/settings') {
+  } else if (normalizedPath === '/settings') {
     content = <SettingsView />;
   } else if (path.startsWith('/client/')) {
     const clientId = path.split('/')[2];
