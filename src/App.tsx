@@ -54,9 +54,6 @@ const App: React.FC = () => {
   console.log('[App] Ready, rendering', isAppKitEnvironment ? 'AppKitRouter' : 'WebRouter');
   return (
     <AuthProvider>
-      <div style={{ position: 'fixed', top: 0, left: 0, zIndex: 9999, background: 'red', color: 'white', padding: '5px' }}>
-        DEBUG: v2 - {isAppKitEnvironment ? 'AppKit' : 'Web'}
-      </div>
       {isAppKitEnvironment ? <AppKitRouter /> : <WebRouter />}
     </AuthProvider>
   )
