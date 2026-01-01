@@ -1,7 +1,12 @@
 import React, { useState } from 'react';
 import { textToImage } from '@/hooks/useGeminiAPI';
 
-export default function TextToImage({ credits, onRefresh }) {
+interface TextToImageProps {
+  credits: number;
+  onRefresh: () => void;
+}
+
+export default function TextToImage({ credits, onRefresh }: TextToImageProps) {
   const [prompt, setPrompt] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState('');

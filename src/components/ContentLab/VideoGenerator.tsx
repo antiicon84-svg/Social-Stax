@@ -1,7 +1,12 @@
 import React, { useState } from 'react';
 import { generateVideo } from '@/hooks/useGeminiAPI';
 
-export default function VideoGenerator({ credits, onRefresh }) {
+interface VideoGeneratorProps {
+  credits: number;
+  onRefresh: () => void;
+}
+
+export default function VideoGenerator({ credits, onRefresh }: VideoGeneratorProps) {
   const [prompt, setPrompt] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState('');

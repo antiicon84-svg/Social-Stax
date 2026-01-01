@@ -1,3 +1,13 @@
+import { auth_instance as auth, db_instance as db } from '@/config/firebase';
+import {
+  onAuthStateChanged,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signInAnonymously,
+  updateProfile,
+  signOut,
+  type User as FirebaseUser,
+} from 'firebase/auth';
 import {
   doc,
   getDoc,
@@ -23,6 +33,11 @@ const mapFirebaseUserToAppUser = async (fbUser: FirebaseUser): Promise<User> => 
 
   let createdAt: Date;
   let role: 'admin' | 'user' = 'user';
+  let planTier: 'free' | 'starter' | 'pro' | 'enterprise' = 'free';
+  let credits = 0;
+  let creditsUsed = 0;
+  let autoDeleteGeneratedContent = false;
+  let storageUsed = 0;
 
   if (snap.exists()) {
     const data = snap.data();
@@ -38,6 +53,11 @@ const mapFirebaseUserToAppUser = async (fbUser: FirebaseUser): Promise<User> => 
     if (data.role === 'admin') {
       role = 'admin';
     }
+    planTier = data.planTier || 'free';
+    credits = data.credits || 0;
+    creditsUsed = data.creditsUsed || 0;
+    autoDeleteGeneratedContent = data.autoDeleteGeneratedContent || false;
+    storageUsed = data.storageUsed || 0;
   } else {
     createdAt = new Date();
   }
@@ -49,6 +69,11 @@ const mapFirebaseUserToAppUser = async (fbUser: FirebaseUser): Promise<User> => 
     photoURL: fbUser.photoURL ?? '',
     createdAt,
     role,
+    planTier,
+    credits,
+    creditsUsed,
+    autoDeleteGeneratedContent,
+    storageUsed,
   };
 };
 

@@ -5,6 +5,7 @@ import DashboardView from '~/views/DashboardView';
 import AllClientsView from '~/views/AllClientsView';
 import CreateClientView from '~/views/CreateClientView';
 import ClientDetailView from '~/views/ClientDetailView';
+import TemplatesView from '~/views/TemplatesView';
 import ContentLab from '@/components/ContentLab/ContentLab';
 import PromptGuideView from '~/views/PromptGuideView';
 import DownloadsView from '~/views/DownloadsView';

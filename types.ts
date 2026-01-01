@@ -26,6 +26,11 @@ export interface UserProfile {
   displayName?: string;
   photoURL?: string;
   role: 'admin' | 'user'; // Use role instead of isAdmin for consistency
+  planTier?: 'free' | 'starter' | 'pro' | 'enterprise';
+  credits?: number;
+  creditsUsed?: number;
+  autoDeleteGeneratedContent?: boolean;
+  storageUsed?: number;
   subscription?: SubscriptionPlan;
   usage?: Usage; // Add usage tracking to the user's profile
   cloudConfig?: {

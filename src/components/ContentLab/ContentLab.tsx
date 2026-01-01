@@ -1,23 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { doc, getDoc } from 'firebase/firestore';
-import { db } from '@/config/firebase';
+import { db_instance as db } from '@/config/firebase';
 import TextToImage from './TextToImage';
 import ImageEditor from './ImageEditor';
 import VideoGenerator from './VideoGenerator';
 
 export default function ContentLab() {
-  const { currentUser } = useAuth();
+  const { currentUser, loading: authLoading } = useAuth();
   const [activeTab, setActiveTab] = useState<'image' | 'edit' | 'video'>('image');
   const [credits, setCredits] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (currentUser) loadCredits();
-  }, [currentUser]);
+    if (!authLoading && currentUser) {
+      loadCredits();
+    } else if (!authLoading && !currentUser) {
+      setLoading(false);
+    }
+  }, [currentUser, authLoading]);
 
   const loadCredits = async () => {
     if (!currentUser) return;
+    setLoading(true);
     try {
       const userDoc = await getDoc(doc(db, 'users', currentUser.userId));
       if (userDoc.exists()) {
@@ -30,6 +35,14 @@ export default function ContentLab() {
       setLoading(false);
     }
   };
+
+  if (authLoading) {
+    return <div className="text-center text-white p-6">Loading...</div>;
+  }
+
+  if (!currentUser) {
+    return <div className="text-center text-white p-6">Please log in to use the Content Lab.</div>;
+  }
 
   return (
     <div className="p-6">
@@ -66,7 +79,7 @@ export default function ContentLab() {
       </div>
 
       {loading ? (
-        <div className="text-center text-white">Loading...</div>
+        <div className="text-center text-white">Loading credits...</div>
       ) : (
         <>
           {activeTab === 'image' && <TextToImage credits={credits} onRefresh={loadCredits} />}

@@ -1,6 +1,9 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY;
+if (!API_KEY) {
+  throw new Error('VITE_GOOGLE_API_KEY is not set. Please add it to your .env file.');
+}
 const genAI = new GoogleGenerativeAI(API_KEY);
 
 export async function textToImage(prompt: string): Promise<string> {
