@@ -212,6 +212,11 @@ const LoginView: React.FC = () => {
                 Continue as Guest
             </button>
 
+            {/* Privacy Notice */}
+            <div className="mt-8 pt-6 border-t border-gray-800 text-center">
+                <p className="text-xs text-gray-600">Data is encrypted and stored locally on this device.</p>
+            </div>
+
         </div>
       </main>
     </div>
