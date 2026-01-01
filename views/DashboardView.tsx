@@ -105,10 +105,10 @@ const DashboardView: React.FC<{
             <div className="w-12 h-12 bg-purple-600/10 rounded-xl flex items-center justify-center">
               <Briefcase className="w-6 h-6 text-purple-500" />
             </div>
-            <div className="text-xs text-purple-500 font-medium">{clients.length > 0 ? clients[0].industry || 'Mixed' : 'None'}</div>
+            <div className="text-xs text-purple-500 font-medium">{new Set(clients.map(c => c.industry)).size} Unique</div>
           </div>
-          <h3 className="text-2xl font-bold text-white mb-1">{clients.length > 0 ? clients[0].industry || 'Mixed' : 'None'}</h3>
-          <p className="text-gray-400 text-sm">Primary Industry</p>
+          <h3 className="text-2xl font-bold text-white mb-1">{new Set(clients.map(c => c.industry)).size}</h3>
+          <p className="text-gray-400 text-sm">Unique Industries</p>
         </div>
       </div>
 
