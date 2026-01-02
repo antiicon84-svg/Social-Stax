@@ -193,9 +193,13 @@ const ContentLabView: React.FC = () => {
               {platforms.map((p) => (
                 <button
                   key={p.name}
-                  onClick={() => setPlatform(p.name)}
+                  onClick={() => {
+            const isSelected = selectedPlatforms.includes(p.name);
+            setSelectedPlatforms(isSelected ? selectedPlatforms.filter(pl => pl !== p.name) : [...selectedPlatforms, p.name]);
+            setPreviewPlatform(p.name);
+          }
                   className={`flex items-center gap-2 px-3 py-3 rounded-xl border transition-all ${
-                    platform === p.name 
+                    selectedPlatforms.includes(p.name) }
                       ? 'bg-red-600/10 border-red-600/50 text-white' 
                       : 'bg-black border-gray-800 text-gray-500 hover:border-gray-700'
                   }`}
