@@ -437,9 +437,14 @@ exports.analyzeWebsite = functions.https.onCall(async (data, context) => {
   }
 
   try {
-    const { url } = data;
+    let { url } = data;
     if (!url) {
       throw new functions.https.HttpsError('invalid-argument', 'URL is required');
+    }
+
+    // Normalize URL
+    if (!/^https?:\/\//i.test(url)) {
+      url = `https://${url}`;
     }
 
     // 1. Fetch website content

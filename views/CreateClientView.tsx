@@ -60,9 +60,17 @@ const CreateClientView: React.FC<CreateClientViewProps> = ({ onClientAdded }) =>
 
   const handleAnalyze = async () => {
     if (!websiteUrl) return alert('Please enter a website URL');
+
+    // Normalize URL
+    let urlToAnalyze = websiteUrl.trim();
+    if (!/^https?:\/\//i.test(urlToAnalyze)) {
+      urlToAnalyze = `https://${urlToAnalyze}`;
+    }
+    setWebsiteUrl(urlToAnalyze); // Update UI
+
     setIsAnalyzing(true);
     try {
-      const data = await analyzeWebsite(websiteUrl);
+      const data = await analyzeWebsite(urlToAnalyze);
       if (data) {
         if (data.name) setName(data.name);
         if (data.industry) setIndustry(data.industry);
