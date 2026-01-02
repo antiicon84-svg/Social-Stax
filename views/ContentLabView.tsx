@@ -3,6 +3,7 @@ import Button from '@/components/Button';
 import { generateContent, enhancePromptWithAI } from '~/services/aiService';
 import { savePost } from '~/services/dbService';
 import { getCurrentUser } from '~/services/authService';
+import { formatContentForPlatform } from '~/services/formatService';
 import { Post } from '~/types';
 import { 
   FlaskConical, 
@@ -43,7 +44,8 @@ const ContentLabView: React.FC = () => {
     try {
       if (activeTab === 'text') {
         const output = await generateContent(topic, platform);
-        setResult(output);
+        const formattedOutput = await formatContentForPlatform(output, platform);
+        setResult(formattedOutput);
       } else {
         // For Image and Video, we generate a detailed prompt/brief
         const enhanced = await enhancePromptWithAI(topic, activeTab);
