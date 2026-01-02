@@ -1,0 +1,90 @@
+import React, { useState } from 'react';
+import { useAuth } from '@/context/AuthContext';
+import Button from '@/components/Button';
+import { sendEmailVerification } from 'firebase/auth';
+import { auth_instance } from '@/config/firebase';
+import { Mail, RefreshCw, LogOut } from 'lucide-react';
+
+const VerifyEmailView: React.FC = () => {
+    const { currentUser, logout } = useAuth();
+    const [sending, setSending] = useState(false);
+    const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+
+    const handleResend = async () => {
+        const user = auth_instance.currentUser;
+        if (!user) return;
+
+        setSending(true);
+        setMessage(null);
+        try {
+            await sendEmailVerification(user);
+            setMessage({ type: 'success', text: 'Verification email sent! Please check your inbox (and spam folder).' });
+        } catch (error: any) {
+            console.error('Error sending verification email:', error);
+            if (error.code === 'auth/too-many-requests') {
+                setMessage({ type: 'error', text: 'Too many requests. Please wait a moment before trying again.' });
+            } else {
+                setMessage({ type: 'error', text: 'Failed to send verification email. Please try again later.' });
+            }
+        } finally {
+            setSending(false);
+        }
+    };
+
+    const handleReload = () => {
+        window.location.reload();
+    };
+
+    return (
+        <div className="flex flex-col items-center justify-center min-h-screen bg-black p-6 md:p-10 text-white">
+            <div className="max-w-md w-full bg-gray-900 border border-gray-800 rounded-2xl p-8 shadow-2xl text-center space-y-6">
+                <div className="w-16 h-16 bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Mail size={32} className="text-red-500" />
+                </div>
+
+                <h1 className="text-2xl font-bold">Verify Your Email</h1>
+
+                <p className="text-gray-400">
+                    We've sent a verification email to <span className="text-white font-semibold">{currentUser?.email}</span>.
+                    Please click the link in that email to verify your account and access Social Stax.
+                </p>
+
+                {message && (
+                    <div className={`p-4 rounded-lg text-sm ${message.type === 'success' ? 'bg-green-900/20 text-green-300 border border-green-800' : 'bg-red-900/20 text-red-300 border border-red-800'}`}>
+                        {message.text}
+                    </div>
+                )}
+
+                <div className="space-y-3 pt-4">
+                    <Button
+                        variant="secondary"
+                        fullWidth
+                        onClick={handleResend}
+                        disabled={sending}
+                        className="flex items-center justify-center gap-2"
+                    >
+                        {sending ? 'Sending...' : 'Resend Verification Email'}
+                    </Button>
+
+                    <Button
+                        variant="ghost"
+                        fullWidth
+                        onClick={handleReload}
+                        className="flex items-center justify-center gap-2"
+                    >
+                        <RefreshCw size={16} /> I've Verified My Email
+                    </Button>
+
+                    <button
+                        onClick={() => logout()}
+                        className="text-gray-500 hover:text-white text-sm flex items-center justify-center gap-2 w-full mt-4 transition-colors"
+                    >
+                        <LogOut size={14} /> Sign Out
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default VerifyEmailView;

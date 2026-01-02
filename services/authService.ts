@@ -7,6 +7,7 @@ import {
   updateProfile,
   signOut,
   type User as FirebaseUser,
+  sendEmailVerification,
 } from 'firebase/auth';
 import {
   doc,
@@ -191,6 +192,9 @@ export const signUpWithEmail = async (
 
     // Create user record in Firestore
     await createUserRecord(user.uid, email, isAdmin, displayName);
+
+    // Send email verification
+    await sendEmailVerification(user);
 
     // Map to app User type
     const appUser = await mapFirebaseUserToAppUser(user);

@@ -16,6 +16,7 @@ import { UserProfile } from '~/types';
 interface CurrentUser {
   userId: string | null;
   email: string | null;
+  emailVerified: boolean;
   profile: UserProfile | null;
 }
 
@@ -37,6 +38,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [currentUser, setCurrentUser] = useState<CurrentUser>({
     userId: null,
     email: null,
+    emailVerified: false,
     profile: null
   });
 
@@ -64,6 +66,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             setCurrentUser({
               userId: user.uid,
               email: user.email,
+              emailVerified: user.emailVerified,
               profile
             });
             setLoading(false);
@@ -73,6 +76,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             setCurrentUser({
               userId: user.uid,
               email: user.email,
+              emailVerified: user.emailVerified,
               profile: null
             });
             setLoading(false);
@@ -82,6 +86,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           setCurrentUser({
             userId: user.uid,
             email: user.email,
+            emailVerified: user.emailVerified,
             profile: null
           });
           setLoading(false);
@@ -90,6 +95,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setCurrentUser({
           userId: null,
           email: null,
+          emailVerified: false,
           profile: null
         });
         setLoading(false);
