@@ -40,11 +40,14 @@ const CreateClientView: React.FC<CreateClientViewProps> = ({ onClientAdded }) =>
   const [industry, setIndustry] = useState(INDUSTRY_OPTIONS[0].value);
   const [brandTone, setBrandTone] = useState(BRAND_TONE_OPTIONS[0].value);
   const [brandColor, setBrandColor] = useState('#ef4444');
+  const [secondaryColor, setSecondaryColor] = useState('#ffffff');
+  const [accentColor, setAccentColor] = useState('#000000');
   const [logoUrl, setLogoUrl] = useState('');
 
   // Detailed Brand Kit
   const [description, setDescription] = useState('');
   const [mission, setMission] = useState('');
+  const [targetMarket, setTargetMarket] = useState('');
   const [phone, setPhone] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
   const [instagram, setInstagram] = useState('');
@@ -65,7 +68,17 @@ const CreateClientView: React.FC<CreateClientViewProps> = ({ onClientAdded }) =>
         if (data.industry) setIndustry(data.industry);
         if (data.tone) setBrandTone(data.tone);
         if (data.description) setDescription(data.description);
-        if (data.color) setBrandColor(data.color);
+        if (data.mission) setMission(data.mission);
+        if (data.targetMarket) setTargetMarket(data.targetMarket);
+
+        // Handle Colors - AI returns 'colors' array or single 'color'
+        if (data.colors && Array.isArray(data.colors)) {
+          if (data.colors[0]) setBrandColor(data.colors[0]);
+          if (data.colors[1]) setSecondaryColor(data.colors[1]);
+          if (data.colors[2]) setAccentColor(data.colors[2]);
+        } else if (data.color) {
+          setBrandColor(data.color);
+        }
 
         // Handle Logo/Profile Pic
         const foundLogo = data.logoUrl || data.profilePicUrl;
@@ -109,9 +122,12 @@ const CreateClientView: React.FC<CreateClientViewProps> = ({ onClientAdded }) =>
       industry,
       brandTone,
       primaryBrandColor: brandColor,
+      secondaryBrandColor: secondaryColor,
+      accentBrandColor: accentColor,
       logo: logoUrl,
       description,
       mission,
+      targetMarket,
       website: websiteUrl,
       phoneNumber: phone,
       whatsapp,
@@ -252,15 +268,41 @@ const CreateClientView: React.FC<CreateClientViewProps> = ({ onClientAdded }) =>
               </select>
             </div>
             <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Brand Color</label>
-              <div className="flex gap-3">
-                <div className="w-12 h-12 rounded-xl border border-gray-800 shrink-0" style={{ backgroundColor: brandColor }} />
-                <input
-                  type="text"
-                  className="flex-1 bg-black border border-gray-800 rounded-xl px-4 py-3 text-white font-mono"
-                  value={brandColor}
-                  onChange={(e) => setBrandColor(e.target.value)}
-                />
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Brand Colors</label>
+              <div className="flex flex-col gap-3">
+                {/* Primary */}
+                <div className="flex gap-3">
+                  <div className="w-10 h-10 rounded-lg border border-gray-800 shrink-0" style={{ backgroundColor: brandColor }} />
+                  <input
+                    type="text"
+                    className="flex-1 bg-black border border-gray-800 rounded-lg px-3 py-2 text-white font-mono text-sm"
+                    placeholder="Primary"
+                    value={brandColor}
+                    onChange={(e) => setBrandColor(e.target.value)}
+                  />
+                </div>
+                {/* Secondary */}
+                <div className="flex gap-3">
+                  <div className="w-10 h-10 rounded-lg border border-gray-800 shrink-0" style={{ backgroundColor: secondaryColor }} />
+                  <input
+                    type="text"
+                    className="flex-1 bg-black border border-gray-800 rounded-lg px-3 py-2 text-white font-mono text-sm"
+                    placeholder="Secondary"
+                    value={secondaryColor}
+                    onChange={(e) => setSecondaryColor(e.target.value)}
+                  />
+                </div>
+                {/* Accent */}
+                <div className="flex gap-3">
+                  <div className="w-10 h-10 rounded-lg border border-gray-800 shrink-0" style={{ backgroundColor: accentColor }} />
+                  <input
+                    type="text"
+                    className="flex-1 bg-black border border-gray-800 rounded-lg px-3 py-2 text-white font-mono text-sm"
+                    placeholder="Accent"
+                    value={accentColor}
+                    onChange={(e) => setAccentColor(e.target.value)}
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -287,10 +329,20 @@ const CreateClientView: React.FC<CreateClientViewProps> = ({ onClientAdded }) =>
             <div className="space-y-2">
               <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Mission Statement</label>
               <textarea
-                className="w-full bg-black border border-gray-800 rounded-xl px-4 py-3 text-white min-h-[100px] outline-none focus:ring-2 focus:ring-red-600"
+                className="w-full bg-black border border-gray-800 rounded-xl px-4 py-3 text-white min-h-[80px] outline-none focus:ring-2 focus:ring-red-600"
                 placeholder="Our mission is to..."
                 value={mission}
                 onChange={(e) => setMission(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Target Market</label>
+              <textarea
+                className="w-full bg-black border border-gray-800 rounded-xl px-4 py-3 text-white min-h-[80px] outline-none focus:ring-2 focus:ring-red-600"
+                placeholder="Target demographic..."
+                value={targetMarket}
+                onChange={(e) => setTargetMarket(e.target.value)}
               />
             </div>
 

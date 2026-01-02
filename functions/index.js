@@ -520,16 +520,20 @@ exports.analyzeWebsite = functions.https.onCall(async (data, context) => {
       2. industry: The industry or niche.
       3. tone: The brand tone of voice (e.g., Professional, Playful).
       4. description: A short bio/summary.
-      5. color: Primary brand color (hex code), infer from text or common industry colors if null.
-      6. logoUrl: The best URL for the brand LOGO. Prefer 'og:image' if it looks like a logo, otherwise identify a logo from the list.
-      7. profilePicUrl: The best URL for a PERSON'S profile picture (if this is an influencer/personal site).
-      8. instagram: Instagram handle/URL if found.
-      9. facebook: Facebook URL.
-      10. twitter: Twitter/X URL.
-      11. linkedin: LinkedIn URL.
-      12. whatsapp: WhatsApp number/link.
-      13. email: Contact email.
-      14. keywords: Array of 5-10 SEO keywords/tags.
+      5. mission: The brand's mission statement or core value proposition.
+      6. colors: Array of up to 3 hex color codes (primary, secondary, accent). Infer if not explicit.
+      7. logoUrl: The best URL for the brand LOGO. Prefer 'og:image' if it looks like a logo, otherwise identify a logo from the list.
+      8. profilePicUrl: The best URL for a PERSON'S profile picture (if this is an influencer/personal site).
+      9. instagram: Instagram handle/URL if found.
+      10. facebook: Facebook URL.
+      11. twitter: Twitter/X URL.
+      12. linkedin: LinkedIn URL.
+      13. whatsapp: WhatsApp number/link.
+      14. phoneNumber: Phone number.
+      15. email: Contact email.
+      16. contactInfo: General contact details (address, etc).
+      17. targetMarket: Suggested target market/audience for this brand.
+      18. keywords: Array of 5-10 SEO keywords/tags.
 
       Input Data:
       Page Title: ${title}

@@ -20,6 +20,7 @@ import { useClientData } from '@/hooks/useClientData';
 import { useAuth } from '../context/AuthContext';
 
 import SettingsView from '~/views/SettingsView';
+import CalendarView from '~/views/CalendarView';
 
 const ClientDetailWrapper: React.FC<{ onPostScheduled: () => void }> = ({ onPostScheduled }) => {
   const { clientId } = useParams<{ clientId: string }>();
@@ -83,7 +84,7 @@ const WebRouter: React.FC = () => {
   return (
     <div className="flex min-h-screen bg-black flex-col md:flex-row">
       <VoiceAssistant />
-      <Navbar clients={clients} />
+      {!['/login', '/signup'].includes(location.pathname) && <Navbar clients={clients} />}
       <div className="flex-1 flex flex-col overflow-auto relative">
         {loadError && (
           <div className="bg-red-900 text-red-100 p-4 m-4 rounded z-50 relative">
@@ -106,6 +107,7 @@ const WebRouter: React.FC = () => {
               <Route path="/downloads" element={<DownloadsView />} />
               <Route path="/settings" element={<SettingsView />} />
               <Route path="/admin" element={<AdminPanel />} />
+              <Route path="/calendar" element={<CalendarView />} />
               <Route path="*" element={<ErrorFallback />} />
             </Routes>
           </ErrorBoundary>
