@@ -58,19 +58,17 @@ const VerifyEmailView: React.FC = () => {
                 <div className="space-y-3 pt-4">
                     <Button
                         variant="secondary"
-                        fullWidth
                         onClick={handleResend}
                         disabled={sending}
-                        className="flex items-center justify-center gap-2"
+                        className="w-full flex items-center justify-center gap-2"
                     >
                         {sending ? 'Sending...' : 'Resend Verification Email'}
                     </Button>
 
                     <Button
                         variant="ghost"
-                        fullWidth
                         onClick={handleReload}
-                        className="flex items-center justify-center gap-2"
+                        className="w-full flex items-center justify-center gap-2"
                     >
                         <RefreshCw size={16} /> I've Verified My Email
                     </Button>

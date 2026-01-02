@@ -56,82 +56,83 @@ const WebRouter: React.FC = () => {
     handleDeletePost
   } = useClientData(isAuthenticated);
 
-  if (isAuthLoading) return;
+  useEffect(() => {
+    if (isAuthLoading) return;
 
-  if (!isAuthenticated) {
-    if (!['/login', '/signup', '/verify-email'].includes(location.pathname)) {
-      navigate('/login');
-    }
-  } else {
-    // Check for email verification (skip for Guest users)
-    const isGuest = currentUser?.email === 'guest@socialstax.app';
-
-    if (!isGuest && !currentUser?.emailVerified) {
-      if (location.pathname !== '/verify-email') {
-        navigate('/verify-email');
+    if (!isAuthenticated) {
+      if (!['/login', '/signup', '/verify-email'].includes(location.pathname)) {
+        navigate('/login');
       }
-    } else if (currentUser?.emailVerified && location.pathname === '/verify-email') {
-      navigate('/');
+    } else {
+      // Check for email verification (skip for Guest users)
+      const isGuest = currentUser?.email === 'guest@socialstax.app';
+
+      if (!isGuest && !currentUser?.emailVerified) {
+        if (location.pathname !== '/verify-email') {
+          navigate('/verify-email');
+        }
+      } else if (currentUser?.emailVerified && location.pathname === '/verify-email') {
+        navigate('/');
+      }
     }
+  }, [isAuthenticated, isAuthLoading, navigate, location.pathname, currentUser]);
+
+  if (isAuthLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-black">
+        <LoadingSpinner size="lg" />
+      </div>
+    );
   }
-}, [isAuthenticated, isAuthLoading, navigate, location.pathname, currentUser]);
 
-if (isAuthLoading) {
+
+  const dashboardProps = {
+    clients,
+    posts,
+    onDeletePost: handleDeletePost,
+    isLoadingClients,
+    isLoadingPosts,
+    onDataRefresh: handleRefresh,
+  };
+
+  console.log('[WebRouter] Rendering main layout. Path:', location.pathname);
+
   return (
-    <div className="flex items-center justify-center min-h-screen bg-black">
-      <LoadingSpinner size="lg" />
-    </div>
-  );
-}
-
-
-const dashboardProps = {
-  clients,
-  posts,
-  onDeletePost: handleDeletePost,
-  isLoadingClients,
-  isLoadingPosts,
-  onDataRefresh: handleRefresh,
-};
-
-console.log('[WebRouter] Rendering main layout. Path:', location.pathname);
-
-return (
-  <div className="flex min-h-screen bg-black flex-col md:flex-row">
-    <VoiceAssistant />
-    {!['/login', '/signup'].includes(location.pathname) && <Navbar clients={clients} />}
-    <div className="flex-1 flex flex-col overflow-auto relative">
-      {loadError && (
-        <div className="bg-red-900 text-red-100 p-4 m-4 rounded z-50 relative">
-          <p className="font-semibold">Error loading data:</p>
-          <p className="text-sm">{loadError}</p>
+    <div className="flex min-h-screen bg-black flex-col md:flex-row">
+      <VoiceAssistant />
+      {!['/login', '/signup'].includes(location.pathname) && <Navbar clients={clients} />}
+      <div className="flex-1 flex flex-col overflow-auto relative">
+        {loadError && (
+          <div className="bg-red-900 text-red-100 p-4 m-4 rounded z-50 relative">
+            <p className="font-semibold">Error loading data:</p>
+            <p className="text-sm">{loadError}</p>
+          </div>
+        )}
+        <div className="flex-1">
+          <ErrorBoundary>
+            <Routes>
+              <Route path="/login" element={<LoginView />} />
+              <Route path="/" element={<DashboardView {...dashboardProps} />} />
+              <Route path="/clients" element={<AllClientsView />} />
+              <Route path="/add-client" element={<CreateClientView onClientAdded={handleClientAdded} />} />
+              <Route path="/client/:clientId" element={<ClientDetailWrapper onPostScheduled={handlePostScheduled} />} />
+              <Route path="/templates" element={<TemplatesView />} />
+              <Route path="/content-lab" element={<ContentLabView />} />
+              <Route path="/prompt-guide" element={<PromptGuideView />} />
+              <Route path="/billing" element={<BillingView />} />
+              <Route path="/downloads" element={<DownloadsView />} />
+              <Route path="/settings" element={<SettingsView />} />
+              <Route path="/admin" element={<AdminPanel />} />
+              <Route path="/calendar" element={<CalendarView />} />
+              <Route path="/calendar" element={<CalendarView />} />
+              <Route path="/verify-email" element={<VerifyEmailView />} />
+              <Route path="*" element={<ErrorFallback />} />
+            </Routes>
+          </ErrorBoundary>
         </div>
-      )}
-      <div className="flex-1">
-        <ErrorBoundary>
-          <Routes>
-            <Route path="/login" element={<LoginView />} />
-            <Route path="/" element={<DashboardView {...dashboardProps} />} />
-            <Route path="/clients" element={<AllClientsView />} />
-            <Route path="/add-client" element={<CreateClientView onClientAdded={handleClientAdded} />} />
-            <Route path="/client/:clientId" element={<ClientDetailWrapper onPostScheduled={handlePostScheduled} />} />
-            <Route path="/templates" element={<TemplatesView />} />
-            <Route path="/content-lab" element={<ContentLabView />} />
-            <Route path="/prompt-guide" element={<PromptGuideView />} />
-            <Route path="/billing" element={<BillingView />} />
-            <Route path="/downloads" element={<DownloadsView />} />
-            <Route path="/settings" element={<SettingsView />} />
-            <Route path="/admin" element={<AdminPanel />} />
-            <Route path="/calendar" element={<CalendarView />} />
-            <Route path="/calendar" element={<CalendarView />} />
-            <Route path="/verify-email" element={<VerifyEmailView />} />
-            <Route path="*" element={<ErrorFallback />} />
-          </Routes>
-        </ErrorBoundary>
       </div>
     </div>
-  </div>
-);
+  );
 };
 
 export default WebRouter;
