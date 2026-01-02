@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Button from '@/components/Button';
+import { useAuth } from '@/context/AuthContext';
 import { generateContent, enhancePromptWithAI } from '~/services/aiService';
 import { savePost } from '~/services/dbService';
 import { getCurrentUser } from '~/services/authService';
@@ -24,6 +25,7 @@ import {
 } from 'lucide-react';
 
 const ContentLabView: React.FC = () => {
+  const { currentUser } = useAuth();
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(['Instagram']);
   const [previewPlatform, setPreviewPlatform] = useState('Instagram');
   const [activeTab, setActiveTab] = useState<'text' | 'image' | 'video'>('text');
@@ -97,7 +99,7 @@ const ContentLabView: React.FC = () => {
 
   const handleSaveDraft = async () => {
     if (!result) return;
-    const user = getCurrentUser();
+    const user = currentUser;
     if (!user) return alert('You must be logged in to save drafts.');
 
     setIsSaving(true);
@@ -174,8 +176,8 @@ const ContentLabView: React.FC = () => {
             key={tab.id}
             onClick={() => setActiveTab(tab.id as any)}
             className={`flex items-center gap-2 px-4 py-2 text-sm font-bold transition-colors relative top-[1px] ${activeTab === tab.id
-                ? 'text-red-500 border-b-2 border-red-500'
-                : 'text-gray-500 hover:text-white'
+              ? 'text-red-500 border-b-2 border-red-500'
+              : 'text-gray-500 hover:text-white'
               }`}
           >
             <tab.icon size={16} />
@@ -195,8 +197,8 @@ const ContentLabView: React.FC = () => {
                   key={p.name}
                   onClick={() => setSelectedPlatforms(prev => prev.includes(p.name) ? prev.filter(plat => plat !== p.name) : [...prev, p.name])}
                   className={`flex items-center gap-2 px-3 py-3 rounded-xl border transition-all ${selectedPlatforms.includes(p.name)
-                      ? 'bg-red-600/10 border-red-600/50 text-white'
-                      : 'bg-black border-gray-800 text-gray-500 hover:border-gray-700'
+                    ? 'bg-red-600/10 border-red-600/50 text-white'
+                    : 'bg-black border-gray-800 text-gray-500 hover:border-gray-700'
                     }`}
                 >
                   <p.icon size={16} className={selectedPlatforms.includes(p.name) ? p.color : ''} />
