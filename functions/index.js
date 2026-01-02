@@ -112,7 +112,7 @@ exports.login = functions.https.onCall(async (data, context) => {
     const now = admin.firestore.Timestamp.now();
     const quotaResetAt = subscription.quotaResetAt.toDate();
     const daysSinceReset = (now.toDate() - quotaResetAt) / (1000 * 60 * 60 * 24);
-    
+
     if (daysSinceReset >= 1) {
       await db.collection('subscriptions').doc(userId).update({
         apiUsed: 0,
@@ -296,7 +296,7 @@ exports.trackApiUsage = functions.https.onCall(async (data, context) => {
       // Track user API usage
       const subscriptionRef = db.collection('subscriptions').doc(userId);
       const subscriptionDoc = await subscriptionRef.get();
-      
+
       if (subscriptionDoc.exists) {
         const current = subscriptionDoc.data().apiUsed || 0;
         await subscriptionRef.update({
@@ -308,7 +308,7 @@ exports.trackApiUsage = functions.https.onCall(async (data, context) => {
       // Track access token usage
       const tokenRef = db.collection('accessTokens').doc(tokenOrEmail);
       const tokenDoc = await tokenRef.get();
-      
+
       if (tokenDoc.exists) {
         const current = tokenDoc.data().quotaUsed || 0;
         await tokenRef.update({
@@ -426,6 +426,137 @@ exports.geminiVoiceAssistant = functions.https.onCall(async (data, context) => {
   } catch (error) {
     console.error('Gemini Voice Assistant error:', error);
     throw new functions.https.HttpsError('internal', 'Voice assistant error: ' + error.message);
+  }
+});
+
+// Analyze Website (Scrape + Gemini)
+exports.analyzeWebsite = functions.https.onCall(async (data, context) => {
+  // Verify user is authenticated
+  if (!context.auth) {
+    throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
+  }
+
+  try {
+    const { url } = data;
+    if (!url) {
+      throw new functions.https.HttpsError('invalid-argument', 'URL is required');
+    }
+
+    // 1. Fetch website content
+    const axios = require('axios');
+    const cheerio = require('cheerio');
+    const { GoogleGenerativeAI } = require('@google/generative-ai');
+
+    const response = await axios.get(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+      },
+      timeout: 10000
+    });
+
+    const html = response.data;
+    const $ = cheerio.load(html);
+
+    // 2. Extract key information
+    const title = $('title').text().trim();
+    const metaDescription = $('meta[name="description"]').attr('content') || $('meta[property="og:description"]').attr('content') || '';
+
+    // Extract main text content (limit length to avoid token limits)
+    $('script, style, nav, footer, iframe').remove();
+    let bodyText = $('body').text().replace(/\s+/g, ' ').trim().substring(0, 15000);
+
+    // 3. Extract Images (Logo, Profile Pic candidates)
+    const images = [];
+    const pushImage = (src, type) => {
+      if (src && !src.startsWith('data:') && (src.startsWith('http') || src.startsWith('//'))) {
+        if (src.startsWith('//')) src = 'https:' + src;
+        images.push({ src, type });
+      } else if (src && src.startsWith('/')) {
+        try {
+          // Construct absolute URL
+          const urlObj = new URL(url);
+          const absoluteUrl = `${urlObj.protocol}//${urlObj.host}${src}`;
+          images.push({ src: absoluteUrl, type });
+        } catch (e) { }
+      }
+    };
+
+    // OpenGraph Image (High priority)
+    pushImage($('meta[property="og:image"]').attr('content'), 'og:image');
+    pushImage($('meta[name="twitter:image"]').attr('content'), 'twitter:image');
+
+    // Favicons / Icons
+    pushImage($('link[rel="icon"]').attr('href'), 'icon');
+    pushImage($('link[rel="shortcut icon"]').attr('href'), 'icon');
+    pushImage($('link[rel="apple-touch-icon"]').attr('href'), 'icon');
+
+    // Img tags with 'logo' or 'profile' in class/id/src
+    $('img').each((i, el) => {
+      const src = $(el).attr('src');
+      const className = $(el).attr('class') || '';
+      const id = $(el).attr('id') || '';
+      const alt = $(el).attr('alt') || '';
+
+      if (src) {
+        const score = (className + id + src + alt).toLowerCase();
+        let type = 'image';
+        if (score.includes('logo')) type = 'possible_logo';
+        if (score.includes('profile') || score.includes('avatar') || score.includes('user')) type = 'possible_profile';
+
+        if (type !== 'image' || i < 5) { // Limit generic images
+          pushImage(src, type);
+        }
+      }
+    });
+
+    // 4. Send to Gemini for inference
+    const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+    const systemPrompt = `
+      You are a brand expert. Analyze the provided website text and list of image URLs.
+      Extract the following information in JSON format:
+      1. name: Brand/Person name.
+      2. industry: The industry or niche.
+      3. tone: The brand tone of voice (e.g., Professional, Playful).
+      4. description: A short bio/summary.
+      5. color: Primary brand color (hex code), infer from text or common industry colors if null.
+      6. logoUrl: The best URL for the brand LOGO. Prefer 'og:image' if it looks like a logo, otherwise identify a logo from the list.
+      7. profilePicUrl: The best URL for a PERSON'S profile picture (if this is an influencer/personal site).
+      8. instagram: Instagram handle/URL if found.
+      9. facebook: Facebook URL.
+      10. twitter: Twitter/X URL.
+      11. linkedin: LinkedIn URL.
+      12. whatsapp: WhatsApp number/link.
+      13. email: Contact email.
+      14. keywords: Array of 5-10 SEO keywords/tags.
+
+      Input Data:
+      Page Title: ${title}
+      Meta Description: ${metaDescription}
+      
+      Image Candidates: ${JSON.stringify(images.slice(0, 15))}
+      
+      Page Text:
+      ${bodyText}
+    `;
+
+    const result = await model.generateContent({
+      contents: [{ role: 'user', parts: [{ text: systemPrompt }] }]
+    });
+
+    const text = result.response.text();
+    const jsonMatch = text.match(/\{[\s\S]*\}/); // Flexible JSON match
+
+    if (jsonMatch) {
+      return JSON.parse(jsonMatch[0]);
+    } else {
+      throw new Error('Failed to parse AI response');
+    }
+
+  } catch (error) {
+    console.error('Analyze website error:', error);
+    throw new functions.https.HttpsError('internal', 'Analysis failed: ' + error.message);
   }
 });
 
