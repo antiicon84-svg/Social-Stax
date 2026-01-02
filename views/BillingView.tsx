@@ -1,8 +1,18 @@
 import React from 'react';
 import { useAuth } from '@/context/AuthContext';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 const BillingView: React.FC = () => {
-  const { currentUser } = useAuth();
+  const { currentUser, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
   const usage = currentUser?.profile?.usage || {
     aiAnalysis: 0,
     contentGenerations: 0,
