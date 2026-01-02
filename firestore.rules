@@ -1,21 +1,25 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Helper function to check admin role
+    function isAdmin() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
     // ===================================================
     // USERS COLLECTION - Secure Password Storage
     // ===================================================
     match /users/{userId} {
-      // Only the user can read their own profile
-      allow read: if request.auth.uid == userId;
+      // User can read own, Admin can read all (for granting access)
+      allow read: if request.auth.uid == userId || isAdmin();
       
       // Only the user can write to their own profile
       allow write: if request.auth.uid == userId;
       
       // Passwords are never readable or writable directly
-      // Password field is protected at sub-collection level
       match /private/{document=**} {
-        allow read: if false; // No one can read password hash
-        allow write: if false; // Password only set via Cloud Function
+        allow read: if false; 
+        allow write: if false; 
       }
     }
 
@@ -59,12 +63,7 @@ service cloud.firestore {
     // ===================================================
     // FREE ACCESS GRANTS (Admin Only)
     // ===================================================
-    match /free_access/{grantId} {
-      // Must read user profile to verify admin role
-      function isAdmin() {
-        return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
-      }
-      
+    match /free_access/{grantId} {     
       allow read, write: if request.auth.uid != null && isAdmin();
     }
 
