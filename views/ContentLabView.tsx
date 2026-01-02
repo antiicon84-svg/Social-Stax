@@ -26,7 +26,8 @@ import {
 const ContentLabView: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'text' | 'image' | 'video'>('text');
   const [topic, setTopic] = useState('');
-  const [platform, setPlatform] = useState('Instagram');
+  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(['Instagram']);
+    const [previewPlatform, setPreviewPlatform] = useState('Instagram');
   const [result, setResult] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -42,8 +43,9 @@ const ContentLabView: React.FC = () => {
     
     try {
       if (activeTab === 'text') {
-        const output = await generateContent(topic, platform);
-        setResult(output);
+        const output = await generateContent(topic, previewPlatform);
+                    const formattedOutput = await formatContentForPlatform(output, previewPlatform);
+        setResult(formattedOutput);
       } else {
         // For Image and Video, we generate a detailed prompt/brief
         const enhanced = await enhancePromptWithAI(topic, activeTab);
