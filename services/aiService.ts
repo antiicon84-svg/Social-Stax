@@ -55,20 +55,18 @@ export const analyzePromptCoherence = async (prompt: string, type: 'video' | 'im
 /**
  * Analyzes a website to extract brand information
  */
-export const analyzeWebsite = async (url: string) => {
-  const systemPrompt = `Analyze the website URL provided and infer brand details like name, industry, tone, description, and primary color.
-  URL: ${url}
-  Output JSON: { "name": "...", "industry": "...", "tone": "...", "description": "...", "color": "#..." }`;
+import { getFunctions, httpsCallable } from "firebase/functions";
+import { getApp } from "firebase/app";
 
+/**
+ * Analyzes a website to extract brand information using Cloud Function (Server-side scraping + Gemini)
+ */
+export const analyzeWebsite = async (url: string) => {
   try {
-    const result = await model.generateContent([systemPrompt]);
-    const response = await result.response;
-    const text = response.text();
-    const jsonMatch = text.match(/\{.*\}/s);
-    if (jsonMatch) {
-      return JSON.parse(jsonMatch[0]);
-    }
-    return null;
+    const functions = getFunctions(getApp());
+    const analyzeFunction = httpsCallable(functions, 'analyzeWebsite');
+    const result = await analyzeFunction({ url });
+    return result.data as any; // Type assertion as response structure is dynamic
   } catch (error) {
     console.error("Website analysis failed", error);
     throw error;
