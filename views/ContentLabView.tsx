@@ -3,6 +3,7 @@ import Button from '@/components/Button';
 import { generateContent, enhancePromptWithAI } from '~/services/aiService';
 import { savePost } from '~/services/dbService';
 import { getCurrentUser } from '~/services/authService';
+import { formatContentForPlatform } from '~/services/formatService';
 import { Post } from '~/types';
 import { 
   FlaskConical, 
@@ -26,7 +27,7 @@ import {
 const ContentLabView: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'text' | 'image' | 'video'>('text');
   const [topic, setTopic] = useState('');
-  const [platform, setPlatform] = useState('Instagram');
+  const [selectedPlatforms, setSelectedPlatforms] = useState(['Instagram']);
   const [result, setResult] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -42,7 +43,7 @@ const ContentLabView: React.FC = () => {
     
     try {
       if (activeTab === 'text') {
-        const output = await generateContent(topic, platform);
+        const output = await generateContent(topic, selectedPlatforms[0]);
         setResult(output);
       } else {
         // For Image and Video, we generate a detailed prompt/brief
@@ -193,14 +194,11 @@ const ContentLabView: React.FC = () => {
               {platforms.map((p) => (
                 <button
                   key={p.name}
-                  onClick={() => setPlatform(p.name)}
+                  onClick={() => setSelectedPlatforms(prev => prev.includes(p.name) ? prev.filter(plat => plat !== p.name) : [...prev, p.name])}
                   className={`flex items-center gap-2 px-3 py-3 rounded-xl border transition-all ${
-                    platform === p.name 
-                      ? 'bg-red-600/10 border-red-600/50 text-white' 
-                      : 'bg-black border-gray-800 text-gray-500 hover:border-gray-700'
-                  }`}
+                    selectedPlatforms.includes(p.name) ? 'bg-red-600/50 text-white' : ''}`
                 >
-                  <p.icon size={16} className={platform === p.name ? p.color : ''} />
+                  <p.icon size={16} className={selectedPlatforms.includes(p.name) ? p.color : ''} />
                   <span className="text-xs font-bold">{p.name}</span>
                 </button>
               ))}
