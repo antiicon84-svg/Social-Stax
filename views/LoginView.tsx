@@ -131,15 +131,7 @@ const LoginView: React.FC = () => {
                 </div>
             </div>
 
-            {/* Discrete Admin Login Link */}
-            <div className="absolute bottom-4 left-4">
-                <button
-                    onClick={() => navigate('/admin')}
-                    className="text-xs text-zinc-800 hover:text-zinc-600 transition-colors"
-                >
-                    Admin
-                </button>
-            </div>
+
         </div>
     );
 };
