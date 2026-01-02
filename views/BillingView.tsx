@@ -1,5 +1,5 @@
+import React from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { getCurrentUser } from '~/services/authService';
 
 const BillingView: React.FC = () => {
   const { currentUser } = useAuth();
@@ -42,31 +42,31 @@ const BillingView: React.FC = () => {
             <div>
               <div className="flex justify-between text-sm mb-2">
                 <span>AI Generations</span>
-                <span>{usage.contentGenerations} / {user?.profile?.planTier === 'pro' ? '∞' : '50'}</span>
+                <span>{usage.contentGenerations} / {currentUser?.profile?.planTier === 'pro' ? '∞' : '50'}</span>
               </div>
               <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-red-600"
-                  style={{ width: `${Math.min((usage.contentGenerations / (user?.profile?.planTier === 'pro' ? 1000 : 50)) * 100, 100)}%` }}
+                  style={{ width: `${Math.min((usage.contentGenerations / (currentUser?.profile?.planTier === 'pro' ? 1000 : 50)) * 100, 100)}%` }}
                 />
               </div>
             </div>
             <div>
               <div className="flex justify-between text-sm mb-2">
                 <span>Image Generations</span>
-                <span>{usage.imageGenerations || 0} / {user?.profile?.planTier === 'pro' ? '∞' : '10'}</span>
+                <span>{usage.imageGenerations || 0} / {currentUser?.profile?.planTier === 'pro' ? '∞' : '10'}</span>
               </div>
               <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-red-600"
-                  style={{ width: `${Math.min(((usage.imageGenerations || 0) / (user?.profile?.planTier === 'pro' ? 500 : 10)) * 100, 100)}%` }}
+                  style={{ width: `${Math.min(((usage.imageGenerations || 0) / (currentUser?.profile?.planTier === 'pro' ? 500 : 10)) * 100, 100)}%` }}
                 />
               </div>
             </div>
             <div>
               <div className="flex justify-between text-sm mb-2">
                 <span>Credits Used</span>
-                <span>{user?.profile?.creditsUsed || 0}</span>
+                <span>{currentUser?.profile?.creditsUsed || 0}</span>
               </div>
             </div>
           </div>
