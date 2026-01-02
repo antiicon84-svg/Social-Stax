@@ -14,6 +14,7 @@ import AdminPanel from '@/components/AdminPanel';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import Button from '@/components/Button';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import LoginView from '~/views/LoginView';
 import VoiceAssistant from '@/components/VoiceAssistant';
 import { useClientData } from '@/hooks/useClientData';
 import { useAuth } from '../context/AuthContext';
@@ -78,7 +79,7 @@ const WebRouter: React.FC = () => {
   };
 
   console.log('[WebRouter] Rendering main layout. Path:', location.pathname);
-  
+
   return (
     <div className="flex min-h-screen bg-black flex-col md:flex-row">
       <VoiceAssistant />
@@ -93,7 +94,7 @@ const WebRouter: React.FC = () => {
         <div className="flex-1">
           <ErrorBoundary>
             <Routes>
-                            <Route path="/login" element={<Navigate to="/" replace />} />
+              <Route path="/login" element={<LoginView />} />
               <Route path="/" element={<DashboardView {...dashboardProps} />} />
               <Route path="/clients" element={<AllClientsView />} />
               <Route path="/add-client" element={<CreateClientView onClientAdded={handleClientAdded} />} />
