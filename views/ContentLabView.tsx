@@ -24,11 +24,9 @@ import {
 } from 'lucide-react';
 
 const ContentLabView: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'text' | 'image' | 'video'>('text');
-  const [topic, setTopic] = useState('');
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(['Instagram']);
   const [previewPlatform, setPreviewPlatform] = useState('Instagram');
-    const [result, setResult] = useState('');[result, setResult] = useState('');
+  const [result, setResult] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -106,7 +104,7 @@ const ContentLabView: React.FC = () => {
         id: '', // dbService handles ID generation
         clientId: 'global', // 'global' or allow user to select client. For now 'global' or user's own draft
         ownerEmail: user.email || '',
-        platform: platform as any,
+        platform: selectedPlatforms[0] as any,
         content: result,
         status: 'draft',
         scheduledAt: new Date(),
@@ -194,14 +192,14 @@ const ContentLabView: React.FC = () => {
               {platforms.map((p) => (
                 <button
                   key={p.name}
-                  onClick={() => setPlatform(p.name)}
+                  onClick={() => setSelectedPlatforms(prev => prev.includes(p.name) ? prev.filter(plat => plat !== p.name) : [...prev, p.name])}
                   className={`flex items-center gap-2 px-3 py-3 rounded-xl border transition-all ${
-                    selectedPlatforms.includes(p.name)e 
+                    selectedPlatforms.includes(p.name) 
                       ? 'bg-red-600/10 border-red-600/50 text-white' 
                       : 'bg-black border-gray-800 text-gray-500 hover:border-gray-700'
                   }`}
                 >
-                  <p.icon size={16} className={selectedPlatforms.includes(p.name)e ? p.color : ''} />
+                  <p.icon size={16} className={selectedPlatforms.includes(p.name) ? p.color : ''} />
                   <span className="text-xs font-bold">{p.name}</span>
                 </button>
               ))}

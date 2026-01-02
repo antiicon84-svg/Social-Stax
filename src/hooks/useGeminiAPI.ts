@@ -17,21 +17,16 @@ export async function textToImage(prompt: string): Promise<string> {
     throw error;
   }
 }
-/*
-export async function editImage(image: File, instructions: string): Promise<string> {
-  const model = genAI.getGenerativeModel({
-    model: 'gemini-pro-vision',
-  });
-  const imagePart = await fileToGenerativePart(image);
-  const result = await model.generateContent([instructions, imagePart]);
-  return result.response.text();
+
+
+
+export async function editImage(imageUrl: string, instructions: string): Promise<string> {
+  console.warn('Image editing is not fully supported in this environment. Returning a placeholder.');
+  return `https://via.placeholder.com/512x512.png?text=Edited+${encodeURIComponent(instructions)}`;
 }
 
 export async function generateVideo(prompt: string): Promise<string> {
-  const model = genAI.getGenerativeModel({
-    model: 'gemini-pro-vision',
-  });
-  const result = await model.generateContent(prompt);
-  return result.response.text();
+  console.warn('Video generation is not fully supported in this environment. Returning a placeholder.');
+  return `https://dummyimage.com/600x400/000/fff&text=Video+Placeholder+for+${encodeURIComponent(prompt)}`;
 }
-*/
+
