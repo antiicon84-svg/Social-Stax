@@ -3,7 +3,8 @@ service cloud.firestore {
   match /databases/{database}/documents {
     // Helper function to check admin role
     function isAdmin() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
     // ===================================================
@@ -18,12 +19,14 @@ service cloud.firestore {
       
       // CLIENTS Subcollection
       match /clients/{clientId} {
-        allow read, write: if request.auth.uid == userId;
+        allow read: if request.auth.uid == userId || isAdmin();
+        allow write: if request.auth.uid == userId;
       }
 
       // POSTS Subcollection (User specific)
       match /posts/{postId} {
-        allow read, write: if request.auth.uid == userId;
+        allow read: if request.auth.uid == userId || isAdmin();
+        allow write: if request.auth.uid == userId;
       }
       
       // Passwords are never readable or writable directly
@@ -47,7 +50,7 @@ service cloud.firestore {
     // POSTS COLLECTION (Public/Top Level - Keeping just in case)
     // ===================================================
     match /posts/{postId} {
-      allow read: if resource.data.isPublic == true || resource.data.userId == request.auth.uid;
+      allow read: if resource.data.isPublic == true || resource.data.userId == request.auth.uid || isAdmin();
       allow create: if request.auth.uid != null && request.resource.data.userId == request.auth.uid;
       allow update, delete: if resource.data.userId == request.auth.uid;
     }
