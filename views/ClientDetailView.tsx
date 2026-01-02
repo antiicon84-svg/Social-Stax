@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react';
 import { getClientById, savePost, saveClient } from '~/services/dbService'; // Added saveClient
 import { Client, Post, SocialPlatform } from '~/types';
 import { SOCIAL_PLATFORMS, INDUSTRY_OPTIONS, BRAND_TONE_OPTIONS } from '@/config/constants';
@@ -164,8 +165,8 @@ const ClientDetailView: React.FC<ClientDetailViewProps> = ({ clientId, onPostSch
                     key={platform}
                     onClick={() => handlePlatformToggle(platform as SocialPlatform)}
                     className={`w-full flex items-center justify-between p-3 rounded-lg border transition-all ${selectedPlatforms.includes(platform as SocialPlatform)
-                        ? 'bg-red-600/10 border-red-500/50 text-white'
-                        : 'bg-black border-gray-800 text-gray-400 hover:border-gray-600'
+                      ? 'bg-red-600/10 border-red-500/50 text-white'
+                      : 'bg-black border-gray-800 text-gray-400 hover:border-gray-600'
                       }`}
                   >
                     <span className="font-medium">{platform}</span>
