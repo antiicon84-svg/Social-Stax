@@ -16,6 +16,8 @@ export async function textToImage(prompt: string): Promise<string> {
     console.error('Text to image error:', error);
     throw error;
   }
+}
+
 
 
 export async function editImage(imageUrl: string, instructions: string): Promise<string> {
