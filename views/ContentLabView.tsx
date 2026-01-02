@@ -198,8 +198,10 @@ const ContentLabView: React.FC = () => {
                   className={`flex items-center gap-2 px-3 py-3 rounded-xl border transition-all ${
                     selectedPlatforms.includes(p.name) ? 'bg-red-600/50 text-white' : ''}`
                 >
+                              <></>
                   <p.icon size={16} className={selectedPlatforms.includes(p.name) ? p.color : ''} />
                   <span className="text-xs font-bold">{p.name}</span>
+                                </>
                 </button>
               ))}
             </div>
