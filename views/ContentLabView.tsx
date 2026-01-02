@@ -26,7 +26,10 @@ import {
 const ContentLabView: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'text' | 'image' | 'video'>('text');
   const [topic, setTopic] = useState('');
-  const [platform, setPlatform] = useState('Instagram');
+  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(['Instagram']);
+  const [previewPlatform, setPreviewPlatform] = useState('Instagram');
+    const [platformContent, setPlatformContent] = useState<Record<string, string>>({});
+  
   const [result, setResult] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -34,6 +37,13 @@ const ContentLabView: React.FC = () => {
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
 
+
+    // Update displayed content when preview platform changes
+  React.useEffect(() => {
+    if (platformContent[previewPlatform]) {
+      setResult(platformContent[previewPlatform]);
+    }
+  }, [previewPlatform, platformContent]);
   const handleGenerate = async () => {
     if (!topic) return alert('Please enter a topic or prompt');
     setIsLoading(true);
@@ -43,7 +53,17 @@ const ContentLabView: React.FC = () => {
     try {
       if (activeTab === 'text') {
         const output = await generateContent(topic, platform);
-        setResult(output);
+                    
+            // Format content for all selected platforms
+            const formattedForPlatforms: Record<string, string> = {};
+            for (const plat of selectedPlatforms) {
+              const formatted = await formatContentForPlatform(output, plat);
+              formattedForPlatforms[plat] = formatted;
+            }
+            setPlatformContent(formattedForPlatforms);
+            
+            // Display the preview platform's formatted content
+            setResult(formattedForPlatforms[previewPlatform] || output);
       } else {
         // For Image and Video, we generate a detailed prompt/brief
         const enhanced = await enhancePromptWithAI(topic, activeTab);
@@ -235,6 +255,24 @@ const ContentLabView: React.FC = () => {
         </div>
 
         {/* Output Area */}
+                {/* Platform Preview Tabs */}
+        {selectedPlatforms.length > 0 && (
+          <div className="flex gap-2 mb-4 border-b border-gray-800 pb-2 overflow-x-auto">
+            {selectedPlatforms.map((platform) => (
+              <button
+                key={platform}
+                onClick={() => setPreviewPlatform(platform)}
+                className={`px-4 py-2 text-sm font-bold whitespace-nowrap transition-colors ${
+                  previewPlatform === platform
+                    ? 'text-red-500 border-b-2 border-red-500'
+                    : 'text-gray-500 hover:text-white'
+                }`}
+              >
+                {platform}
+              </button>
+            ))}
+          </div>
+        )}
         <div className="lg:col-span-3">
           <div className={`h-full min-h-[400px] bg-gray-950 border border-gray-800 rounded-3xl p-8 relative flex flex-col transition-all ${!result && !isLoading && !generatedImageUrl ? 'items-center justify-center border-dashed' : ''}`}>
             {isLoading ? (
