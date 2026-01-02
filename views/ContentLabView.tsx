@@ -26,8 +26,14 @@ import {
 const ContentLabView: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'text' | 'image' | 'video'>('text');
   const [topic, setTopic] = useState('');
+<<<<<<< HEAD
   const [selectedPlatforms, setSelectedPlatforms] = useState(['Instagram']);
   const [result, setResult] = useState('');
+=======
+  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(['Instagram']);
+  const [previewPlatform, setPreviewPlatform] = useState('Instagram');
+    const [result, setResult] = useState('');[result, setResult] = useState('');
+>>>>>>> 77628f2d0f66e250cd83fc214c8a3be8bb46b743
   const [isLoading, setIsLoading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -42,7 +48,11 @@ const ContentLabView: React.FC = () => {
     
     try {
       if (activeTab === 'text') {
+<<<<<<< HEAD
         const output = await generateContent(topic, selectedPlatforms[0]);
+=======
+        const output = await generateContent(topic, previewPlatform);
+>>>>>>> 77628f2d0f66e250cd83fc214c8a3be8bb46b743
         setResult(output);
       } else {
         // For Image and Video, we generate a detailed prompt/brief
@@ -195,9 +205,18 @@ const ContentLabView: React.FC = () => {
                   key={p.name}
                   onClick={() => setSelectedPlatforms(prev => prev.includes(p.name) ? prev.filter(plat => plat !== p.name) : [...prev, p.name])}
                   className={`flex items-center gap-2 px-3 py-3 rounded-xl border transition-all ${
+<<<<<<< HEAD
                     selectedPlatforms.includes(p.name) ? 'bg-red-600/50 text-white' : ''}`}
                 >
                   <p.icon size={16} className={selectedPlatforms.includes(p.name) ? p.color : ''} />
+=======
+                    selectedPlatforms.includes(p.name)e 
+                      ? 'bg-red-600/10 border-red-600/50 text-white' 
+                      : 'bg-black border-gray-800 text-gray-500 hover:border-gray-700'
+                  }`}
+                >
+                  <p.icon size={16} className={selectedPlatforms.includes(p.name)e ? p.color : ''} />
+>>>>>>> 77628f2d0f66e250cd83fc214c8a3be8bb46b743
                   <span className="text-xs font-bold">{p.name}</span>
                 </button>
               ))}

@@ -91,3 +91,59 @@ export const generateContent = async (topic: string, platform?: string) => {
     throw error;
   }
 };
+
+/**
+ * Formats generated content for specific social media platforms
+ * Includes platform-specific character limits, hashtags, emojis, and brand kit alignment
+ */
+export const formatSocialMediaContent = async (
+  content: string,
+  platform: 'Instagram' | 'LinkedIn' | 'Twitter' | 'Facebook',
+  brandKit?: any
+): Promise<string> => {
+  const platformConfigs = {
+    Instagram: {
+      maxLength: 2200,
+      hashtagCount: 15,
+      emojiEmphasis: true,
+      tone: 'Creative, visually-focused, trendy'
+    },
+    LinkedIn: {
+      maxLength: 3000,
+      hashtagCount: 5,
+      emojiEmphasis: false,
+      tone: 'Professional, thought leadership, industry insights'
+    },
+    Twitter: {
+      maxLength: 280,
+      hashtagCount: 3,
+      emojiEmphasis: true,
+      tone: 'Concise, engaging, trendy'
+    },
+    Facebook: {
+      maxLength: 63206,
+      hashtagCount: 8,
+      emojiEmphasis: true,
+      tone: 'Conversational, community-focused, storytelling'
+    }
+  };
+
+  const config = platformConfigs[platform];
+  const brandTone = brandKit?.tone || config.tone;
+
+  try {
+    const systemPrompt = `Format this content for ${platform}.
+    - Max ${config.maxLength} characters
+    - Add ${config.hashtagCount} relevant hashtags
+    - ${config.emojiEmphasis ? 'Use strategic emojis' : 'Minimal emojis'}
+    - Tone: ${brandTone}
+    - Include CTA if relevant
+    Return ONLY formatted post.`;
+
+    const result = await model.generateContent([systemPrompt, `Content: ${content}`]);
+    return result.response.text().trim();
+  } catch (error) {
+    console.error('Formatting failed', error);
+    return content;
+  }
+};
