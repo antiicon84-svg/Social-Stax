@@ -1,0 +1,17 @@
+{
+    "geminicodeassist.codeGenerationPaneViewEnabled": true,
+    "geminicodeassist.agentYoloMode": true,
+
+  // Enable Gemini 3 Preview (via Gemini CLI integration)
+  "geminicodeassist.previewFeatures": true,
+
+  // Enable Next Edit Predictions Preview (inline suggestions while typing)
+  "geminicodeassist.inlineSuggestions.nextEditPredictions.enabled": true,
+
+  // Chat code blocks show as preview (not collapsed/expanded)
+  "geminicodeassist.chat.defaultCodeBlockDisplay": "preview",
+
+  // Enable inline suggestion preview ghost text
+  "editor.inlineSuggest.enabled": true,
+  "editor.suggest.preview": true
+}
