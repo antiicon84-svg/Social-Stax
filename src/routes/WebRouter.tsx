@@ -93,6 +93,7 @@ const WebRouter: React.FC = () => {
         <div className="flex-1">
           <ErrorBoundary>
             <Routes>
+                            <Route path="/login" element={<Navigate to="/" replace />} />
               <Route path="/" element={<DashboardView {...dashboardProps} />} />
               <Route path="/clients" element={<AllClientsView />} />
               <Route path="/add-client" element={<CreateClientView onClientAdded={handleClientAdded} />} />
