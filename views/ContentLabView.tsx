@@ -26,8 +26,9 @@ import {
 const ContentLabView: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'text' | 'image' | 'video'>('text');
   const [topic, setTopic] = useState('');
-  const [platform, setPlatform] = useState('Instagram');
-  const [result, setResult] = useState('');
+  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(['Instagram']);
+  const [previewPlatform, setPreviewPlatform] = useState('Instagram');
+    const [result, setResult] = useState('');[result, setResult] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -42,7 +43,7 @@ const ContentLabView: React.FC = () => {
     
     try {
       if (activeTab === 'text') {
-        const output = await generateContent(topic, platform);
+        const output = await generateContent(topic, previewPlatform);
         setResult(output);
       } else {
         // For Image and Video, we generate a detailed prompt/brief
@@ -195,12 +196,12 @@ const ContentLabView: React.FC = () => {
                   key={p.name}
                   onClick={() => setPlatform(p.name)}
                   className={`flex items-center gap-2 px-3 py-3 rounded-xl border transition-all ${
-                    platform === p.name 
+                    selectedPlatforms.includes(p.name)e 
                       ? 'bg-red-600/10 border-red-600/50 text-white' 
                       : 'bg-black border-gray-800 text-gray-500 hover:border-gray-700'
                   }`}
                 >
-                  <p.icon size={16} className={platform === p.name ? p.color : ''} />
+                  <p.icon size={16} className={selectedPlatforms.includes(p.name)e ? p.color : ''} />
                   <span className="text-xs font-bold">{p.name}</span>
                 </button>
               ))}
