@@ -4,6 +4,7 @@ import AppKitRouter from './routes/AppKitRouter'; // Import the new AppKit-speci
 import LoadingSpinner from './components/LoadingSpinner';
 import { isAppKit } from '~/utils/appkitUtils'; // Import appkit utilities
 import { AuthProvider } from './context/AuthContext'; // Import authentication context provider
+import AdminSetup from './components/AdminSetup';
 
 const App: React.FC = () => {
   const [isReady, setIsReady] = useState(false);
@@ -43,11 +44,11 @@ const App: React.FC = () => {
   if (!isReady) {
     console.log('[App] Not ready, showing spinner');
     return (
-            <AuthProvider>
-      <div className="flex items-center justify-center min-h-screen bg-black">
-        <LoadingSpinner size="lg" />
-      </div>
-                    </AuthProvider>
+      <AuthProvider>
+        <div className="flex items-center justify-center min-h-screen bg-black">
+          <LoadingSpinner size="lg" />
+        </div>
+      </AuthProvider>
     );
   }
 
@@ -55,6 +56,7 @@ const App: React.FC = () => {
   return (
     <AuthProvider>
       {isAppKitEnvironment ? <AppKitRouter /> : <WebRouter />}
+      <AdminSetup />
     </AuthProvider>
   )
 };
