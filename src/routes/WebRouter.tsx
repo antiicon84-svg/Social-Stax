@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react';
 import { Routes, Route, useNavigate, useParams, useLocation } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
-import LoginView from '~/views/LoginView';
 import DashboardView from '~/views/DashboardView';
 import AllClientsView from '~/views/AllClientsView';
 import CreateClientView from '~/views/CreateClientView';
@@ -68,13 +67,6 @@ const WebRouter: React.FC = () => {
     );
   }
 
-  if (!isAuthenticated) {
-    return (
-      <Routes>
-        <Route path="*" element={<LoginView />} />
-      </Routes>
-    );
-  }
 
   const dashboardProps = {
     clients,
