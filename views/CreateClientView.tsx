@@ -5,19 +5,23 @@ import { analyzeWebsite } from '~/services/aiService';
 import { getCurrentUser } from '~/services/authService';
 import { INDUSTRY_OPTIONS, BRAND_TONE_OPTIONS } from '@/config/constants';
 import Button from '@/components/Button';
-import { 
-  Globe, 
-  Upload, 
-  User, 
-  Briefcase, 
-  Palette, 
+import {
+  Globe,
+  Upload,
+  User,
+  Briefcase,
+  Palette,
   ArrowLeft,
   Search,
   Hash,
   Instagram,
+  Facebook,
+  Twitter,
+  Linkedin,
   Phone,
   MessageCircle,
-  StickyNote
+  StickyNote,
+  Image as ImageIcon
 } from 'lucide-react';
 import { ClientType, Client } from '~/types';
 
@@ -29,20 +33,24 @@ const CreateClientView: React.FC<CreateClientViewProps> = ({ onClientAdded }) =>
   const navigate = useNavigate();
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [websiteUrl, setWebsiteUrl] = useState('');
-  
+
   // Basic Info
   const [clientType, setClientType] = useState<ClientType>('Brand');
   const [name, setName] = useState('');
   const [industry, setIndustry] = useState(INDUSTRY_OPTIONS[0].value);
   const [brandTone, setBrandTone] = useState(BRAND_TONE_OPTIONS[0].value);
   const [brandColor, setBrandColor] = useState('#ef4444');
-  
+  const [logoUrl, setLogoUrl] = useState('');
+
   // Detailed Brand Kit
   const [description, setDescription] = useState('');
   const [mission, setMission] = useState('');
   const [phone, setPhone] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
   const [instagram, setInstagram] = useState('');
+  const [facebook, setFacebook] = useState('');
+  const [twitter, setTwitter] = useState('');
+  const [linkedin, setLinkedin] = useState('');
   const [tags, setTags] = useState('');
   const [contactInfo, setContactInfo] = useState('');
   const [aiNotes, setAiNotes] = useState('');
@@ -58,10 +66,29 @@ const CreateClientView: React.FC<CreateClientViewProps> = ({ onClientAdded }) =>
         if (data.tone) setBrandTone(data.tone);
         if (data.description) setDescription(data.description);
         if (data.color) setBrandColor(data.color);
+
+        // Handle Logo/Profile Pic
+        const foundLogo = data.logoUrl || data.profilePicUrl;
+        if (foundLogo) setLogoUrl(foundLogo);
+        if (data.profilePicUrl && !data.logoUrl) setClientType('Influencer');
+
+        // Handle Socials
+        if (data.instagram) setInstagram(data.instagram);
+        if (data.facebook) setFacebook(data.facebook);
+        if (data.twitter) setTwitter(data.twitter);
+        if (data.linkedin) setLinkedin(data.linkedin);
+        if (data.whatsapp) setWhatsapp(data.whatsapp);
+        if (data.phone) setPhone(data.phone); // AI might map phone to 'phone' or 'whatsapp'
+        if (data.email) setContactInfo(data.email);
+
+        // Handle Keywords
+        if (data.keywords && Array.isArray(data.keywords)) {
+          setTags(data.keywords.join(', '));
+        }
       }
     } catch (error) {
       console.error(error);
-      alert('Failed to analyze website. Please fill manually.');
+      alert('Failed to analyze website. Please check the URL or fill manually.');
     } finally {
       setIsAnalyzing(false);
     }
@@ -82,12 +109,18 @@ const CreateClientView: React.FC<CreateClientViewProps> = ({ onClientAdded }) =>
       industry,
       brandTone,
       primaryBrandColor: brandColor,
+      logo: logoUrl,
       description,
       mission,
       website: websiteUrl,
       phoneNumber: phone,
       whatsapp,
-      socialLinks: { instagram },
+      socialLinks: {
+        instagram,
+        facebook,
+        twitter,
+        linkedin
+      },
       tags: tags.split(',').map(t => t.trim()).filter(t => t),
       contactInfo,
       additionalNotes: aiNotes,
@@ -116,16 +149,16 @@ const CreateClientView: React.FC<CreateClientViewProps> = ({ onClientAdded }) =>
             <h2 className="font-bold text-sm uppercase tracking-wider">Auto-Fill from Website</h2>
           </div>
           <div className="flex gap-3">
-            <input 
-              type="url" 
+            <input
+              type="url"
               placeholder="https://example.com"
               className="flex-1 bg-black border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-red-600 outline-none transition-all"
               value={websiteUrl}
               onChange={(e) => setWebsiteUrl(e.target.value)}
             />
-            <Button 
-              type="button" 
-              onClick={handleAnalyze} 
+            <Button
+              type="button"
+              onClick={handleAnalyze}
               isLoading={isAnalyzing}
               variant="secondary"
             >
@@ -140,14 +173,14 @@ const CreateClientView: React.FC<CreateClientViewProps> = ({ onClientAdded }) =>
             <div className="space-y-4">
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest">Client Type</label>
               <div className="flex bg-black p-1 rounded-xl border border-gray-800">
-                <button 
+                <button
                   type="button"
                   onClick={() => setClientType('Brand')}
                   className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg font-bold text-sm transition-all ${clientType === 'Brand' ? 'bg-red-600/10 text-red-500 border border-red-600/20' : 'text-gray-500 hover:text-gray-300'}`}
                 >
                   <Briefcase size={16} /> Brand
                 </button>
-                <button 
+                <button
                   type="button"
                   onClick={() => setClientType('Influencer')}
                   className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg font-bold text-sm transition-all ${clientType === 'Influencer' ? 'bg-red-600/10 text-red-500 border border-red-600/20' : 'text-gray-500 hover:text-gray-300'}`}
@@ -158,12 +191,29 @@ const CreateClientView: React.FC<CreateClientViewProps> = ({ onClientAdded }) =>
             </div>
 
             <div className="space-y-4">
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest">Logo</label>
-              <div className="h-[52px] border-2 border-dashed border-gray-800 rounded-xl flex items-center justify-center text-gray-600 hover:border-red-500/50 hover:text-gray-400 cursor-pointer transition-all group">
-                <div className="flex items-center gap-2">
-                  <Upload size={16} className="group-hover:text-red-500" />
-                  <span className="text-sm font-medium">Upload</span>
-                </div>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest">Logo / Profile Pic</label>
+              <div className="flex gap-3">
+                {logoUrl ? (
+                  <div className="relative w-[52px] h-[52px] rounded-xl overflow-hidden border border-gray-800">
+                    <img src={logoUrl} alt="Logo" className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => setLogoUrl('')}
+                      className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 flex items-center justify-center text-xs text-white"
+                    >X</button>
+                  </div>
+                ) : (
+                  <div className="h-[52px] w-[52px] border-2 border-dashed border-gray-800 rounded-xl flex items-center justify-center text-gray-600 shrink-0">
+                    <ImageIcon size={20} />
+                  </div>
+                )}
+                <input
+                  type="url"
+                  placeholder="Logo Image URL"
+                  className="flex-1 bg-black border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-red-600 outline-none text-sm"
+                  value={logoUrl}
+                  onChange={(e) => setLogoUrl(e.target.value)}
+                />
               </div>
             </div>
           </div>
@@ -171,8 +221,8 @@ const CreateClientView: React.FC<CreateClientViewProps> = ({ onClientAdded }) =>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Name</label>
-              <input 
-                type="text" 
+              <input
+                type="text"
                 className="w-full bg-black border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-red-600 outline-none"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -181,8 +231,8 @@ const CreateClientView: React.FC<CreateClientViewProps> = ({ onClientAdded }) =>
             </div>
             <div className="space-y-2">
               <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Industry</label>
-              <input 
-                type="text" 
+              <input
+                type="text"
                 className="w-full bg-black border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-red-600 outline-none"
                 value={industry}
                 onChange={(e) => setIndustry(e.target.value)}
@@ -193,7 +243,7 @@ const CreateClientView: React.FC<CreateClientViewProps> = ({ onClientAdded }) =>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Brand Tone</label>
-              <select 
+              <select
                 className="w-full bg-black border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-red-600 outline-none appearance-none"
                 value={brandTone}
                 onChange={(e) => setBrandTone(e.target.value)}
@@ -205,8 +255,8 @@ const CreateClientView: React.FC<CreateClientViewProps> = ({ onClientAdded }) =>
               <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Brand Color</label>
               <div className="flex gap-3">
                 <div className="w-12 h-12 rounded-xl border border-gray-800 shrink-0" style={{ backgroundColor: brandColor }} />
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   className="flex-1 bg-black border border-gray-800 rounded-xl px-4 py-3 text-white font-mono"
                   value={brandColor}
                   onChange={(e) => setBrandColor(e.target.value)}
@@ -226,7 +276,7 @@ const CreateClientView: React.FC<CreateClientViewProps> = ({ onClientAdded }) =>
           <div className="space-y-6">
             <div className="space-y-2">
               <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Description (Bio)</label>
-              <textarea 
+              <textarea
                 className="w-full bg-black border border-gray-800 rounded-xl px-4 py-3 text-white min-h-[100px] outline-none focus:ring-2 focus:ring-red-600"
                 placeholder="Short bio or summary..."
                 value={description}
@@ -236,7 +286,7 @@ const CreateClientView: React.FC<CreateClientViewProps> = ({ onClientAdded }) =>
 
             <div className="space-y-2">
               <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Mission Statement</label>
-              <textarea 
+              <textarea
                 className="w-full bg-black border border-gray-800 rounded-xl px-4 py-3 text-white min-h-[100px] outline-none focus:ring-2 focus:ring-red-600"
                 placeholder="Our mission is to..."
                 value={mission}
@@ -249,8 +299,8 @@ const CreateClientView: React.FC<CreateClientViewProps> = ({ onClientAdded }) =>
                 <label className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
                   <Globe size={12} /> Website
                 </label>
-                <input 
-                  type="url" 
+                <input
+                  type="url"
                   className="w-full bg-black border border-gray-800 rounded-xl px-4 py-3 text-white outline-none focus:ring-2 focus:ring-red-600"
                   value={websiteUrl}
                   onChange={(e) => setWebsiteUrl(e.target.value)}
@@ -260,8 +310,8 @@ const CreateClientView: React.FC<CreateClientViewProps> = ({ onClientAdded }) =>
                 <label className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
                   <Phone size={12} /> Phone Number
                 </label>
-                <input 
-                  type="tel" 
+                <input
+                  type="tel"
                   className="w-full bg-black border border-gray-800 rounded-xl px-4 py-3 text-white outline-none focus:ring-2 focus:ring-red-600"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
@@ -269,27 +319,65 @@ const CreateClientView: React.FC<CreateClientViewProps> = ({ onClientAdded }) =>
               </div>
             </div>
 
+            {/* Social Links Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <label className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
-                  <MessageCircle size={12} /> WhatsApp
+                  <Instagram size={12} /> Instagram
                 </label>
-                <input 
-                  type="tel" 
+                <input
+                  type="text"
+                  placeholder="@username or URL"
                   className="w-full bg-black border border-gray-800 rounded-xl px-4 py-3 text-white outline-none focus:ring-2 focus:ring-red-600"
-                  value={whatsapp}
-                  onChange={(e) => setWhatsapp(e.target.value)}
+                  value={instagram}
+                  onChange={(e) => setInstagram(e.target.value)}
                 />
               </div>
               <div className="space-y-2">
                 <label className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
-                  <Instagram size={12} /> Instagram Handle
+                  <Facebook size={12} /> Facebook
                 </label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
+                  placeholder="URL or Page Name"
                   className="w-full bg-black border border-gray-800 rounded-xl px-4 py-3 text-white outline-none focus:ring-2 focus:ring-red-600"
-                  value={instagram}
-                  onChange={(e) => setInstagram(e.target.value)}
+                  value={facebook}
+                  onChange={(e) => setFacebook(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
+                  <Twitter size={12} /> Twitter / X
+                </label>
+                <input
+                  type="text"
+                  placeholder="@username"
+                  className="w-full bg-black border border-gray-800 rounded-xl px-4 py-3 text-white outline-none focus:ring-2 focus:ring-red-600"
+                  value={twitter}
+                  onChange={(e) => setTwitter(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
+                  <Linkedin size={12} /> LinkedIn
+                </label>
+                <input
+                  type="text"
+                  placeholder="Profile URL"
+                  className="w-full bg-black border border-gray-800 rounded-xl px-4 py-3 text-white outline-none focus:ring-2 focus:ring-red-600"
+                  value={linkedin}
+                  onChange={(e) => setLinkedin(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
+                  <MessageCircle size={12} /> WhatsApp
+                </label>
+                <input
+                  type="tel"
+                  className="w-full bg-black border border-gray-800 rounded-xl px-4 py-3 text-white outline-none focus:ring-2 focus:ring-red-600"
+                  value={whatsapp}
+                  onChange={(e) => setWhatsapp(e.target.value)}
                 />
               </div>
             </div>
@@ -299,8 +387,8 @@ const CreateClientView: React.FC<CreateClientViewProps> = ({ onClientAdded }) =>
                 <label className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
                   <Hash size={12} /> Tags (Keywords)
                 </label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   placeholder="e.g. Sustainable, Luxury, Gen Z"
                   className="w-full bg-black border border-gray-800 rounded-xl px-4 py-3 text-white outline-none focus:ring-2 focus:ring-red-600"
                   value={tags}
@@ -311,8 +399,8 @@ const CreateClientView: React.FC<CreateClientViewProps> = ({ onClientAdded }) =>
                 <label className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
                   <Search size={12} /> General Contact Info
                 </label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   placeholder="Email or City"
                   className="w-full bg-black border border-gray-800 rounded-xl px-4 py-3 text-white outline-none focus:ring-2 focus:ring-red-600"
                   value={contactInfo}
@@ -325,7 +413,7 @@ const CreateClientView: React.FC<CreateClientViewProps> = ({ onClientAdded }) =>
               <label className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
                 <StickyNote size={12} /> Additional AI Notes
               </label>
-              <textarea 
+              <textarea
                 className="w-full bg-black border border-gray-800 rounded-xl px-4 py-3 text-white min-h-[100px] outline-none focus:ring-2 focus:ring-red-600"
                 placeholder="Enter any specific rules or instructions for the AI..."
                 value={aiNotes}
