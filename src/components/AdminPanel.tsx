@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { createFreeAccessGrant, revokeFreeAccessGrant, getFreeAccessGrants, getUserByEmail } from '~/services/dbService';
+import { useAuth } from '@/context/AuthContext';
 import Button from './Button';
 import { Lock } from 'lucide-react';
 
 const AdminPanel: React.FC = () => {
-  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
-  const [adminPassword, setAdminPassword] = useState('');
-  
+  const { currentUser, isAdmin } = useAuth();
+
   const [activeTab, setActiveTab] = useState<'grant' | 'manage'>('grant');
   const [grantEmail, setGrantEmail] = useState('');
   const [grantPlan, setGrantPlan] = useState('starter');
@@ -24,34 +24,25 @@ const AdminPanel: React.FC = () => {
   const [grants, setGrants] = useState<any[]>([]);
   const [isLoadingGrants, setIsLoadingGrants] = useState(false);
 
-  const handleAdminLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (adminPassword === 'admin123') {
-        setIsAdminAuthenticated(true);
-    } else {
-        alert('Incorrect Password');
-    }
-  };
-
-  if (!isAdminAuthenticated) {
+  if (!currentUser) {
     return (
-        <div className="flex items-center justify-center min-h-[60vh]">
-            <form onSubmit={handleAdminLogin} className="bg-gray-900 p-8 rounded-2xl border border-gray-800 text-center max-w-sm w-full">
-                <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-6 text-red-500">
-                    <Lock size={32} />
-                </div>
-                <h2 className="text-2xl font-bold text-white mb-2">Admin Access</h2>
-                <p className="text-gray-400 mb-6 text-sm">Please enter the admin password to continue.</p>
-                <input 
-                    type="password" 
-                    placeholder="Enter Password" 
-                    className="w-full bg-black border border-gray-700 rounded-xl px-4 py-3 text-white mb-4 focus:ring-2 focus:ring-red-600 outline-none"
-                    value={adminPassword}
-                    onChange={(e) => setAdminPassword(e.target.value)}
-                />
-                <Button type="submit" className="w-full">Access Panel</Button>
-            </form>
+      <div className="flex items-center justify-center min-h-[60vh] text-center">
+        <p className="text-gray-400">Please sign in to access the admin panel.</p>
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="bg-gray-900 p-8 rounded-2xl border border-gray-800 text-center max-w-sm w-full">
+          <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-6 text-red-500">
+            <Lock size={32} />
+          </div>
+          <h2 className="text-2xl font-bold text-white mb-2">Access Denied</h2>
+          <p className="text-gray-400 mb-6 text-sm">You do not have permission to view this page.</p>
         </div>
+      </div>
     );
   }
 
@@ -70,15 +61,15 @@ const AdminPanel: React.FC = () => {
       }
 
       const expirationDate = grantExpiration ? new Date(grantExpiration) : null;
-      
+
       await createFreeAccessGrant({
         userId: user.uid,
         userEmail: grantEmail,
         plan: grantPlan as 'starter' | 'pro' | 'enterprise',
-        reason: grantReason, 
+        reason: grantReason,
         expiresAt: expirationDate,
         ...(showCustomLimits && { customLimits }),
-      } as any); 
+      } as any);
 
       setMessage({
         type: 'success',
@@ -130,20 +121,18 @@ const AdminPanel: React.FC = () => {
       {/* Header */}
       <div className="mb-8 flex justify-between items-center">
         <div>
-            <h2 className="text-3xl font-bold text-white mb-2">🛡️ Admin Panel</h2>
-            <p className="text-gray-400">Manage free access grants and user quotas</p>
+          <h2 className="text-3xl font-bold text-white mb-2">🛡️ Admin Panel</h2>
+          <p className="text-gray-400">Manage free access grants and user quotas</p>
         </div>
-        <Button variant="secondary" onClick={() => setIsAdminAuthenticated(false)} size="sm">Logout</Button>
       </div>
 
       {/* Message Alert */}
       {message && (
         <div
-          className={`mb-6 p-4 rounded border ${
-            message.type === 'success'
-              ? 'bg-green-900/30 border-green-700 text-green-300'
-              : 'bg-red-900/30 border-red-700 text-red-300'
-          }`}
+          className={`mb-6 p-4 rounded border ${message.type === 'success'
+            ? 'bg-green-900/30 border-green-700 text-green-300'
+            : 'bg-red-900/30 border-red-700 text-red-300'
+            }`}
         >
           {message.type === 'success' ? '✓' : '✕'} {message.text}
         </div>
@@ -153,11 +142,10 @@ const AdminPanel: React.FC = () => {
       <div className="flex space-x-4 mb-8 border-b border-gray-700">
         <button
           onClick={() => setActiveTab('grant')}
-          className={`pb-4 font-medium transition-colors ${
-            activeTab === 'grant'
-              ? 'text-red-500 border-b-2 border-red-500'
-              : 'text-gray-400 hover:text-gray-300'
-          }`}
+          className={`pb-4 font-medium transition-colors ${activeTab === 'grant'
+            ? 'text-red-500 border-b-2 border-red-500'
+            : 'text-gray-400 hover:text-gray-300'
+            }`}
         >
           Grant Access
         </button>
@@ -166,11 +154,10 @@ const AdminPanel: React.FC = () => {
             setActiveTab('manage');
             handleLoadGrants();
           }}
-          className={`pb-4 font-medium transition-colors ${
-            activeTab === 'manage'
-              ? 'text-red-500 border-b-2 border-red-500'
-              : 'text-gray-400 hover:text-gray-300'
-          }`}
+          className={`pb-4 font-medium transition-colors ${activeTab === 'manage'
+            ? 'text-red-500 border-b-2 border-red-500'
+            : 'text-gray-400 hover:text-gray-300'
+            }`}
         >
           Manage Grants
         </button>
