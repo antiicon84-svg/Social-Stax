@@ -6,7 +6,7 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 
 const LoginView: React.FC = () => {
     const navigate = useNavigate();
-    const { login, signUp, loginGuest, isAuthenticated, loading } = useAuth();
+    const { login, signUp, isAuthenticated, loading } = useAuth();
 
     const [isLogin, setIsLogin] = useState(true);
     const [email, setEmail] = useState('');
@@ -34,19 +34,6 @@ const LoginView: React.FC = () => {
             navigate('/');
         } catch (err: any) {
             setError(err.message || 'Authentication failed');
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
-
-    const handleGuestLogin = async () => {
-        setError(null);
-        setIsSubmitting(true);
-        try {
-            await loginGuest();
-            navigate('/');
-        } catch (err: any) {
-            setError(err.message || 'Guest login failed');
         } finally {
             setIsSubmitting(false);
         }
@@ -127,24 +114,6 @@ const LoginView: React.FC = () => {
                 </form>
 
                 <div className="mt-6 flex flex-col gap-4">
-                    <div className="relative">
-                        <div className="absolute inset-0 flex items-center">
-                            <div className="w-full border-t border-zinc-800"></div>
-                        </div>
-                        <div className="relative flex justify-center text-sm">
-                            <span className="px-2 bg-zinc-900 text-zinc-500">Or continue with</span>
-                        </div>
-                    </div>
-
-                    <Button
-                        variant="secondary"
-                        className="w-full"
-                        onClick={handleGuestLogin}
-                        disabled={isSubmitting}
-                    >
-                        Continue as Guest
-                    </Button>
-
                     <div className="text-center mt-4">
                         <button
                             type="button"
@@ -160,6 +129,16 @@ const LoginView: React.FC = () => {
                         </button>
                     </div>
                 </div>
+            </div>
+
+            {/* Discrete Admin Login Link */}
+            <div className="absolute bottom-4 left-4">
+                <button
+                    onClick={() => navigate('/admin')}
+                    className="text-xs text-zinc-800 hover:text-zinc-600 transition-colors"
+                >
+                    Admin
+                </button>
             </div>
         </div>
     );
