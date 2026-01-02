@@ -350,9 +350,6 @@ const ClientDetailView: React.FC<ClientDetailViewProps> = ({ clientId, onPostSch
               {isSaving ? 'Saving Changes...' : 'Save Changes'}
             </Button>
           </div>
-          <div className="text-center text-xs text-green-500 mt-4 font-mono">
-            DEBUG: v2.1 Loaded (Tabs + Delete Enabled)
-          </div>
         </div>
       )}
     </div>
