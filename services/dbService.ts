@@ -13,7 +13,7 @@ import {
 import { getApp } from "firebase/app";
 import { getFunctions, httpsCallable } from "firebase/functions";
 import { Client, Post, UserProfile, FreeAccessGrant, SubscriptionPlan, Usage } from '../types'
-  import { getCurrentUser } from "./authService";
+import { getCurrentUser } from "./authService";
 
 const db = getFirestore(getApp());
 
@@ -55,6 +55,11 @@ export const saveClient = async (client: Client): Promise<void> => {
     const { id, ...clientData } = client;
     await addDoc(clientsCol, clientData);
   }
+};
+
+export const deleteClient = async (clientId: string): Promise<void> => {
+  const uid = getAuthenticatedUid();
+  await deleteDoc(doc(db, "users", uid, "clients", clientId));
 };
 
 export const getScheduledPosts = async (): Promise<Post[]> => {

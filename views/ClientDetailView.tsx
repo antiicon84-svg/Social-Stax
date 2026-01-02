@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getClientById, savePost, saveClient } from '~/services/dbService'; // Added saveClient
+import { getClientById, savePost, saveClient, deleteClient } from '~/services/dbService'; // Added saveClient, deleteClient
 import { Client, Post, SocialPlatform } from '~/types';
 import { SOCIAL_PLATFORMS, INDUSTRY_OPTIONS, BRAND_TONE_OPTIONS } from '@/config/constants';
 import Button from '@/components/Button';
@@ -98,6 +98,20 @@ const ClientDetailView: React.FC<ClientDetailViewProps> = ({ clientId, onPostSch
       console.error("Error updating client", error);
       alert('Failed to update client');
     } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDeleteClient = async () => {
+    if (!window.confirm('Are you sure you want to delete this client? This cannot be undone.')) return;
+    setIsSaving(true);
+    try {
+      await deleteClient(clientId);
+      alert('Client deleted successfully');
+      navigate('/');
+    } catch (error) {
+      console.error("Error deleting client", error);
+      alert('Failed to delete client');
       setIsSaving(false);
     }
   };
@@ -328,10 +342,16 @@ const ClientDetailView: React.FC<ClientDetailViewProps> = ({ clientId, onPostSch
             </div>
           </section>
 
-          <div className="flex justify-end pt-4">
+          <div className="flex justify-between pt-4 border-t border-gray-800 mt-8">
+            <Button variant="danger" onClick={handleDeleteClient} disabled={isSaving}>
+              Delete Client
+            </Button>
             <Button onClick={handleSaveClient} disabled={isSaving} size="lg">
               {isSaving ? 'Saving Changes...' : 'Save Changes'}
             </Button>
+          </div>
+          <div className="text-center text-xs text-green-500 mt-4 font-mono">
+            DEBUG: v2.1 Loaded (Tabs + Delete Enabled)
           </div>
         </div>
       )}
