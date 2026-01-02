@@ -9,7 +9,7 @@
   "geminicodeassist.inlineSuggestions.nextEditPredictions.enabled": true,
 
   // Chat code blocks show as preview (not collapsed/expanded)
-  "geminicodeassist.chat.defaultCodeBlockDisplay": "preview",
+  "geminicodeassist.chat.defaultCodeBlockDisplay": "Preview",
 
   // Enable inline suggestion preview ghost text
   "editor.inlineSuggest.enabled": true,
