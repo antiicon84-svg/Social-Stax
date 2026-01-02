@@ -4,7 +4,6 @@ import AppKitRouter from './routes/AppKitRouter'; // Import the new AppKit-speci
 import LoadingSpinner from './components/LoadingSpinner';
 import { isAppKit } from '~/utils/appkitUtils'; // Import appkit utilities
 import { AuthProvider } from './context/AuthContext'; // Import authentication context provider
-import AdminSetup from './components/AdminSetup';
 
 const App: React.FC = () => {
   const [isReady, setIsReady] = useState(false);
@@ -56,7 +55,6 @@ const App: React.FC = () => {
   return (
     <AuthProvider>
       {isAppKitEnvironment ? <AppKitRouter /> : <WebRouter />}
-      <AdminSetup />
     </AuthProvider>
   )
 };
