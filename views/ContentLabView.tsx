@@ -3,7 +3,6 @@ import Button from '@/components/Button';
 import { generateContent, enhancePromptWithAI } from '~/services/aiService';
 import { savePost } from '~/services/dbService';
 import { getCurrentUser } from '~/services/authService';
-import { formatContentForPlatform } from '~/services/formatService';
 import { Post } from '~/types';
 import { 
   FlaskConical, 
@@ -106,7 +105,7 @@ const ContentLabView: React.FC = () => {
         id: '', // dbService handles ID generation
         clientId: 'global', // 'global' or allow user to select client. For now 'global' or user's own draft
         ownerEmail: user.email || '',
-        platform: platform as any,
+        platform: selectedPlatforms[0] as any,
         content: result,
         status: 'draft',
         scheduledAt: new Date(),
@@ -196,12 +195,10 @@ const ContentLabView: React.FC = () => {
                   key={p.name}
                   onClick={() => setSelectedPlatforms(prev => prev.includes(p.name) ? prev.filter(plat => plat !== p.name) : [...prev, p.name])}
                   className={`flex items-center gap-2 px-3 py-3 rounded-xl border transition-all ${
-                    selectedPlatforms.includes(p.name) ? 'bg-red-600/50 text-white' : ''}`
+                    selectedPlatforms.includes(p.name) ? 'bg-red-600/50 text-white' : ''}`}
                 >
-                              <></>
                   <p.icon size={16} className={selectedPlatforms.includes(p.name) ? p.color : ''} />
                   <span className="text-xs font-bold">{p.name}</span>
-                                </>
                 </button>
               ))}
             </div>
