@@ -57,6 +57,18 @@ service cloud.firestore {
     }
 
     // ===================================================
+    // FREE ACCESS GRANTS (Admin Only)
+    // ===================================================
+    match /free_access/{grantId} {
+      // Must read user profile to verify admin role
+      function isAdmin() {
+        return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      }
+      
+      allow read, write: if request.auth.uid != null && isAdmin();
+    }
+
+    // ===================================================
     // RATE LIMITING COLLECTION (For brute force protection)
     // ===================================================
     match /rateLimiting/{ipAddress} {
