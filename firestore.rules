@@ -7,7 +7,7 @@ service cloud.firestore {
     }
 
     // ===================================================
-    // USERS COLLECTION - Secure Password Storage
+    // USERS COLLECTION
     // ===================================================
     match /users/{userId} {
       // User can read own, Admin can read all (for granting access)
@@ -15,6 +15,16 @@ service cloud.firestore {
       
       // Only the user can write to their own profile
       allow write: if request.auth.uid == userId;
+      
+      // CLIENTS Subcollection
+      match /clients/{clientId} {
+        allow read, write: if request.auth.uid == userId;
+      }
+
+      // POSTS Subcollection (User specific)
+      match /posts/{postId} {
+        allow read, write: if request.auth.uid == userId;
+      }
       
       // Passwords are never readable or writable directly
       match /private/{document=**} {
@@ -24,40 +34,22 @@ service cloud.firestore {
     }
 
     // ===================================================
-    // PROJECTS COLLECTION
+    // PROJECTS COLLECTION (Top Level)
     // ===================================================
     match /projects/{projectId} {
       // Users can only read projects they own
       allow read: if resource.data.userId == request.auth.uid;
-      
-      // Users can create new projects
-      allow create: if request.auth.uid != null &&
-                       request.resource.data.userId == request.auth.uid;
-      
-      // Users can update only their own projects
-      allow update: if resource.data.userId == request.auth.uid;
-      
-      // Users can delete only their own projects
-      allow delete: if resource.data.userId == request.auth.uid;
+      allow create: if request.auth.uid != null && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if resource.data.userId == request.auth.uid;
     }
 
     // ===================================================
-    // POSTS COLLECTION
+    // POSTS COLLECTION (Public/Top Level - Keeping just in case)
     // ===================================================
     match /posts/{postId} {
-      // Users can read public posts
-      allow read: if resource.data.isPublic == true ||
-                     resource.data.userId == request.auth.uid;
-      
-      // Authenticated users can create posts
-      allow create: if request.auth.uid != null &&
-                       request.resource.data.userId == request.auth.uid;
-      
-      // Users can only update their own posts
-      allow update: if resource.data.userId == request.auth.uid;
-      
-      // Users can only delete their own posts
-      allow delete: if resource.data.userId == request.auth.uid;
+      allow read: if resource.data.isPublic == true || resource.data.userId == request.auth.uid;
+      allow create: if request.auth.uid != null && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if resource.data.userId == request.auth.uid;
     }
 
     // ===================================================
