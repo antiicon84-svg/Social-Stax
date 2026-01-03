@@ -25,12 +25,8 @@ const VerifyEmailView: React.FC = () => {
         setSending(true);
         setMessage(null);
         try {
-            // Configure redirect URL to point to the new handler route
-            const actionCodeSettings = {
-                url: `${window.location.origin}/verify-process`, // Points to /verify-process
-                handleCodeInApp: true
-            };
-            await sendEmailVerification(user, actionCodeSettings);
+            // Use Firebase's default verification flow (most reliable)
+            await sendEmailVerification(user);
             setMessage({ type: 'success', text: 'Verification email sent! Please check your inbox (and spam folder).' });
         } catch (error: any) {
             console.error('Error sending verification email:', error);
