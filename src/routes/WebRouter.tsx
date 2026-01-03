@@ -19,6 +19,7 @@ import { useClientData } from '@/hooks/useClientData';
 import { useAuth } from '../context/AuthContext';
 
 import SettingsView from '~/views/SettingsView';
+import EmailVerificationView from '~/views/EmailVerificationView';
 
 const ClientDetailWrapper: React.FC<{ onPostScheduled: () => void }> = ({ onPostScheduled }) => {
   const { clientId } = useParams<{ clientId: string }>();
@@ -105,6 +106,7 @@ const WebRouter: React.FC = () => {
               <Route path="/downloads" element={<DownloadsView />} />
               <Route path="/settings" element={<SettingsView />} />
               <Route path="/admin" element={<AdminPanel />} />
+                            <Route path="/action" element={<EmailVerificationView />} />
               <Route path="*" element={<ErrorFallback />} />
             </Routes>
           </ErrorBoundary>
