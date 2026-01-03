@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { useAuth } from '~/context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 import { applyActionCode, checkActionCode } from 'firebase/auth';
-import { auth } from '~/services/firebaseConfig';
+import { auth_instance } from '../config/firebase';
 
 const EmailVerificationView: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -32,7 +32,7 @@ const EmailVerificationView: React.FC = () => {
 
         // Verify the code is valid before applying
         try {
-          await checkActionCode(auth, code);
+          await checkActionCode(auth_instance, code);
         } catch (checkError: any) {
           console.error('Invalid or expired code:', checkError);
           setStatus('error');
@@ -41,8 +41,8 @@ const EmailVerificationView: React.FC = () => {
         }
 
         // Apply the verification code
-        await applyActionCode(auth, code);
-        
+        await applyActionCode(auth_instance, code);
+
         setStatus('success');
         setMessage('✓ Your email has been verified successfully!');
 
@@ -53,7 +53,7 @@ const EmailVerificationView: React.FC = () => {
       } catch (error: any) {
         console.error('Email verification error:', error);
         setStatus('error');
-        
+
         // Provide specific error messages based on Firebase error codes
         if (error.code === 'auth/invalid-action-code') {
           setMessage('This verification link has expired. Please request a new one.');
@@ -80,7 +80,7 @@ const EmailVerificationView: React.FC = () => {
             <p className="text-sm text-gray-400">Please wait while we verify your email address...</p>
           </div>
         )}
-        
+
         {status === 'success' && (
           <div className="space-y-4 text-center">
             <div className="flex justify-center">
@@ -94,7 +94,7 @@ const EmailVerificationView: React.FC = () => {
             <p className="text-sm text-gray-400">Redirecting you to the dashboard in 3 seconds...</p>
           </div>
         )}
-        
+
         {status === 'error' && (
           <div className="space-y-4 text-center">
             <div className="flex justify-center">
