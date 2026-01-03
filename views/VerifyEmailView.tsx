@@ -64,8 +64,19 @@ const VerifyEmailView: React.FC = () => {
 
     // Auto-poll for verification status
     React.useEffect(() => {
+        // Immediately check on mount (in case user just verified via link)
+        const checkOnMount = async () => {
+            if (auth_instance?.currentUser) {
+                await auth_instance.currentUser.reload();
+                if (auth_instance.currentUser.emailVerified) {
+                    window.location.reload();
+                }
+            }
+        };
+        checkOnMount();
+
         const interval = setInterval(async () => {
-            const user = auth_instance.currentUser;
+            const user = auth_instance?.currentUser;
             if (user && !user.emailVerified) {
                 await user.reload();
                 if (user.emailVerified) {
