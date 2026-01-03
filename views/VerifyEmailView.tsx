@@ -25,9 +25,13 @@ const VerifyEmailView: React.FC = () => {
         setSending(true);
         setMessage(null);
         try {
-            // Use Firebase's default verification flow (most reliable)
-            await sendEmailVerification(user);
-            setMessage({ type: 'success', text: 'Verification email sent! Please check your inbox (and spam folder).' });
+            // Point verification to localhost so it works in the same session
+            const actionCodeSettings = {
+                url: window.location.origin, // http://localhost:3005
+                handleCodeInApp: false // Use Firebase's default handler, but return to localhost
+            };
+            await sendEmailVerification(user, actionCodeSettings);
+            setMessage({ type: 'success', text: 'Verification email sent! The link will bring you back here after verification.' });
         } catch (error: any) {
             console.error('Error sending verification email:', error);
             if (error.code === 'auth/too-many-requests') {
