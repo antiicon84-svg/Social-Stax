@@ -31,9 +31,36 @@ const VerifyEmailView: React.FC = () => {
         }
     };
 
-    const handleReload = () => {
-        window.location.reload();
+    const checkVerification = async () => {
+        try {
+            const user = auth_instance.currentUser;
+            if (user) {
+                await user.reload();
+                if (user.emailVerified) {
+                    window.location.reload(); // Force full reload to update context
+                } else {
+                    setMessage({ type: 'error', text: 'Email not verified yet. Please click the link in your email.' });
+                }
+            }
+        } catch (error) {
+            console.error("Error checking verification:", error);
+        }
     };
+
+    // Auto-poll for verification status
+    React.useEffect(() => {
+        const interval = setInterval(async () => {
+            const user = auth_instance.currentUser;
+            if (user && !user.emailVerified) {
+                await user.reload();
+                if (user.emailVerified) {
+                    window.location.reload();
+                }
+            }
+        }, 3000); // Check every 3 seconds
+
+        return () => clearInterval(interval);
+    }, []);
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-black p-6 md:p-10 text-white">
@@ -67,7 +94,7 @@ const VerifyEmailView: React.FC = () => {
 
                     <Button
                         variant="ghost"
-                        onClick={handleReload}
+                        onClick={checkVerification}
                         className="w-full flex items-center justify-center gap-2"
                     >
                         <RefreshCw size={16} /> I've Verified My Email
