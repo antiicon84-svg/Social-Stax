@@ -14,6 +14,11 @@ import AdminPanel from '@/components/AdminPanel';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import Button from '@/components/Button';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import LoginView from '~/views/LoginView';
+import VoiceAssistant from '@/components/VoiceAssistant';
+import { useClientData } from '@/hooks/useClientData';
+import { useAuth } from '../context/AuthContext';
+import SettingsView from '~/views/SettingsView';
 import VerifyEmailView from '~/views/VerifyEmailView';
 import EmailVerificationView from '~/views/EmailVerificationView';
 
