@@ -429,4 +429,95 @@ exports.geminiVoiceAssistant = functions.https.onCall(async (data, context) => {
   }
 });
 
+// Email Verification Handler - Custom Backend Handler
+exports.verifyEmail = functions.https.onCall(async (data, context) => {
+  const { oobCode, mode } = data;
+
+  if (!oobCode) {
+    throw new functions.https.HttpsError('invalid-argument', 'oobCode is required');
+  }
+
+  try {
+    // Step 1: Verify the action code with Firebase Admin SDK
+    const resetEmail = await admin.auth().verifyIdToken(oobCode).catch(async () => {
+      // If it's not a token, try to verify it as an action code
+      return await admin.auth().verifyActionCodeAsync(oobCode);
+    });
+
+    // Step 2: Apply the action code (completes the verification)
+    await admin.auth().applyActionCode(oobCode);
+
+    console.log('Email verification successful for action code:', oobCode);
+
+    return {
+      success: true,
+      message: 'Email verified successfully',
+    };
+  } catch (error) {
+    console.error('Email verification error:', error);
+
+    // Return specific error messages
+    if (error.code === 'auth/invalid-action-code') {
+      throw new functions.https.HttpsError(
+        'invalid-argument',
+        'Invalid or expired verification code. Please request a new verification email.'
+      );
+    }
+    if (error.code === 'auth/expired-action-code') {
+      throw new functions.https.HttpsError(
+        'failed-precondition',
+        'This verification code has expired. Please request a new verification email.'
+      );
+    }
+
+    throw new functions.https.HttpsError(
+      'internal',
+      'An error occurred during email verification. Please try again.'
+    );
+  }
+});
+
+// Alternative: REST API endpoint for email verification (for email links)
+exports.verifyEmailAction = functions.https.onRequest(async (req, res) => {
+  const { oobCode, mode, continueUrl } = req.query;
+
+  // Set CORS headers
+  res.set('Access-Control-Allow-Origin', '*');
+  res.set('Access-Control-Allow-Methods', 'GET, POST');
+
+  if (req.method === 'OPTIONS') {
+    res.status(204).send('');
+    return;
+  }
+
+  if (!oobCode || mode !== 'verifyEmail') {
+    return res.status(400).json({
+      error: 'Invalid request',
+      message: 'oobCode and mode parameters are required',
+    });
+  }
+
+  try {
+    // Verify the action code
+    await admin.auth().applyActionCode(oobCode);
+
+    console.log('Email verification successful via REST API');
+
+    // Redirect to success page
+    const redirectUrl = continueUrl || 'https://elegant-fort-482119-t4.firebaseapp.com/verified';
+    return res.redirect(302, redirectUrl);
+  } catch (error) {
+    console.error('Email verification error via REST:', error);
+
+    const errorMessages = {
+      'auth/invalid-action-code': 'Invalid or expired verification code. Please request a new verification email.',
+      'auth/expired-action-code': 'This verification code has expired. Please request a new verification email.',
+    };
+
+    const message = errorMessages[error.code] || 'An error occurred during email verification';
+    const redirectUrl = `https://elegant-fort-482119-t4.firebaseapp.com/verify-error?message=${encodeURIComponent(message)}`;
+    return res.redirect(302, redirectUrl);
+  }
+});
+
 module.exports = exports;
