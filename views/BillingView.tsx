@@ -20,6 +20,15 @@ const BillingView: React.FC = () => {
     apiCalls: 0
   };
 
+  const planTier = currentUser?.profile?.planTier || 'free';
+  const isPro = planTier === 'pro';
+
+  // Safe percentage calculation helper
+  const calculatePercentage = (value: number | undefined, max: number) => {
+    if (typeof value !== 'number') return 0;
+    return Math.min((value / max) * 100, 100);
+  };
+
   return (
     <div className="p-6 md:p-10 max-w-4xl mx-auto w-full text-white">
       <h1 className="text-3xl font-bold mb-2 text-red-600">Subscription & Billing</h1>
@@ -28,14 +37,14 @@ const BillingView: React.FC = () => {
       <div className="grid md:grid-cols-2 gap-8 mb-12">
         <div className="bg-gray-900 p-8 rounded-2xl border border-red-900/30">
           <h2 className="text-sm font-bold text-red-500 uppercase tracking-widest mb-4">Current Plan</h2>
-          <div className="text-4xl font-bold mb-2">{currentUser?.profile?.planTier || 'Free'} Plan</div>
-          <div className="text-gray-400 mb-6">{currentUser?.profile?.planTier === 'pro' ? '$49 / month' : 'Free Forever'}</div>
+          <div className="text-4xl font-bold mb-2">{isPro ? 'Pro' : 'Free'} Plan</div>
+          <div className="text-gray-400 mb-6">{isPro ? '$49 / month' : 'Free Forever'}</div>
           <ul className="space-y-3 text-sm text-gray-300 mb-8">
             <li className="flex items-center">
-              <span className="text-red-500 mr-2">✓</span> {currentUser?.profile?.planTier === 'pro' ? 'Unlimited' : 'Limited'} AI Generations
+              <span className="text-red-500 mr-2">✓</span> {isPro ? 'Unlimited' : 'Limited'} AI Generations
             </li>
             <li className="flex items-center">
-              <span className="text-red-500 mr-2">✓</span> {currentUser?.profile?.planTier === 'pro' ? '10' : '1'} Social Profiles
+              <span className="text-red-500 mr-2">✓</span> {isPro ? '10' : '1'} Social Profiles
             </li>
             <li className="flex items-center">
               <span className="text-red-500 mr-2">✓</span> Advanced Analytics
@@ -52,24 +61,24 @@ const BillingView: React.FC = () => {
             <div>
               <div className="flex justify-between text-sm mb-2">
                 <span>AI Generations</span>
-                <span>{usage.contentGenerations} / {currentUser?.profile?.planTier === 'pro' ? '∞' : '50'}</span>
+                <span>{usage?.contentGenerations || 0} / {isPro ? '∞' : '50'}</span>
               </div>
               <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-red-600"
-                  style={{ width: `${Math.min((usage.contentGenerations / (currentUser?.profile?.planTier === 'pro' ? 1000 : 50)) * 100, 100)}%` }}
+                  style={{ width: `${calculatePercentage(usage?.contentGenerations, isPro ? 1000 : 50)}%` }}
                 />
               </div>
             </div>
             <div>
               <div className="flex justify-between text-sm mb-2">
                 <span>Image Generations</span>
-                <span>{usage.imageGenerations || 0} / {currentUser?.profile?.planTier === 'pro' ? '∞' : '10'}</span>
+                <span>{usage?.imageGenerations || 0} / {isPro ? '∞' : '10'}</span>
               </div>
               <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-red-600"
-                  style={{ width: `${Math.min(((usage.imageGenerations || 0) / (currentUser?.profile?.planTier === 'pro' ? 500 : 10)) * 100, 100)}%` }}
+                  style={{ width: `${calculatePercentage(usage?.imageGenerations, isPro ? 500 : 10)}%` }}
                 />
               </div>
             </div>
