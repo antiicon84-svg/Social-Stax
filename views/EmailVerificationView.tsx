@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '~/src/context/AuthContext';
 import { applyActionCode, checkActionCode } from 'firebase/auth';
-import { auth_instance } from '../config/firebase';
+import { auth_instance } from '~/src/config/firebase';
 
 const EmailVerificationView: React.FC = () => {
   const [searchParams] = useSearchParams();
