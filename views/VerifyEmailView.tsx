@@ -17,9 +17,9 @@ const VerifyEmailView: React.FC = () => {
         setSending(true);
         setMessage(null);
         try {
-            // Configure redirect URL (points back to the app root)
+            // Configure redirect URL to point to the new handler route
             const actionCodeSettings = {
-                url: window.location.origin, // e.g. http://localhost:3005
+                url: `${window.location.origin}/verify-process`, // Points to /verify-process
                 handleCodeInApp: true
             };
             await sendEmailVerification(user, actionCodeSettings);

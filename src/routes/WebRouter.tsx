@@ -14,12 +14,8 @@ import AdminPanel from '@/components/AdminPanel';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import Button from '@/components/Button';
 import ErrorBoundary from '@/components/ErrorBoundary';
-import LoginView from '~/views/LoginView';
-import VoiceAssistant from '@/components/VoiceAssistant';
-import { useClientData } from '@/hooks/useClientData';
-import { useAuth } from '../context/AuthContext';
-
-import SettingsView from '~/views/SettingsView';
+import VerifyEmailView from '~/views/VerifyEmailView';
+import EmailVerificationView from '~/views/EmailVerificationView';
 
 const ClientDetailWrapper: React.FC<{ onPostScheduled: () => void }> = ({ onPostScheduled }) => {
   const { clientId } = useParams<{ clientId: string }>();
@@ -58,18 +54,19 @@ const WebRouter: React.FC = () => {
     if (isAuthLoading) return;
 
     if (!isAuthenticated) {
-      if (!['/login', '/signup', '/verify-email'].includes(location.pathname)) {
+      if (!['/login', '/signup', '/verify-email', '/verify-process'].includes(location.pathname)) {
         navigate('/login');
       }
     } else {
       // Check for email verification (skip for Guest users)
       const isGuest = currentUser?.email === 'guest@socialstax.app';
 
+      // Allow access to verification pages if unverified
       if (!isGuest && !currentUser?.emailVerified) {
-        if (location.pathname !== '/verify-email') {
+        if (!['/verify-email', '/verify-process'].includes(location.pathname)) {
           navigate('/verify-email');
         }
-      } else if (currentUser?.emailVerified && location.pathname === '/verify-email') {
+      } else if (currentUser?.emailVerified && ['/verify-email', '/verify-process'].includes(location.pathname)) {
         navigate('/');
       }
     }
@@ -98,7 +95,7 @@ const WebRouter: React.FC = () => {
   return (
     <div className="flex min-h-screen bg-black flex-col md:flex-row">
       <VoiceAssistant />
-      {!['/login', '/signup'].includes(location.pathname) && <Navbar clients={clients} />}
+      {!['/login', '/signup', '/verify-email', '/verify-process'].includes(location.pathname) && <Navbar clients={clients} />}
       <div className="flex-1 flex flex-col overflow-auto relative">
         {loadError && (
           <div className="bg-red-900 text-red-100 p-4 m-4 rounded z-50 relative">
@@ -121,6 +118,8 @@ const WebRouter: React.FC = () => {
               <Route path="/downloads" element={<DownloadsView />} />
               <Route path="/settings" element={<SettingsView />} />
               <Route path="/admin" element={<AdminPanel />} />
+              <Route path="/verify-email" element={<VerifyEmailView />} />
+              <Route path="/verify-process" element={<EmailVerificationView />} />
               <Route path="*" element={<ErrorFallback />} />
             </Routes>
           </ErrorBoundary>
