@@ -17,7 +17,12 @@ const VerifyEmailView: React.FC = () => {
         setSending(true);
         setMessage(null);
         try {
-            await sendEmailVerification(user);
+            // Configure redirect URL (points back to the app root)
+            const actionCodeSettings = {
+                url: window.location.origin, // e.g. http://localhost:3005
+                handleCodeInApp: true
+            };
+            await sendEmailVerification(user, actionCodeSettings);
             setMessage({ type: 'success', text: 'Verification email sent! Please check your inbox (and spam folder).' });
         } catch (error: any) {
             console.error('Error sending verification email:', error);
