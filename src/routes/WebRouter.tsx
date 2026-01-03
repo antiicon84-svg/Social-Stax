@@ -59,7 +59,8 @@ const WebRouter: React.FC = () => {
     if (isAuthLoading) return;
 
     if (!isAuthenticated) {
-      if (!['/login', '/signup', '/verify-email', '/verify-process'].includes(location.pathname)) {
+      // Unauthenticated users can ONLY access login and signup
+      if (!['/login', '/signup'].includes(location.pathname)) {
         navigate('/login');
       }
     } else {
