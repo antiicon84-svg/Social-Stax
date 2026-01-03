@@ -11,8 +11,16 @@ const VerifyEmailView: React.FC = () => {
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
     const handleResend = async () => {
+        if (!auth_instance) {
+            setMessage({ type: 'error', text: 'Firebase Auth is not initialized. Please check your environment variables.' });
+            return;
+        }
+
         const user = auth_instance.currentUser;
-        if (!user) return;
+        if (!user) {
+            setMessage({ type: 'error', text: 'No user is currently logged in.' });
+            return;
+        }
 
         setSending(true);
         setMessage(null);
@@ -29,7 +37,7 @@ const VerifyEmailView: React.FC = () => {
             if (error.code === 'auth/too-many-requests') {
                 setMessage({ type: 'error', text: 'Too many requests. Please wait a moment before trying again.' });
             } else {
-                setMessage({ type: 'error', text: 'Failed to send verification email. Please try again later.' });
+                setMessage({ type: 'error', text: `Failed to send verification email: ${error.message}` });
             }
         } finally {
             setSending(false);
@@ -38,6 +46,11 @@ const VerifyEmailView: React.FC = () => {
 
     const checkVerification = async () => {
         try {
+            if (!auth_instance) {
+                setMessage({ type: 'error', text: 'Firebase Auth is not initialized.' });
+                return;
+            }
+
             const user = auth_instance.currentUser;
             if (user) {
                 await user.reload();
@@ -49,6 +62,7 @@ const VerifyEmailView: React.FC = () => {
             }
         } catch (error) {
             console.error("Error checking verification:", error);
+            setMessage({ type: 'error', text: 'Failed to check verification status.' });
         }
     };
 
