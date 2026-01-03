@@ -1,10 +1,13 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { GOOGLE_API_KEY } from "@/config/constants";
 
-const genAI = new GoogleGenerativeAI(GOOGLE_API_KEY);
-
-// Use gemini-2.0-flash for low-cost generation
-const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+const getAIModel = () => {
+  if (!GOOGLE_API_KEY) {
+    throw new Error("Google API Key is missing. Please check your environment variables.");
+  }
+  const genAI = new GoogleGenerativeAI(GOOGLE_API_KEY);
+  return genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+};
 
 /**
  * Enhances a given prompt using AI
@@ -15,6 +18,7 @@ export const enhancePromptWithAI = async (prompt: string, type: 'video' | 'image
   Output only the enhanced prompt and technical parameters in JSON format: { "enhancedPrompt": "...", "technicalParams": "..." }`;
 
   try {
+    const model = getAIModel();
     const result = await model.generateContent([systemPrompt, prompt]);
     const response = await result.response;
     const text = response.text();
@@ -38,6 +42,7 @@ export const analyzePromptCoherence = async (prompt: string, type: 'video' | 'im
   Output in JSON: { "score": 8, "advice": "..." }`;
 
   try {
+    const model = getAIModel();
     const result = await model.generateContent([systemPrompt, prompt]);
     const response = await result.response;
     const text = response.text();
@@ -81,6 +86,7 @@ export const generateContent = async (topic: string, platform?: string) => {
   Provide a headline, body text, and a visual brief for an image generator.`;
 
   try {
+    const model = getAIModel();
     const result = await model.generateContent(prompt);
     const response = await result.response;
     return response.text();
@@ -138,6 +144,7 @@ export const formatSocialMediaContent = async (
     - Include CTA if relevant
     Return ONLY formatted post.`;
 
+    const model = getAIModel();
     const result = await model.generateContent([systemPrompt, `Content: ${content}`]);
     return result.response.text().trim();
   } catch (error) {

@@ -124,7 +124,7 @@ const WebRouter: React.FC = () => {
               <Route path="/settings" element={<SettingsView />} />
               <Route path="/admin" element={<AdminPanel />} />
               <Route path="/calendar" element={<CalendarView />} />
-              <Route path="/calendar" element={<CalendarView />} />
+
               <Route path="/verify-email" element={<VerifyEmailView />} />
               <Route path="*" element={<ErrorFallback />} />
             </Routes>

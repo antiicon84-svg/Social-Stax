@@ -44,35 +44,48 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // Check auth state on mount using Firebase Native Auth
   useEffect(() => {
-    const auth = getFirebaseAuth();
+    let unsubscribeAuth: (() => void) | undefined;
     let profileUnsubscribe: (() => void) | null = null;
 
-    const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
-      // Clean up previous profile listener if exists
-      if (profileUnsubscribe) {
-        profileUnsubscribe();
-        profileUnsubscribe = null;
-      }
+    try {
+      const auth = getFirebaseAuth();
 
-      if (user) {
-        // Set up real-time listener for user profile
-        try {
-          const db = getFirestore();
-          const userRef = doc(db, "users", user.uid);
+      unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
+        // Clean up previous profile listener if exists
+        if (profileUnsubscribe) {
+          profileUnsubscribe();
+          profileUnsubscribe = null;
+        }
 
-          profileUnsubscribe = onSnapshot(userRef, (docSnapshot) => {
-            const profile = docSnapshot.exists() ? (docSnapshot.data() as UserProfile) : null;
+        if (user) {
+          // Set up real-time listener for user profile
+          try {
+            const db = getFirestore();
+            const userRef = doc(db, "users", user.uid);
 
-            setCurrentUser({
-              userId: user.uid,
-              email: user.email,
-              emailVerified: user.emailVerified,
-              profile
+            profileUnsubscribe = onSnapshot(userRef, (docSnapshot) => {
+              const profile = docSnapshot.exists() ? (docSnapshot.data() as UserProfile) : null;
+
+              setCurrentUser({
+                userId: user.uid,
+                email: user.email,
+                emailVerified: user.emailVerified,
+                profile
+              });
+              setLoading(false);
+            }, (error) => {
+              console.error("Profile sync error:", error);
+              // Fallback to basic user info if sync fails
+              setCurrentUser({
+                userId: user.uid,
+                email: user.email,
+                emailVerified: user.emailVerified,
+                profile: null
+              });
+              setLoading(false);
             });
-            setLoading(false);
-          }, (error) => {
-            console.error("Profile sync error:", error);
-            // Fallback to basic user info if sync fails
+          } catch (err) {
+            console.error(err);
             setCurrentUser({
               userId: user.uid,
               email: user.email,
@@ -80,30 +93,24 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               profile: null
             });
             setLoading(false);
-          });
-        } catch (err) {
-          console.error(err);
+          }
+        } else {
           setCurrentUser({
-            userId: user.uid,
-            email: user.email,
-            emailVerified: user.emailVerified,
+            userId: null,
+            email: null,
+            emailVerified: false,
             profile: null
           });
           setLoading(false);
         }
-      } else {
-        setCurrentUser({
-          userId: null,
-          email: null,
-          emailVerified: false,
-          profile: null
-        });
-        setLoading(false);
-      }
-    });
+      });
+    } catch (error) {
+      console.error("Auth initialization failed (likely missing config):", error);
+      setLoading(false);
+    }
 
     return () => {
-      unsubscribeAuth();
+      if (unsubscribeAuth) unsubscribeAuth();
       if (profileUnsubscribe) profileUnsubscribe();
     };
   }, []);
