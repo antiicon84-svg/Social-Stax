@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { HashRouter, MemoryRouter } from 'react-router-dom';
+import { BrowserRouter, MemoryRouter } from 'react-router-dom';
 import App from './App';
 import ErrorBoundary from './components/ErrorBoundary';
 import '~/index.css'; // Essential for styling and preventing layout shifts
@@ -15,12 +15,12 @@ const root = ReactDOM.createRoot(rootElement);
 const isBlobEnv = window.location.protocol === 'blob:';
 
 const renderApp = () => {
-  const Router = isBlobEnv ? MemoryRouter : HashRouter;
-  
+  const Router = isBlobEnv ? MemoryRouter : BrowserRouter;
+
   const appComponent = (
     <React.StrictMode>
       <ErrorBoundary>
-        <Router> 
+        <Router>
           <App />
         </Router>
       </ErrorBoundary>
@@ -43,7 +43,7 @@ if ('serviceWorker' in navigator) {
 // Environment Initialization with safety checks
 const initAndRender = () => {
   const ak = (window as any).appkit;
-  
+
   if (ak && ak.ready && typeof ak.ready.then === 'function' && !isBlobEnv) {
     console.log("AppKit detected, waiting for initialization...");
     ak.ready.then(() => {

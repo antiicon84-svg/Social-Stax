@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Email Verification - Social Stax</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: #000;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    .container {
+      text-align: center;
+      padding: 2rem;
+    }
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid rgba(255, 255, 255, 0.1);
+      border-top-color: #3b82f6;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 1.5rem;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    h1 {
+      font-size: 24px;
+      margin-bottom: 0.5rem;
+    }
+    p {
+      color: #9ca3af;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="spinner"></div>
+    <h1>Verifying your email...</h1>
+    <p>Please wait while we redirect you.</p>
+  </div>
+
+  <script>
+    // This page handles Firebase Auth action links and redirects to the HashRouter app
+    (function() {
+      try {
+        // Get the current URL parameters
+        const params = new URLSearchParams(window.location.search);
+        const mode = params.get('mode');
+        const oobCode = params.get('oobCode');
+        const apiKey = params.get('apiKey');
+        const continueUrl = params.get('continueUrl');
+        const lang = params.get('lang');
+
+        console.log('Firebase auth action handler:', { mode, oobCode: oobCode ? '***' : null });
+
+        // Build the hash URL for the React app
+        let hashUrl = '';
+        
+        if (mode === 'verifyEmail' && oobCode) {
+          // Redirect to the email verification page in the React app (using hash routing)
+          const verifyParams = new URLSearchParams();
+          verifyParams.set('mode', mode);
+          verifyParams.set('oobCode', oobCode);
+          if (apiKey) verifyParams.set('apiKey', apiKey);
+          if (lang) verifyParams.set('lang', lang);
+          
+          // Use the HashRouter syntax: /#/verify-process?params
+          hashUrl = `${window.location.origin}/#/verify-process?${verifyParams.toString()}`;
+        } else if (mode === 'resetPassword' && oobCode) {
+          // Handle password reset (if you add this feature later)
+          const resetParams = new URLSearchParams();
+          resetParams.set('mode', mode);
+          resetParams.set('oobCode', oobCode);
+          if (apiKey) resetParams.set('apiKey', apiKey);
+          
+          hashUrl = `${window.location.origin}/#/reset-password?${resetParams.toString()}`;
+        } else {
+          // Unknown mode or missing code, go to home
+          hashUrl = `${window.location.origin}/#/`;
+        }
+
+        console.log('Redirecting to:', hashUrl);
+        
+        // Redirect immediately
+        window.location.replace(hashUrl);
+      } catch (error) {
+        console.error('Error in auth action handler:', error);
+        // Fallback: redirect to home
+        window.location.replace(`${window.location.origin}/#/`);
+      }
+    })();
+  </script>
+</body>
+</html>

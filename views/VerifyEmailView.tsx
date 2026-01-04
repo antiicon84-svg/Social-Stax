@@ -25,10 +25,9 @@ const VerifyEmailView: React.FC = () => {
         setSending(true);
         setMessage(null);
         try {
-            // Point verification to localhost and handle in app
-            // Using HashRouter syntax /#/ to avoid server 404s
+            // Send verification email with clean URL (BrowserRouter)
             const actionCodeSettings = {
-                url: `${window.location.origin}/#/verify-process`, // Points to /#/verify-process
+                url: `${window.location.origin}/verify-process`,
                 handleCodeInApp: true
             };
             await sendEmailVerification(user, actionCodeSettings);

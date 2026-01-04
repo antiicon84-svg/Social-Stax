@@ -193,10 +193,9 @@ export const signUpWithEmail = async (
     // Create user record in Firestore
     await createUserRecord(user.uid, email, isAdmin, displayName);
 
-    // Send email verification with consistent settings
-    // Using HashRouter syntax /#/ to match app routing strategy
+    // Send email verification with clean URL (BrowserRouter)
     const actionCodeSettings = {
-      url: `${window.location.origin}/#/verify-process`,
+      url: `${window.location.origin}/verify-process`,
       handleCodeInApp: true,
     };
     await sendEmailVerification(user, actionCodeSettings);
