@@ -6,12 +6,17 @@ import {
   signInAnonymously,
   updateProfile,
   signOut,
+  sendEmailVerification,
+  applyActionCode,
+  checkActionCode,
   type User as FirebaseUser,
+  type ActionCodeSettings,
 } from 'firebase/auth';
 import {
   doc,
   getDoc,
   setDoc,
+  updateDoc,
   Timestamp,
   serverTimestamp,
 } from 'firebase/firestore';
@@ -134,6 +139,7 @@ export const createUserRecord = async (
         updatedAt: serverTimestamp(),
         autoDeleteGeneratedContent: false,
         storageUsed: 0,
+        emailVerified: false,
         subscription: {
           status: 'trial',
           plan: 'starter',
@@ -156,9 +162,87 @@ export const createUserRecord = async (
   }
 };
 
+// Send verification email
+export const sendVerificationEmail = async (user: FirebaseUser): Promise<void> => {
+  try {
+    // Get the current domain
+    const currentUrl = window.location.origin;
+    
+    const actionCodeSettings: ActionCodeSettings = {
+      url: `${currentUrl}/auth/verify-email`,
+      handleCodeInApp: true,
+    };
+
+    await sendEmailVerification(user, actionCodeSettings);
+    console.log('Verification email sent to:', user.email);
+  } catch (error) {
+    console.error('Error sending verification email:', error);
+    throw error;
+  }
+};
+
+// Verify email with action code
+export const verifyEmailWithCode = async (actionCode: string): Promise<void> => {
+  try {
+    // Validate the action code
+    await checkActionCode(auth, actionCode);
+    
+    // Apply the email verification
+    await applyActionCode(auth, actionCode);
+    
+    // Update user record in Firestore
+    const user = auth.currentUser;
+    if (user) {
+      const userRef = doc(db, 'users', user.uid);
+      await updateDoc(userRef, {
+        emailVerified: true,
+        updatedAt: serverTimestamp(),
+      });
+      
+      // Reload user to get updated emailVerified status
+      await user.reload();
+    }
+    
+    console.log('Email verified successfully');
+  } catch (error: any) {
+    console.error('Error verifying email:', error);
+    if (error.code === 'auth/expired-action-code') {
+      throw new Error('Verification link has expired. Please request a new one.');
+    } else if (error.code === 'auth/invalid-action-code') {
+      throw new Error('Invalid verification link. Please request a new one.');
+    }
+    throw error;
+  }
+};
+
+// Resend verification email
+export const resendVerificationEmail = async (): Promise<void> => {
+  try {
+    const user = auth.currentUser;
+    if (!user) {
+      throw new Error('No authenticated user');
+    }
+    
+    if (user.emailVerified) {
+      throw new Error('Email is already verified');
+    }
+    
+    await sendVerificationEmail(user);
+  } catch (error) {
+    console.error('Error resending verification email:', error);
+    throw error;
+  }
+};
+
 // Get current user
 export const getCurrentUser = () => {
   return auth.currentUser;
+};
+
+// Check if current user's email is verified
+export const isEmailVerified = (): boolean => {
+  const user = auth.currentUser;
+  return user ? user.emailVerified : false;
 };
 
 // Logout
@@ -191,6 +275,9 @@ export const signUpWithEmail = async (
 
     // Create user record in Firestore
     await createUserRecord(user.uid, email, isAdmin, displayName);
+
+    // Send verification email
+    await sendVerificationEmail(user);
 
     // Map to app User type
     const appUser = await mapFirebaseUserToAppUser(user);
