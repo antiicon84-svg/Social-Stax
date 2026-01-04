@@ -106,7 +106,8 @@ const WebRouter: React.FC = () => {
               <Route path="/downloads" element={<DownloadsView />} />
               <Route path="/settings" element={<SettingsView />} />
               <Route path="/admin" element={<AdminPanel />} />
-                            <Route path="/action" element={<EmailVerificationView />} />
+                            <Route path="/auth/verify-email" element={<EmailVerificationView />} />
+                                    <Route path="/action" element={<EmailVerificationView />} />
               <Route path="*" element={<ErrorFallback />} />
             </Routes>
           </ErrorBoundary>
