@@ -429,7 +429,6 @@ exports.geminiVoiceAssistant = functions.https.onCall(async (data, context) => {
   }
 });
 
-<<<<<<< HEAD
 // Analyze Website (Scrape + Gemini)
 exports.analyzeWebsite = functions.https.onCall(async (data, context) => {
   // Verify user is authenticated
@@ -567,7 +566,9 @@ exports.analyzeWebsite = functions.https.onCall(async (data, context) => {
   } catch (error) {
     console.error('Analyze website error:', error);
     throw new functions.https.HttpsError('internal', 'Analysis failed: ' + error.message);
-=======
+  }
+});
+
 // Email Verification Handler - Custom Backend Handler
 exports.verifyEmail = functions.https.onCall(async (data, context) => {
   const { oobCode, mode } = data;
@@ -656,7 +657,6 @@ exports.verifyEmailAction = functions.https.onRequest(async (req, res) => {
     const message = errorMessages[error.code] || 'An error occurred during email verification';
     const redirectUrl = `https://elegant-fort-482119-t4.firebaseapp.com/verify-error?message=${encodeURIComponent(message)}`;
     return res.redirect(302, redirectUrl);
->>>>>>> 69f700431ddbf9e4b2d9a853f5e1ccf0c437290f
   }
 });
 
