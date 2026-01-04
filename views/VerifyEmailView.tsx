@@ -26,9 +26,9 @@ const VerifyEmailView: React.FC = () => {
         setMessage(null);
         try {
             // Point verification to localhost and handle in app
-            // This ensures the oobCode is passed to EmailVerificationView unconsumed
+            // Using HashRouter syntax /#/ to avoid server 404s
             const actionCodeSettings = {
-                url: `${window.location.origin}/verify-process`, // Points to /verify-process
+                url: `${window.location.origin}/#/verify-process`, // Points to /#/verify-process
                 handleCodeInApp: true
             };
             await sendEmailVerification(user, actionCodeSettings);
