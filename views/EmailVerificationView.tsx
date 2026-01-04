@@ -15,8 +15,8 @@ const EmailVerificationView: React.FC = () => {
     const verifyEmail = async () => {
       try {
         // Extract the verification code from URL parameters
-        const code = new URLSearchParams(window.location.search).get('oobCode') || searchParams.get('oobCode');
-        const mode = new URLSearchParams(window.location.search).get('mode') || searchParams.get('mode');
+        const code const urlParams = new URLSearchParams(window.location.href.split('#')[0].split('?')[1] || ''); const code = urlParams.get('oobCode') || searchParams.get('oobCode');
+        const mode = new URLSearchParams(window.location.search).get('mode') || searchParams.get('mode');const mode = urlParams.get('mode') || searchParams.get('mode');
 
         if (!code) {
           setStatus('error');
