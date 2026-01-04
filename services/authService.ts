@@ -193,8 +193,13 @@ export const signUpWithEmail = async (
     // Create user record in Firestore
     await createUserRecord(user.uid, email, isAdmin, displayName);
 
-    // Send email verification
-    await sendEmailVerification(user);
+    // Send email verification with consistent settings
+    // This matches the logic in VerifyEmailView to ensure links work in-app
+    const actionCodeSettings = {
+      url: `${window.location.origin}/verify-process`,
+      handleCodeInApp: true,
+    };
+    await sendEmailVerification(user, actionCodeSettings);
 
     // Map to app User type
     const appUser = await mapFirebaseUserToAppUser(user);

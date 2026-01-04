@@ -25,13 +25,14 @@ const VerifyEmailView: React.FC = () => {
         setSending(true);
         setMessage(null);
         try {
-            // Point verification to localhost so it works in the same session
+            // Point verification to localhost and handle in app
+            // This ensures the oobCode is passed to EmailVerificationView unconsumed
             const actionCodeSettings = {
-                url: window.location.origin, // http://localhost:3005
-                handleCodeInApp: false // Use Firebase's default handler, but return to localhost
+                url: `${window.location.origin}/verify-process`, // Points to /verify-process
+                handleCodeInApp: true
             };
             await sendEmailVerification(user, actionCodeSettings);
-            setMessage({ type: 'success', text: 'Verification email sent! The link will bring you back here after verification.' });
+            setMessage({ type: 'success', text: 'Verification email sent! Click the link to verify.' });
         } catch (error: any) {
             console.error('Error sending verification email:', error);
             if (error.code === 'auth/too-many-requests') {
