@@ -10,11 +10,7 @@ import {
   applyActionCode,
   checkActionCode,
   type User as FirebaseUser,
-<<<<<<< HEAD
-  sendEmailVerification,
-=======
   type ActionCodeSettings,
->>>>>>> 23e36548f7dff2b8a6ca45c30bf065e3038c93db
 } from 'firebase/auth';
 import {
   doc,
@@ -171,9 +167,9 @@ export const sendVerificationEmail = async (user: FirebaseUser): Promise<void> =
   try {
     // Get the current domain
     const currentUrl = window.location.origin;
-    
+
     const actionCodeSettings: ActionCodeSettings = {
-      url: `${currentUrl}/auth/verify-email`,
+      url: `${currentUrl}/verify-process`,
       handleCodeInApp: true,
     };
 
@@ -190,10 +186,10 @@ export const verifyEmailWithCode = async (actionCode: string): Promise<void> => 
   try {
     // Validate the action code
     await checkActionCode(auth, actionCode);
-    
+
     // Apply the email verification
     await applyActionCode(auth, actionCode);
-    
+
     // Update user record in Firestore
     const user = auth.currentUser;
     if (user) {
@@ -202,11 +198,11 @@ export const verifyEmailWithCode = async (actionCode: string): Promise<void> => 
         emailVerified: true,
         updatedAt: serverTimestamp(),
       });
-      
+
       // Reload user to get updated emailVerified status
       await user.reload();
     }
-    
+
     console.log('Email verified successfully');
   } catch (error: any) {
     console.error('Error verifying email:', error);
@@ -226,11 +222,11 @@ export const resendVerificationEmail = async (): Promise<void> => {
     if (!user) {
       throw new Error('No authenticated user');
     }
-    
+
     if (user.emailVerified) {
       throw new Error('Email is already verified');
     }
-    
+
     await sendVerificationEmail(user);
   } catch (error) {
     console.error('Error resending verification email:', error);
@@ -280,17 +276,8 @@ export const signUpWithEmail = async (
     // Create user record in Firestore
     await createUserRecord(user.uid, email, isAdmin, displayName);
 
-<<<<<<< HEAD
-    // Send email verification with clean URL (BrowserRouter)
-    const actionCodeSettings = {
-      url: `${window.location.origin}/verify-process`,
-      handleCodeInApp: true,
-    };
-    await sendEmailVerification(user, actionCodeSettings);
-=======
     // Send verification email
     await sendVerificationEmail(user);
->>>>>>> 23e36548f7dff2b8a6ca45c30bf065e3038c93db
 
     // Map to app User type
     const appUser = await mapFirebaseUserToAppUser(user);
