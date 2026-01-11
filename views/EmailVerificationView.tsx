@@ -15,7 +15,6 @@ const EmailVerificationView: React.FC = () => {
     const verifyEmail = async () => {
       try {
         // Extract the verification code from URL parameters
-        // Extract the verification code from URL parameters
         // Handle both standard URL params and potential hash router issues
         const searchString = window.location.search || (window.location.hash.includes('?') ? window.location.hash.split('?')[1] : '');
         const urlParams = new URLSearchParams(searchString);
