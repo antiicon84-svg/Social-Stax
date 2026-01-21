@@ -1,13 +1,10 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { GOOGLE_API_KEY } from "@/config/constants";
 
-const getAIModel = () => {
-  if (!GOOGLE_API_KEY) {
-    throw new Error("Google API Key is missing. Please check your environment variables.");
-  }
-  const genAI = new GoogleGenerativeAI(GOOGLE_API_KEY);
-  return genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-};
+const genAI = new GoogleGenerativeAI(GOOGLE_API_KEY);
+
+// Use gemini-2.0-flash for low-cost generation
+const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
 /**
  * Enhances a given prompt using AI
@@ -18,7 +15,6 @@ export const enhancePromptWithAI = async (prompt: string, type: 'video' | 'image
   Output only the enhanced prompt and technical parameters in JSON format: { "enhancedPrompt": "...", "technicalParams": "..." }`;
 
   try {
-    const model = getAIModel();
     const result = await model.generateContent([systemPrompt, prompt]);
     const response = await result.response;
     const text = response.text();
@@ -42,7 +38,6 @@ export const analyzePromptCoherence = async (prompt: string, type: 'video' | 'im
   Output in JSON: { "score": 8, "advice": "..." }`;
 
   try {
-    const model = getAIModel();
     const result = await model.generateContent([systemPrompt, prompt]);
     const response = await result.response;
     const text = response.text();
@@ -60,18 +55,20 @@ export const analyzePromptCoherence = async (prompt: string, type: 'video' | 'im
 /**
  * Analyzes a website to extract brand information
  */
-import { getFunctions, httpsCallable } from "firebase/functions";
-import { getApp } from "firebase/app";
-
-/**
- * Analyzes a website to extract brand information using Cloud Function (Server-side scraping + Gemini)
- */
 export const analyzeWebsite = async (url: string) => {
+  const systemPrompt = `Analyze the website URL provided and infer brand details like name, industry, tone, description, and primary color.
+  URL: ${url}
+  Output JSON: { "name": "...", "industry": "...", "tone": "...", "description": "...", "color": "#..." }`;
+
   try {
-    const functions = getFunctions(getApp());
-    const analyzeFunction = httpsCallable(functions, 'analyzeWebsite');
-    const result = await analyzeFunction({ url });
-    return result.data as any; // Type assertion as response structure is dynamic
+    const result = await model.generateContent([systemPrompt]);
+    const response = await result.response;
+    const text = response.text();
+    const jsonMatch = text.match(/\{.*\}/s);
+    if (jsonMatch) {
+      return JSON.parse(jsonMatch[0]);
+    }
+    return null;
   } catch (error) {
     console.error("Website analysis failed", error);
     throw error;
@@ -86,7 +83,6 @@ export const generateContent = async (topic: string, platform?: string) => {
   Provide a headline, body text, and a visual brief for an image generator.`;
 
   try {
-    const model = getAIModel();
     const result = await model.generateContent(prompt);
     const response = await result.response;
     return response.text();
@@ -144,7 +140,6 @@ export const formatSocialMediaContent = async (
     - Include CTA if relevant
     Return ONLY formatted post.`;
 
-    const model = getAIModel();
     const result = await model.generateContent([systemPrompt, `Content: ${content}`]);
     return result.response.text().trim();
   } catch (error) {

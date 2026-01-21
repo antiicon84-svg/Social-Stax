@@ -43,11 +43,11 @@ const App: React.FC = () => {
   if (!isReady) {
     console.log('[App] Not ready, showing spinner');
     return (
-      <AuthProvider>
-        <div className="flex items-center justify-center min-h-screen bg-black">
-          <LoadingSpinner size="lg" />
-        </div>
-      </AuthProvider>
+            <AuthProvider>
+      <div className="flex items-center justify-center min-h-screen bg-black">
+        <LoadingSpinner size="lg" />
+      </div>
+                    </AuthProvider>
     );
   }
 

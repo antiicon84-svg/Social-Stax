@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getClients, getScheduledPosts, deletePost } from '~/services/dbService';
+import { getClients, getScheduledPosts, deletePost } from '@/services/dbService';
 import { Client, Post } from '~/types';
 
 export function useClientData(isAuthenticated: boolean) {

@@ -60,22 +60,19 @@ export interface Client {
   ownerEmail: string;
   ownerUid?: string;
   name: string;
-  clientType: ClientType;
+  clientType: ClientType; 
   industry: string;
   brandTone: string;
   primaryBrandColor: string;
-  secondaryBrandColor?: string;
-  accentBrandColor?: string;
-  logo?: string;
-  logoUsageGuideline?: string;
-  typographyGuideline?: string;
-
+  logo?: string; 
+  logoUsageGuideline?: string; 
+  typographyGuideline?: string; 
+  
   // Extended Brand Kit
   description?: string;
   mission?: string;
-  targetMarket?: string;
-  tags?: string[];
-
+  tags?: string[]; 
+  
   // Enhanced Contact Info
   website?: string;
   phoneNumber?: string;

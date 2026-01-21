@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { verifyEmailWithCode, resendVerificationEmail, isEmailVerified } from '~/services/authService';
+import { verifyEmailWithCode, resendVerificationEmail, isEmailVerified } from '@/services/authService';
 import { useAuth } from '@/context/AuthContext';
 
 const EmailVerificationHandler: React.FC = () => {

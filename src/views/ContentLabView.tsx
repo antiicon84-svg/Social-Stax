@@ -1,15 +1,14 @@
 import React, { useState } from 'react';
 import Button from '@/components/Button';
-import { useAuth } from '@/context/AuthContext';
-import { generateContent, enhancePromptWithAI } from '~/services/aiService';
-import { savePost } from '~/services/dbService';
-import { getCurrentUser } from '~/services/authService';
+import { generateContent, enhancePromptWithAI } from '@/services/aiService';
+import { savePost } from '@/services/dbService';
+import { getCurrentUser } from '@/services/authService';
 import { Post } from '~/types';
-import {
-  FlaskConical,
-  Sparkles,
-  Copy,
-  Check,
+import { 
+  FlaskConical, 
+  Sparkles, 
+  Copy, 
+  Check, 
   Trash2,
   Instagram,
   Linkedin,
@@ -25,11 +24,8 @@ import {
 } from 'lucide-react';
 
 const ContentLabView: React.FC = () => {
-  const { currentUser } = useAuth();
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(['Instagram']);
   const [previewPlatform, setPreviewPlatform] = useState('Instagram');
-  const [activeTab, setActiveTab] = useState<'text' | 'image' | 'video'>('text');
-  const [topic, setTopic] = useState('');
   const [result, setResult] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -42,7 +38,7 @@ const ContentLabView: React.FC = () => {
     setIsLoading(true);
     setResult('');
     setGeneratedImageUrl(null);
-
+    
     try {
       if (activeTab === 'text') {
         const output = await generateContent(topic, previewPlatform);
@@ -50,11 +46,11 @@ const ContentLabView: React.FC = () => {
       } else {
         // For Image and Video, we generate a detailed prompt/brief
         const enhanced = await enhancePromptWithAI(topic, activeTab);
-        const finalResult = typeof enhanced === 'string'
-          ? enhanced
+        const finalResult = typeof enhanced === 'string' 
+          ? enhanced 
           : `**Enhanced Prompt:**\n${enhanced.enhancedPrompt}\n\n**Technical Parameters:**\n${enhanced.technicalParams}`;
         setResult(finalResult);
-
+        
         // For image tab, also generate an actual image using Pollinations
         if (activeTab === 'image') {
           await generateActualImage(enhanced);
@@ -71,13 +67,13 @@ const ContentLabView: React.FC = () => {
   const generateActualImage = async (enhancedPrompt: any) => {
     setIsGeneratingImage(true);
     try {
-      const promptText = typeof enhancedPrompt === 'string'
-        ? enhancedPrompt
+      const promptText = typeof enhancedPrompt === 'string' 
+        ? enhancedPrompt 
         : enhancedPrompt.enhancedPrompt;
-
+      
       // Use Pollinations API for free image generation
       const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(promptText)}?width=1024&height=1024&model=flux&nologo=true`;
-
+      
       // Create an image element to preload and verify
       const img = new Image();
       img.onload = () => {
@@ -90,7 +86,7 @@ const ContentLabView: React.FC = () => {
         // Don't show alert here, let it fail silently and just show the prompt
       };
       img.src = imageUrl;
-
+      
     } catch (error) {
       console.error('Image generation error:', error);
       setIsGeneratingImage(false);
@@ -99,9 +95,9 @@ const ContentLabView: React.FC = () => {
 
   const handleSaveDraft = async () => {
     if (!result) return;
-    const user = currentUser;
+    const user = getCurrentUser();
     if (!user) return alert('You must be logged in to save drafts.');
-
+    
     setIsSaving(true);
     try {
       const newPost: Post = {
@@ -134,7 +130,7 @@ const ContentLabView: React.FC = () => {
 
   const handleDownloadImage = () => {
     if (!generatedImageUrl) return;
-
+    
     const link = document.createElement('a');
     link.href = generatedImageUrl;
     link.download = `generated-image-${Date.now()}.png`;
@@ -175,10 +171,11 @@ const ContentLabView: React.FC = () => {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id as any)}
-            className={`flex items-center gap-2 px-4 py-2 text-sm font-bold transition-colors relative top-[1px] ${activeTab === tab.id
-              ? 'text-red-500 border-b-2 border-red-500'
-              : 'text-gray-500 hover:text-white'
-              }`}
+            className={`flex items-center gap-2 px-4 py-2 text-sm font-bold transition-colors relative top-[1px] ${
+              activeTab === tab.id
+                ? 'text-red-500 border-b-2 border-red-500'
+                : 'text-gray-500 hover:text-white'
+            }`}
           >
             <tab.icon size={16} />
             {tab.label}
@@ -196,10 +193,11 @@ const ContentLabView: React.FC = () => {
                 <button
                   key={p.name}
                   onClick={() => setSelectedPlatforms(prev => prev.includes(p.name) ? prev.filter(plat => plat !== p.name) : [...prev, p.name])}
-                  className={`flex items-center gap-2 px-3 py-3 rounded-xl border transition-all ${selectedPlatforms.includes(p.name)
-                    ? 'bg-red-600/10 border-red-600/50 text-white'
-                    : 'bg-black border-gray-800 text-gray-500 hover:border-gray-700'
-                    }`}
+                  className={`flex items-center gap-2 px-3 py-3 rounded-xl border transition-all ${
+                    selectedPlatforms.includes(p.name) 
+                      ? 'bg-red-600/10 border-red-600/50 text-white' 
+                      : 'bg-black border-gray-800 text-gray-500 hover:border-gray-700'
+                  }`}
                 >
                   <p.icon size={16} className={selectedPlatforms.includes(p.name) ? p.color : ''} />
                   <span className="text-xs font-bold">{p.name}</span>
@@ -219,13 +217,13 @@ const ContentLabView: React.FC = () => {
               value={topic}
               onChange={(e) => setTopic(e.target.value)}
               className="w-full bg-black border border-gray-800 rounded-xl p-4 text-white h-40 outline-none focus:ring-2 focus:ring-red-600 transition-all resize-none text-sm leading-relaxed"
-              placeholder={activeTab === 'image'
+              placeholder={activeTab === 'image' 
                 ? "e.g. A futuristic cyberpunk cityscape at night with neon lights reflecting on wet streets, ultra-realistic 8k"
                 : "e.g. Benefits of sustainable fashion for Gen Z, or a product launch for a new tech gadget..."
               }
             />
-            <Button
-              onClick={handleGenerate}
+            <Button 
+              onClick={handleGenerate} 
               isLoading={isLoading || isGeneratingImage}
               className="w-full py-4 shadow-xl shadow-red-900/20"
             >
@@ -265,8 +263,8 @@ const ContentLabView: React.FC = () => {
                   </div>
                 </div>
                 <div className="flex-1 flex items-center justify-center">
-                  <img
-                    src={generatedImageUrl}
+                  <img 
+                    src={generatedImageUrl} 
                     alt="Generated content"
                     className="max-w-full max-h-[300px] rounded-xl shadow-lg"
                   />
@@ -321,7 +319,7 @@ const ContentLabView: React.FC = () => {
                     {activeTab === 'image' ? 'Images will appear here' : 'Results will appear here'}
                   </h3>
                   <p className="text-gray-500 text-sm">
-                    {activeTab === 'image'
+                    {activeTab === 'image' 
                       ? "Select a platform and enter a prompt to generate AI images."
                       : "Select a platform and enter a topic to start generating AI content."
                     }

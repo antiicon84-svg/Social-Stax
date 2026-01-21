@@ -1,32 +1,27 @@
 import React, { useEffect } from 'react';
-import { Routes, Route, useNavigate, useParams, useLocation } from 'react-router-dom';
+import { Routes, Route, useNavigate, useLocation, Navigate, Outlet, useParams, useOutletContext } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
-import DashboardView from '~/views/DashboardView';
-import AllClientsView from '~/views/AllClientsView';
-import CreateClientView from '~/views/CreateClientView';
-import ClientDetailView from '~/views/ClientDetailView';
-import DownloadsView from '~/views/DownloadsView';
-import TemplatesView from '~/views/TemplatesView';
-import ContentLabView from '~/views/ContentLabView';
-import PromptGuideView from '~/views/PromptGuideView';
-import BillingView from '~/views/BillingView';
+import DashboardView from '@/views/DashboardView';
+import AllClientsView from '@/views/AllClientsView';
+import CreateClientView from '@/views/CreateClientView';
+import ClientDetailView from '@/views/ClientDetailView';
+import DownloadsView from '@/views/DownloadsView';
+import TemplatesView from '@/views/TemplatesView';
+import ContentLabView from '@/views/ContentLabView';
+import PromptGuideView from '@/views/PromptGuideView';
+import BillingView from '@/views/BillingView';
 import AdminPanel from '@/components/AdminPanel';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import Button from '@/components/Button';
 import ErrorBoundary from '@/components/ErrorBoundary';
-import LoginView from '~/views/LoginView';
 import VoiceAssistant from '@/components/VoiceAssistant';
 import { useClientData } from '@/hooks/useClientData';
 import { useAuth } from '../context/AuthContext';
-import SettingsView from '~/views/SettingsView';
-import VerifyEmailView from '~/views/VerifyEmailView';
-import EmailVerificationView from '~/views/EmailVerificationView';
 
-const ClientDetailWrapper: React.FC<{ onPostScheduled: () => void }> = ({ onPostScheduled }) => {
-  const { clientId } = useParams<{ clientId: string }>();
-  if (!clientId) return null;
-  return <ClientDetailView clientId={clientId} onPostScheduled={onPostScheduled} />;
-};
+import SettingsView from '@/views/SettingsView';
+import EmailVerificationView from '@/views/EmailVerificationView';
+import LoginView from '@/views/LoginView';
+import SignupView from '@/views/SignupView';
 
 const ErrorFallback: React.FC = () => {
   const navigate = useNavigate();
@@ -39,10 +34,11 @@ const ErrorFallback: React.FC = () => {
   );
 };
 
-const WebRouter: React.FC = () => {
-  const location = useLocation();
+const PrivateLayout: React.FC = () => {
+  const { isAuthenticated, loading: isAuthLoading } = useAuth();
   const navigate = useNavigate();
-  const { isAuthenticated, loading: isAuthLoading, currentUser } = useAuth();
+  const location = useLocation();
+  
   const {
     clients,
     posts,
@@ -56,27 +52,10 @@ const WebRouter: React.FC = () => {
   } = useClientData(isAuthenticated);
 
   useEffect(() => {
-    if (isAuthLoading) return;
-
-    if (!isAuthenticated) {
-      // Unauthenticated users can ONLY access login and signup
-      if (!['/login', '/signup'].includes(location.pathname)) {
-        navigate('/login');
-      }
-    } else {
-      // Check for email verification (skip for Guest users)
-      const isGuest = currentUser?.email === 'guest@socialstax.app';
-
-      // Allow access to verification pages if unverified
-      if (!isGuest && !currentUser?.emailVerified) {
-        if (!['/verify-email', '/verify-process'].includes(location.pathname)) {
-          navigate('/verify-email');
-        }
-      } else if (currentUser?.emailVerified && ['/verify-email', '/verify-process'].includes(location.pathname)) {
-        navigate('/');
-      }
+    if (!isAuthLoading && !isAuthenticated) {
+      navigate('/login', { state: { from: location } });
     }
-  }, [isAuthenticated, isAuthLoading, navigate, location.pathname, currentUser]);
+  }, [isAuthenticated, isAuthLoading, navigate, location]);
 
   if (isAuthLoading) {
     return (
@@ -86,22 +65,14 @@ const WebRouter: React.FC = () => {
     );
   }
 
-
-  const dashboardProps = {
-    clients,
-    posts,
-    onDeletePost: handleDeletePost,
-    isLoadingClients,
-    isLoadingPosts,
-    onDataRefresh: handleRefresh,
-  };
-
-  console.log('[WebRouter] Rendering main layout. Path:', location.pathname);
+  if (!isAuthenticated) {
+    return null;
+  }
 
   return (
     <div className="flex min-h-screen bg-black flex-col md:flex-row">
       <VoiceAssistant />
-      {!['/login', '/signup', '/verify-email', '/verify-process'].includes(location.pathname) && <Navbar clients={clients} />}
+      <Navbar clients={clients} />
       <div className="flex-1 flex flex-col overflow-auto relative">
         {loadError && (
           <div className="bg-red-900 text-red-100 p-4 m-4 rounded z-50 relative">
@@ -111,27 +82,67 @@ const WebRouter: React.FC = () => {
         )}
         <div className="flex-1">
           <ErrorBoundary>
-            <Routes>
-              <Route path="/login" element={<LoginView />} />
-              <Route path="/" element={<DashboardView {...dashboardProps} />} />
-              <Route path="/clients" element={<AllClientsView />} />
-              <Route path="/add-client" element={<CreateClientView onClientAdded={handleClientAdded} />} />
-              <Route path="/client/:clientId" element={<ClientDetailWrapper onPostScheduled={handlePostScheduled} />} />
-              <Route path="/templates" element={<TemplatesView />} />
-              <Route path="/content-lab" element={<ContentLabView />} />
-              <Route path="/prompt-guide" element={<PromptGuideView />} />
-              <Route path="/billing" element={<BillingView />} />
-              <Route path="/downloads" element={<DownloadsView />} />
-              <Route path="/settings" element={<SettingsView />} />
-              <Route path="/admin" element={<AdminPanel />} />
-              <Route path="/verify-email" element={<VerifyEmailView />} />
-              <Route path="/verify-process" element={<EmailVerificationView />} />
-              <Route path="*" element={<ErrorFallback />} />
-            </Routes>
+            <Outlet context={{ 
+              clients, 
+              posts, 
+              onDeletePost: handleDeletePost, 
+              isLoadingClients, 
+              isLoadingPosts, 
+              onDataRefresh: handleRefresh,
+              handleClientAdded,
+              handlePostScheduled
+            }} />
           </ErrorBoundary>
         </div>
       </div>
     </div>
+  );
+};
+
+const DashboardViewWrapper: React.FC = () => {
+  const context = useOutletContext<any>();
+  return <DashboardView {...context} />;
+};
+
+const CreateClientViewWrapper: React.FC = () => {
+  const context = useOutletContext<any>();
+  return <CreateClientView onClientAdded={context.handleClientAdded} />;
+};
+
+const ClientDetailWrapper: React.FC = () => {
+  const { clientId } = useParams<{ clientId: string }>();
+  const context = useOutletContext<any>();
+  if (!clientId) return null;
+  return <ClientDetailView clientId={clientId} onPostScheduled={context.handlePostScheduled} />;
+};
+
+const WebRouter: React.FC = () => {
+  return (
+    <Routes>
+      {/* Public Routes */}
+      <Route path="/login" element={<LoginView />} />
+      <Route path="/signup" element={<SignupView />} />
+      <Route path="/auth/verify-email" element={<EmailVerificationView />} />
+      <Route path="/action" element={<EmailVerificationView />} />
+
+      {/* Private Routes */}
+      <Route element={<PrivateLayout />}>
+        <Route path="/" element={<DashboardViewWrapper />} />
+        <Route path="/clients" element={<AllClientsView />} />
+        <Route path="/add-client" element={<CreateClientViewWrapper />} />
+        <Route path="/client/:clientId" element={<ClientDetailWrapper />} />
+        <Route path="/templates" element={<TemplatesView />} />
+        <Route path="/content-lab" element={<ContentLabView />} />
+        <Route path="/prompt-guide" element={<PromptGuideView />} />
+        <Route path="/billing" element={<BillingView />} />
+        <Route path="/downloads" element={<DownloadsView />} />
+        <Route path="/settings" element={<SettingsView />} />
+        <Route path="/admin" element={<AdminPanel />} />
+      </Route>
+
+      {/* Fallback */}
+      <Route path="*" element={<ErrorFallback />} />
+    </Routes>
   );
 };
 

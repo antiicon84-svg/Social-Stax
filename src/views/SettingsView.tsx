@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import AdminPanel from '@/components/AdminPanel';
 import Button from '@/components/Button';
-import { dev_setCurrentUserAsAdmin } from '~/services/dbService';
+import { dev_setCurrentUserAsAdmin } from '@/services/dbService';
 
 const SettingsView: React.FC = () => {
   const [isPromoting, setIsPromoting] = useState(false);

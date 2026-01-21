@@ -1,22 +1,20 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import {
+import { 
   signUpWithEmail,
   loginUser,
   logoutUser,
   loginGuest as loginGuestService
-} from '~/services/authService';
-import {
-  onAuthStateChanged
+} from '@/services/authService';
+import { 
+  onAuthStateChanged 
 } from 'firebase/auth';
-import { getFirestore, doc, onSnapshot } from 'firebase/firestore';
 import { getFirebaseAuth } from '@/config/firebase';
-import { getUserProfile } from '~/services/dbService';
+import { getUserProfile } from '@/services/dbService';
 import { UserProfile } from '~/types';
 
 interface CurrentUser {
   userId: string | null;
   email: string | null;
-  emailVerified: boolean;
   profile: UserProfile | null;
 }
 
@@ -38,81 +36,49 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [currentUser, setCurrentUser] = useState<CurrentUser>({
     userId: null,
     email: null,
-    emailVerified: false,
     profile: null
   });
 
   // Check auth state on mount using Firebase Native Auth
   useEffect(() => {
-    let unsubscribeAuth: (() => void) | undefined;
-    let profileUnsubscribe: (() => void) | null = null;
-
-    try {
-      const auth = getFirebaseAuth();
-
-      unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
-        // Clean up previous profile listener if exists
-        if (profileUnsubscribe) {
-          profileUnsubscribe();
-          profileUnsubscribe = null;
-        }
-
-        if (user) {
-          // Set up real-time listener for user profile
-          try {
-            const db = getFirestore();
-            const userRef = doc(db, "users", user.uid);
-
-            profileUnsubscribe = onSnapshot(userRef, (docSnapshot) => {
-              const profile = docSnapshot.exists() ? (docSnapshot.data() as UserProfile) : null;
-
-              setCurrentUser({
-                userId: user.uid,
-                email: user.email,
-                emailVerified: user.emailVerified,
-                profile
-              });
-              setLoading(false);
-            }, (error) => {
-              console.error("Profile sync error:", error);
-              // Fallback to basic user info if sync fails
-              setCurrentUser({
-                userId: user.uid,
-                email: user.email,
-                emailVerified: user.emailVerified,
-                profile: null
-              });
-              setLoading(false);
-            });
-          } catch (err) {
-            console.error(err);
-            setCurrentUser({
-              userId: user.uid,
-              email: user.email,
-              emailVerified: user.emailVerified,
-              profile: null
-            });
-            setLoading(false);
-          }
-        } else {
-          setCurrentUser({
-            userId: null,
-            email: null,
-            emailVerified: false,
-            profile: null
+    const auth = getFirebaseAuth();
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        // Fetch user profile
+        let profile: UserProfile | null = null;
+        try {
+          // We need to wait a bit if it's a new signup for the profile to be created
+          // But usually getUserProfile handles null gracefully or we can retry
+          // For now, simple fetch
+          // Note: getUserProfile uses getAuthenticatedUid which relies on getCurrentUser from authService
+          // But here we are inside onAuthStateChanged, so authService might not be updated yet?
+          // Actually dbService.getUserProfile calls getAuthenticatedUid() -> getCurrentUser()
+          // We should probably pass the uid directly if dbService allowed, but it doesn't.
+          // However, firebase auth state is global.
+          profile = await getUserProfile().catch(e => {
+            console.warn("Failed to fetch profile", e);
+            return null;
           });
-          setLoading(false);
+        } catch (err) {
+            console.error(err);
         }
-      });
-    } catch (error) {
-      console.error("Auth initialization failed (likely missing config):", error);
-      setLoading(false);
-    }
 
-    return () => {
-      if (unsubscribeAuth) unsubscribeAuth();
-      if (profileUnsubscribe) profileUnsubscribe();
-    };
+        setCurrentUser({
+          userId: user.uid,
+          email: user.email,
+          profile
+        });
+      } else {
+        setCurrentUser({
+          userId: null,
+          email: null,
+          profile: null
+        });
+      }
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const signUp = async (email: string, password: string, displayName?: string) => {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { getClients } from '~/services/dbService';
+import { getClients } from '@/services/dbService';
 import { Client } from '~/types';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import Button from '@/components/Button';

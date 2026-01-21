@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { resendVerificationEmail, logoutUser } from '~/services/authService';
+import { resendVerificationEmail, logoutUser } from '@/services/authService';
 import { useAuth } from '@/context/AuthContext';
 
 interface EmailVerificationPendingProps {
