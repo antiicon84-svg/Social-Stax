@@ -5,9 +5,15 @@
       "firebase.json",
       "**/.*",
       "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
     ]
   },
-    "functions": [{
+  "functions": [{
     "source": "functions",
     "codebase": "default",
     "ignore": [
@@ -16,5 +22,8 @@
       "firebase-debug.log",
       "firebase-debug.*.log"
     ]
-  }]
+  }],
+  "firestore": {
+    "rules": "firestore.rules"
+  }
 }

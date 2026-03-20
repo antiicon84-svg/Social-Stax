@@ -27,7 +27,7 @@ Navigate to Firestore Console and create:
 **Fields:**
 ```json
 {
-  "email": "admin@socialstax.com",
+  "email": "antiicon84@gmail.com",
   "passwordHash": "$2b$10$...",
   "role": "admin",
   "permissions": [

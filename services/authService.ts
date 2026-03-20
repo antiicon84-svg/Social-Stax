@@ -4,6 +4,8 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signInAnonymously,
+  signInWithPopup,
+  GoogleAuthProvider,
   updateProfile,
   signOut,
   type User as FirebaseUser,
@@ -113,7 +115,8 @@ export const createUserRecord = async (
   uid: string,
   email: string,
   isAdmin: boolean = false,
-  displayName: string = ''
+  displayName: string = '',
+  phone: string = ''
 ): Promise<void> => {
   try {
     const userRef = doc(db, 'users', uid);
@@ -126,6 +129,7 @@ export const createUserRecord = async (
         uid,
         email,
         displayName,
+        phoneNumber: phone,
         role: isAdmin ? 'admin' : 'user',
         planTier: 'free',
         credits: 100,
@@ -175,7 +179,8 @@ export const logoutUser = async (): Promise<void> => {
 export const signUpWithEmail = async (
   email: string,
   password: string,
-  displayName?: string
+  displayName?: string,
+  phone?: string
 ): Promise<User> => {
   try {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -189,8 +194,8 @@ export const signUpWithEmail = async (
     // Check if user should be admin
     const isAdmin = isAdminUser(email);
 
-    // Create user record in Firestore
-    await createUserRecord(user.uid, email, isAdmin, displayName);
+    // Create user record in Firestore (with phone number)
+    await createUserRecord(user.uid, email, isAdmin, displayName, phone);
 
     // Map to app User type
     const appUser = await mapFirebaseUserToAppUser(user);
@@ -199,6 +204,18 @@ export const signUpWithEmail = async (
     console.error('Error signing up:', error);
     throw error;
   }
+};
+
+// Sign in with Google
+export const loginWithGoogle = async (): Promise<void> => {
+  const provider = new GoogleAuthProvider();
+  provider.addScope('email');
+  provider.addScope('profile');
+  const userCredential = await signInWithPopup(auth, provider);
+  const user = userCredential.user;
+  const isAdmin = isAdminUser(user.email ?? '');
+  // Use merge:true so existing accounts are not overwritten
+  await createUserRecord(user.uid, user.email ?? '', isAdmin, user.displayName ?? '', user.phoneNumber ?? '');
 };
 
 // Sign in with email and password

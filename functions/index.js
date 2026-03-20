@@ -354,7 +354,137 @@ exports.getQuotaStatus = functions.https.onCall(async (data, context) => {
   }
 });
 
-module.exports = exports;
+// ============================================================
+// Gemini AI - Secure Backend Proxy (keeps API key off client)
+// ============================================================
+exports.geminiAI = functions.https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError('unauthenticated', 'Must be authenticated');
+  }
+
+  const { operation, payload } = data;
+  if (!operation || !payload) {
+    throw new functions.https.HttpsError('invalid-argument', 'operation and payload required');
+  }
+
+  const { GoogleGenerativeAI } = require('@google/generative-ai');
+  const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+
+  try {
+    let result;
+
+    if (operation === 'generateContent') {
+      const { topic, platform } = payload;
+      const prompt = `Generate high-quality social media content for the topic: "${topic}"${platform ? ` specifically for ${platform}` : ''}. Provide a headline, body text, and a visual brief for an image generator.`;
+      result = await model.generateContent(prompt);
+      return { text: result.response.text() };
+    }
+
+    if (operation === 'enhancePrompt') {
+      const { prompt, type } = payload;
+      const systemPrompt = `You are a professional prompt engineer for ${type} generation AI. Enhance the user's prompt to be more detailed, cinematic, and effective. Output only the enhanced prompt and technical parameters in JSON format: { "enhancedPrompt": "...", "technicalParams": "..." }`;
+      result = await model.generateContent([systemPrompt, prompt]);
+      const text = result.response.text();
+      const jsonMatch = text.match(/\{.*\}/s);
+      return jsonMatch ? JSON.parse(jsonMatch[0]) : { enhancedPrompt: text, technicalParams: '' };
+    }
+
+    if (operation === 'analyzeWebsite') {
+      const { url } = payload;
+      const systemPrompt = `Analyze the website URL provided and infer brand details like name, industry, tone, description, and primary color. URL: ${url} Output JSON: { "name": "...", "industry": "...", "tone": "...", "description": "...", "color": "#..." }`;
+      result = await model.generateContent([systemPrompt]);
+      const text = result.response.text();
+      const jsonMatch = text.match(/\{.*\}/s);
+      return jsonMatch ? JSON.parse(jsonMatch[0]) : null;
+    }
+
+    if (operation === 'formatContent') {
+      const { content, platform, brandKit } = payload;
+      const configs = {
+        Instagram: { maxLength: 2200, hashtagCount: 15, emojiEmphasis: true, tone: 'Creative, visually-focused, trendy' },
+        LinkedIn:  { maxLength: 3000, hashtagCount: 5,  emojiEmphasis: false, tone: 'Professional, thought leadership' },
+        Twitter:   { maxLength: 280,  hashtagCount: 3,  emojiEmphasis: true,  tone: 'Concise, engaging, trendy' },
+        Facebook:  { maxLength: 63206, hashtagCount: 8, emojiEmphasis: true,  tone: 'Conversational, community-focused' },
+      };
+      const config = configs[platform] || configs.Instagram;
+      const tone = brandKit?.tone || config.tone;
+      const systemPrompt = `Format this content for ${platform}. Max ${config.maxLength} characters. Add ${config.hashtagCount} relevant hashtags. ${config.emojiEmphasis ? 'Use strategic emojis.' : 'Minimal emojis.'} Tone: ${tone}. Include CTA if relevant. Return ONLY formatted post.`;
+      result = await model.generateContent([systemPrompt, `Content: ${content}`]);
+      return { text: result.response.text().trim() };
+    }
+
+    if (operation === 'analyzeCoherence') {
+      const { prompt, type } = payload;
+      const systemPrompt = `Analyze the following ${type} generation prompt for coherence and potential conflicts. Provide a score from 1-10 and brief advice. Output in JSON: { "score": 8, "advice": "..." }`;
+      result = await model.generateContent([systemPrompt, prompt]);
+      const text = result.response.text();
+      const jsonMatch = text.match(/\{.*\}/s);
+      return jsonMatch ? JSON.parse(jsonMatch[0]) : { score: 5, advice: 'Unable to analyze.' };
+    }
+
+    throw new functions.https.HttpsError('invalid-argument', `Unknown operation: ${operation}`);
+  } catch (error) {
+    console.error('geminiAI error:', error);
+    throw new functions.https.HttpsError('internal', error.message);
+  }
+});
+
+// Gemini Live Chat - Text-based conversational assistant with navigation support
+exports.geminiLiveChat = functions.https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
+  }
+
+  try {
+    const { message, history = [], systemContext = '' } = data;
+
+    if (!message) {
+      throw new functions.https.HttpsError('invalid-argument', 'Message is required');
+    }
+
+    const { GoogleGenerativeAI } = require('@google/generative-ai');
+    const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+
+    // Build conversation with context
+    const contents = [];
+
+    // Add history
+    if (history && history.length > 0) {
+      for (const msg of history) {
+        contents.push({
+          role: msg.role === 'user' ? 'user' : 'model',
+          parts: [{ text: msg.text }]
+        });
+      }
+    }
+
+    // Add current user message
+    contents.push({
+      role: 'user',
+      parts: [{ text: message }]
+    });
+
+    const systemPrompt = systemContext || 'You are Stax, a helpful AI assistant for a social media marketing platform called Social StaX.';
+
+    const result = await model.generateContent({
+      systemInstruction: { parts: [{ text: systemPrompt }] },
+      contents
+    });
+
+    const responseText = result.response.text();
+
+    return {
+      success: true,
+      text: responseText,
+      timestamp: new Date().toISOString()
+    };
+  } catch (error) {
+    console.error('Gemini Live Chat error:', error);
+    throw new functions.https.HttpsError('internal', 'Chat error: ' + error.message);
+  }
+});
 
 // Gemini 2.0 Audio - Voice Assistant (Secure Backend)
 exports.geminiVoiceAssistant = functions.https.onCall(async (data, context) => {
@@ -426,6 +556,44 @@ exports.geminiVoiceAssistant = functions.https.onCall(async (data, context) => {
   } catch (error) {
     console.error('Gemini Voice Assistant error:', error);
     throw new functions.https.HttpsError('internal', 'Voice assistant error: ' + error.message);
+  }
+});
+
+// One-time Admin Bootstrap - DELETE after first admin is created
+exports.bootstrapAdmin = functions.https.onRequest(async (req, res) => {
+  const secret = req.headers['x-setup-secret'] || req.query.secret;
+  if (!secret || secret !== process.env.ADMIN_SETUP_SECRET) {
+    res.status(403).json({ error: 'Forbidden - provide x-setup-secret header' });
+    return;
+  }
+  const { email, password, displayName = 'Admin' } = req.body;
+  if (!email || !password) {
+    res.status(400).json({ error: 'email and password required in request body' });
+    return;
+  }
+  try {
+    let userRecord;
+    try { userRecord = await admin.auth().getUserByEmail(email); }
+    catch (e) { userRecord = await admin.auth().createUser({ email, password, displayName, emailVerified: true }); }
+    await admin.auth().setCustomUserClaims(userRecord.uid, { admin: true, role: 'admin' });
+    const trialExp = new Date(); trialExp.setFullYear(trialExp.getFullYear() + 10);
+    await db.collection('users').doc(userRecord.uid).set({
+      uid: userRecord.uid, email, displayName, role: 'admin', planTier: 'enterprise',
+      credits: 999999, creditsUsed: 0, createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(), autoDeleteGeneratedContent: false,
+      storageUsed: 0,
+      subscription: { status: 'active', plan: 'enterprise', expiresAt: admin.firestore.Timestamp.fromDate(trialExp), autoRenew: true },
+      usage: { contentGenerations: 0, imageGenerations: 0, voiceAssistantMinutes: 0, apiCalls: 0, lastReset: admin.firestore.FieldValue.serverTimestamp() },
+    }, { merge: true });
+    await db.collection('admins').doc(userRecord.uid).set({
+      uid: userRecord.uid, email, displayName, role: 'admin',
+      permissions: ['manage_users', 'manage_subscriptions', 'generate_tokens', 'view_analytics', 'manage_admins'],
+      status: 'active', createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+    res.json({ success: true, uid: userRecord.uid, email, message: 'Admin created. Sign in at the app with these credentials.' });
+  } catch (err) {
+    console.error('bootstrapAdmin error:', err);
+    res.status(500).json({ error: err.message });
   }
 });
 

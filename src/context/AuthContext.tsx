@@ -1,9 +1,10 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { 
+import {
   signUpWithEmail,
   loginUser,
   logoutUser,
-  loginGuest as loginGuestService
+  loginGuest as loginGuestService,
+  loginWithGoogle as loginWithGoogleService
 } from '~/services/authService';
 import { 
   onAuthStateChanged 
@@ -23,9 +24,10 @@ interface AuthContextType {
   loading: boolean;
   isAuthenticated: boolean;
   isAdmin: boolean;
-  signUp: (email: string, password: string, displayName?: string) => Promise<void>;
+  signUp: (email: string, password: string, displayName?: string, phone?: string) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   loginGuest: () => Promise<void>;
+  loginWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -41,7 +43,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // Check auth state on mount using Firebase Native Auth
   useEffect(() => {
-    const auth = getFirebaseAuth();
+    let auth;
+    try {
+      auth = getFirebaseAuth();
+    } catch (e) {
+      console.error('Firebase Auth not initialized:', e);
+      setLoading(false);
+      return;
+    }
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         // Fetch user profile
@@ -81,13 +90,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return () => unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, displayName?: string) => {
+  const signUp = async (email: string, password: string, displayName?: string, phone?: string) => {
     try {
-      await signUpWithEmail(email, password, displayName);
+      await signUpWithEmail(email, password, displayName, phone);
       // onAuthStateChanged will handle the state update
     } catch (error: any) {
       console.error('Sign Up Error:', error);
-      throw new Error(error.message || 'Failed to sign up');
+      // Re-throw original error so caller can inspect error code
+      throw error;
     }
   };
 
@@ -97,7 +107,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       // onAuthStateChanged will handle the state update
     } catch (error: any) {
       console.error('Login Error:', error);
-      throw new Error(error.message || 'Failed to login');
+      throw error; // Re-throw original so caller can inspect error.code
+    }
+  };
+
+  const loginWithGoogle = async () => {
+    try {
+      await loginWithGoogleService();
+    } catch (error: any) {
+      console.error('Google Login Error:', error);
+      throw new Error(error.message || 'Failed to login with Google');
     }
   };
 
@@ -126,6 +145,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     signUp,
     login,
     loginGuest,
+    loginWithGoogle,
     logout
   };
 

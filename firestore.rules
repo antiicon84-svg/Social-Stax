@@ -1,72 +1,91 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // ===================================================
-    // USERS COLLECTION - Secure Password Storage
-    // ===================================================
+
+    // ── Helper functions ─────────────────────────────────────────────────
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function isOwner(uid) {
+      return request.auth.uid == uid;
+    }
+    function isAdmin() {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // ── Users collection ─────────────────────────────────────────────────
     match /users/{userId} {
-      // Only the user can read their own profile
-      allow read: if request.auth.uid == userId;
-      
-      // Only the user can write to their own profile
-      allow write: if request.auth.uid == userId;
-      
-      // Passwords are never readable or writable directly
-      // Password field is protected at sub-collection level
+      allow read:  if isOwner(userId) || isAdmin();
+      allow write: if isOwner(userId) || isAdmin();
+      // Allow listing users (for email queries in admin/auth flows)
+      allow list:  if isSignedIn();
+
+      // Clients sub-collection
+      match /clients/{clientId} {
+        allow read, write: if isOwner(userId) || isAdmin();
+      }
+
+      // Posts sub-collection
+      match /posts/{postId} {
+        allow read, write: if isOwner(userId) || isAdmin();
+      }
+
+      // Subscriptions sub-collection
+      match /subscriptions/{subId} {
+        allow read, write: if isOwner(userId) || isAdmin();
+      }
+
+      // Usage tracking sub-collection
+      match /usage/{docId} {
+        allow read, write: if isOwner(userId) || isAdmin();
+      }
+
+      // Block direct access to password hashes
       match /private/{document=**} {
-        allow read: if false; // No one can read password hash
-        allow write: if false; // Password only set via Cloud Function
+        allow read, write: if false;
       }
     }
 
-    // ===================================================
-    // PROJECTS COLLECTION
-    // ===================================================
-    match /projects/{projectId} {
-      // Users can only read projects they own
-      allow read: if resource.data.userId == request.auth.uid;
-      
-      // Users can create new projects
-      allow create: if request.auth.uid != null &&
-                       request.resource.data.userId == request.auth.uid;
-      
-      // Users can update only their own projects
-      allow update: if resource.data.userId == request.auth.uid;
-      
-      // Users can delete only their own projects
-      allow delete: if resource.data.userId == request.auth.uid;
+    // ── Free Access Grants (admin grants free plans) ──────────────────────
+    match /free_access/{grantId} {
+      allow read:   if isSignedIn() &&
+                       (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
     }
 
-    // ===================================================
-    // POSTS COLLECTION
-    // ===================================================
-    match /posts/{postId} {
-      // Users can read public posts
-      allow read: if resource.data.isPublic == true ||
-                     resource.data.userId == request.auth.uid;
-      
-      // Authenticated users can create posts
-      allow create: if request.auth.uid != null &&
-                       request.resource.data.userId == request.auth.uid;
-      
-      // Users can only update their own posts
-      allow update: if resource.data.userId == request.auth.uid;
-      
-      // Users can only delete their own posts
-      allow delete: if resource.data.userId == request.auth.uid;
+    // ── Admins collection ─────────────────────────────────────────────────
+    match /admins/{adminId} {
+      allow read:  if isAdmin() || isOwner(adminId);
+      allow write: if isAdmin();
     }
 
-    // ===================================================
-    // RATE LIMITING COLLECTION (For brute force protection)
-    // ===================================================
+    // ── Top-level subscriptions (used by Cloud Functions) ─────────────────
+    match /subscriptions/{userId} {
+      allow read:  if isOwner(userId) || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // ── Access Tokens (API quota tokens) ──────────────────────────────────
+    match /accessTokens/{tokenId} {
+      allow read, write: if isAdmin();
+    }
+
+    // ── Audit Logs ────────────────────────────────────────────────────────
+    match /auditLogs/{logId} {
+      allow read:  if isAdmin();
+      allow write: if false;
+    }
+
+    // ── Rate Limiting (backend only) ──────────────────────────────────────
     match /rateLimiting/{ipAddress} {
-      allow read, write: if false; // Only backend can access
+      allow read, write: if false;
     }
 
-    // ===================================================
-    // DEFAULT DENY
-    // ===================================================
-    // Any collection not explicitly allowed is DENIED
+    // ── Default: deny everything else ────────────────────────────────────
     match /{document=**} {
       allow read, write: if false;
     }
