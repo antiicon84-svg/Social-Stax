@@ -392,10 +392,57 @@ exports.geminiAI = functions.https.onCall(async (data, context) => {
 
     if (operation === 'analyzeWebsite') {
       const { url } = payload;
-      const systemPrompt = `Analyze the website URL provided and infer brand details like name, industry, tone, description, and primary color. URL: ${url} Output JSON: { "name": "...", "industry": "...", "tone": "...", "description": "...", "color": "#..." }`;
+
+      // Fetch the actual website content so Gemini can analyze real data
+      let siteContent = '';
+      try {
+        const https = require('https');
+        const http = require('http');
+        const client = url.startsWith('https') ? https : http;
+
+        siteContent = await new Promise((resolve, reject) => {
+          const req = client.get(url, { timeout: 8000, headers: { 'User-Agent': 'Mozilla/5.0' } }, (res) => {
+            // Follow one redirect
+            if ((res.statusCode === 301 || res.statusCode === 302) && res.headers.location) {
+              const redirectUrl = res.headers.location;
+              const redirectClient = redirectUrl.startsWith('https') ? https : http;
+              redirectClient.get(redirectUrl, { timeout: 8000, headers: { 'User-Agent': 'Mozilla/5.0' } }, (res2) => {
+                let data = '';
+                res2.on('data', chunk => { if (data.length < 50000) data += chunk; });
+                res2.on('end', () => resolve(data));
+                res2.on('error', reject);
+              }).on('error', reject);
+            } else {
+              let data = '';
+              res.on('data', chunk => { if (data.length < 50000) data += chunk; });
+              res.on('end', () => resolve(data));
+              res.on('error', reject);
+            }
+          });
+          req.on('error', reject);
+          req.on('timeout', () => { req.destroy(); reject(new Error('timeout')); });
+        });
+
+        // Strip scripts/styles/tags, keep readable text
+        siteContent = siteContent
+          .replace(/<script[\s\S]*?<\/script>/gi, '')
+          .replace(/<style[\s\S]*?<\/style>/gi, '')
+          .replace(/<[^>]+>/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim()
+          .slice(0, 6000);
+      } catch (fetchErr) {
+        console.warn('Could not fetch website, falling back to URL inference:', fetchErr.message);
+      }
+
+      const context = siteContent
+        ? `Website URL: ${url}\n\nWebsite content:\n${siteContent}`
+        : `Website URL: ${url}`;
+
+      const systemPrompt = `You are a brand analyst. Analyze the following website information and extract brand details.\n\n${context}\n\nOutput ONLY valid JSON (no markdown, no explanation): { "name": "Brand Name", "industry": "Industry", "tone": "Professional|Friendly|Luxury|Bold|Playful|Educational|Minimalist", "description": "Short 1-2 sentence brand description", "color": "#hexcode" }`;
       result = await model.generateContent([systemPrompt]);
-      const text = result.response.text();
-      const jsonMatch = text.match(/\{.*\}/s);
+      const text = result.response.text().trim();
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
       return jsonMatch ? JSON.parse(jsonMatch[0]) : null;
     }
 
@@ -558,6 +605,49 @@ exports.geminiVoiceAssistant = functions.https.onCall(async (data, context) => {
     throw new functions.https.HttpsError('internal', 'Voice assistant error: ' + error.message);
   }
 });
+
+// Manual Usage Reset - Admin only
+exports.manualusagereset = functions.https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError('unauthenticated', 'Must be authenticated');
+  }
+
+  const adminDoc = await db.collection('users').doc(context.auth.uid).get();
+  if (!adminDoc.exists || adminDoc.data().role !== 'admin') {
+    throw new functions.https.HttpsError('permission-denied', 'Admin access required');
+  }
+
+  try {
+    const usersSnapshot = await db.collection('users').get();
+    const batches = [];
+    let batch = db.batch();
+    let opCount = 0;
+
+    for (const userDoc of usersSnapshot.docs) {
+      batch.update(userDoc.ref, {
+        'usage.contentGenerations': 0,
+        'usage.imageGenerations': 0,
+        'usage.voiceAssistantMinutes': 0,
+        'usage.apiCalls': 0,
+        'usage.lastReset': admin.firestore.FieldValue.serverTimestamp(),
+      });
+      opCount++;
+      if (opCount === 499) {
+        batches.push(batch.commit());
+        batch = db.batch();
+        opCount = 0;
+      }
+    }
+    if (opCount > 0) batches.push(batch.commit());
+    await Promise.all(batches);
+
+    return { status: 'success', message: `Reset usage for ${usersSnapshot.size} users` };
+  } catch (error) {
+    console.error('manualusagereset error:', error);
+    throw new functions.https.HttpsError('internal', error.message);
+  }
+});
+
 
 // One-time Admin Bootstrap - DELETE after first admin is created
 exports.bootstrapAdmin = functions.https.onRequest(async (req, res) => {

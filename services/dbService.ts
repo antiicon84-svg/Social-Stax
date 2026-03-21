@@ -196,9 +196,9 @@ export const dev_setCurrentUserAsAdmin = async (): Promise<void> => {
  * Triggers the manualUsageReset Cloud Function to reset all user usage data.
  * This can only be successfully called by an authenticated admin.
  */
-const functions = getFunctions(getApp());
 export const triggerManualUsageReset = async (): Promise<{ message: string }> => {
-  const resetFunction = httpsCallable(functions, 'manualusagereset');
+  const fns = getFunctions(getApp(), 'us-central1');
+  const resetFunction = httpsCallable(fns, 'manualusagereset');
   const result = await resetFunction();
   return result.data as { message: string };
 };
