@@ -21,7 +21,7 @@ const LoginView: React.FC = () => {
   const validateEmail = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
 
   const getGoogleAuthErrorMessage = (err: Error): string => {
-    const code = (err as any)?.code || err?.message || '';
+    const code = (err as { code?: string; message?: string })?.code || err?.message || '';
     if (code.includes('operation-not-allowed')) {
       return 'Google Sign-In is not enabled. Please enable it in Firebase Console under Authentication → Sign-in providers.';
     }
@@ -50,7 +50,7 @@ const LoginView: React.FC = () => {
       await login(email, password);
       navigate('/');
     } catch (err: Error) {
-      const code = err?.code || err?.message || '';
+      const code = (err as { code?: string; message?: string })?.code || err?.message || '';
       if (code.includes('user-not-found') || code.includes('invalid-credential') || code.includes('invalid-login-credentials')) {
         setError('No account found with this email. Please sign up first.');
       } else if (code.includes('wrong-password')) {
@@ -77,7 +77,7 @@ const LoginView: React.FC = () => {
       await signUp(email, password, name.trim(), phone.trim());
       navigate('/');
     } catch (err: Error) {
-      const code = err?.code || err?.message || '';
+      const code = (err as { code?: string; message?: string })?.code || err?.message || '';
       if (code.includes('email-already-in-use')) {
         setError('An account with this email already exists. Please sign in instead.');
         setMode('signin');
@@ -108,7 +108,7 @@ const LoginView: React.FC = () => {
     try {
       await loginGuest();
       navigate('/');
-    } catch (err: Error) {
+    } catch {
       setError('Failed to continue as guest.');
       setLoading(false);
     }
@@ -131,7 +131,7 @@ const LoginView: React.FC = () => {
           </div>
           <div>
             <h1 className="text-xl font-bold tracking-wide bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">Social StaX</h1>
-            <p className="text-xs text-gray-500 hidden sm:block">A-Iconic's all-in-one Marketing Platform</p>
+            <p className="text-xs text-gray-500 hidden sm:block">A-Iconic&apos;s all-in-one Marketing Platform</p>
           </div>
         </div>
         <div className="flex items-center gap-2 text-xs text-gray-500">

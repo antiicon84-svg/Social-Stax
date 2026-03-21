@@ -27,9 +27,7 @@ mutation CreateUser($username: String!, $email: String!, $passwordHash: String!,
     displayName: $displayName,
     createdAt_expr: "request.time",
     updatedAt_expr: "request.time"
-  }) {
-    id
-  }
+  })
 }
 
 mutation UpdateMyDisplayName($displayName: String!) @auth(level: USER) {
@@ -39,7 +37,5 @@ mutation UpdateMyDisplayName($displayName: String!) @auth(level: USER) {
       displayName: $displayName,
       updatedAt_expr: "request.time"
     }
-  ) {
-    id
-  }
+  )
 }

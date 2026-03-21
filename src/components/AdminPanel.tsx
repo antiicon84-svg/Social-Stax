@@ -1,3 +1,4 @@
+import React, { useState } from 'react';
 import { createFreeAccessGrant, revokeFreeAccessGrant, getFreeAccessGrants, getUserByEmail } from '~/services/dbService';
 import Button from './Button';
 import { Lock } from 'lucide-react';

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route, useNavigate, useParams, useLocation } from 'react-router-dom';
+import { Routes, Route, useParams, useLocation } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import LoginView from '~/views/LoginView';
 import DashboardView from '~/views/DashboardView';
@@ -39,7 +39,6 @@ const ErrorFallback: React.FC = () => {
 
 const WebRouter: React.FC = () => {
   const location = useLocation();
-  const navigate = useNavigate();
   const { isAuthenticated, loading: isAuthLoading } = useAuth();
   const {
     clients,

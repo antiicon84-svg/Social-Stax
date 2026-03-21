@@ -52,7 +52,7 @@ export const saveClient = async (client: Client): Promise<void> => {
     // Create new client
     const clientsCol = collection(db, "users", uid, "clients");
     // Exclude a potential empty id from the document data
-    const { id, ...clientData } = client;
+    const { ...clientData } = client;
     await addDoc(clientsCol, clientData);
   }
 };
@@ -74,7 +74,7 @@ export const savePost = async (post: Post): Promise<void> => {
     await setDoc(postRef, postData, { merge: true });
   } else {
     const postsCol = collection(db, "users", uid, "posts");
-    const { id, ...postData } = post;
+    const { ...postData } = post;
     await addDoc(postsCol, postData);
   }
 };

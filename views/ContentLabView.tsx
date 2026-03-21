@@ -45,9 +45,12 @@ const ContentLabView: React.FC = () => {
     setResult('');
     setGeneratedImageUrl(null);
     
+    console.log('Generating content with topic:', topic, 'and platform:', previewPlatform);
+
     try {
       if (activeTab === 'text') {
         const output = await generateContent(topic, previewPlatform);
+        console.log('Generated content output:', output);
         setResult(output);
       } else {
         // For Image and Video, we generate a detailed prompt/brief
@@ -176,7 +179,7 @@ const ContentLabView: React.FC = () => {
         ].map((tab) => (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id as any)}
+            onClick={() => setActiveTab(tab.id as 'text' | 'image' | 'video')}
             className={`flex items-center gap-2 px-4 py-2 text-sm font-bold transition-colors relative top-[1px] ${
               activeTab === tab.id
                 ? 'text-red-500 border-b-2 border-red-500'

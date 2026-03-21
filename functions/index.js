@@ -678,7 +678,7 @@ exports.bootstrapAdmin = functions.https.onRequest(async (req, res) => {
   try {
     let userRecord;
     try { userRecord = await admin.auth().getUserByEmail(email); }
-    catch (e) { userRecord = await admin.auth().createUser({ email, password, displayName, emailVerified: true }); }
+    catch { userRecord = await admin.auth().createUser({ email, password, displayName, emailVerified: true }); }
     await admin.auth().setCustomUserClaims(userRecord.uid, { admin: true, role: 'admin' });
     const trialExp = new Date(); trialExp.setFullYear(trialExp.getFullYear() + 10);
     await db.collection('users').doc(userRecord.uid).set({

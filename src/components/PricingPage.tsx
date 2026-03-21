@@ -87,7 +87,7 @@ const PricingPage: React.FC = () => {
       } else {
         setError("Failed to get Stripe Checkout session ID.");
       }
-    } catch (err: any) {
+    } catch (err: Error) {
       console.error("Subscription error:", err);
       setError(err.message || "An unexpected error occurred.");
     } finally {
