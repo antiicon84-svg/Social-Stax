@@ -93,7 +93,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       await signUpWithEmail(email, password, displayName, phone);
       // onAuthStateChanged will handle the state update
-    } catch (error: any) {
+    } catch (error: Error) {
       console.error('Sign Up Error:', error);
       // Re-throw original error so caller can inspect error code
       throw error;
@@ -104,7 +104,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       await loginUser(email, password);
       // onAuthStateChanged will handle the state update
-    } catch (error: any) {
+    } catch (error: Error) {
       console.error('Login Error:', error);
       throw error; // Re-throw original so caller can inspect error.code
     }
@@ -113,7 +113,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const loginWithGoogle = async () => {
     try {
       await loginWithGoogleService();
-    } catch (error: any) {
+    } catch (error: Error) {
       console.error('Google Login Error:', error);
       throw new Error(error.message || 'Failed to login with Google');
     }
@@ -122,7 +122,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const loginGuest = async () => {
     try {
       await loginGuestService();
-    } catch (error: any) {
+    } catch (error: Error) {
       console.error('Guest Login Error:', error);
       throw new Error(error.message || 'Failed to login as guest');
     }
@@ -131,7 +131,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const logout = async () => {
     try {
       await logoutUser();
-    } catch (error: any) {
+    } catch (error: Error) {
       throw new Error(error.message);
     }
   };

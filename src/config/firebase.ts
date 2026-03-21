@@ -63,7 +63,7 @@ try {
   } else {
     console.warn('Firebase initialization skipped due to missing configuration');
   }
-} catch (error: any) {
+} catch (error: Error) {
   console.error('Failed to initialize Firebase:', error);
   if (error.code === 'auth/api-key-not-valid') {
     console.error(

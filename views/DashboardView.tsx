@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { Client } from '~/types';
+import { Client, Post } from '~/types';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import {
   Users, Search, Plus, Building2, Briefcase, ExternalLink,
-  Calendar, FileText, Zap, BarChart2,
-  ArrowUpRight, Clock, Star, Activity, ChevronRight, Sparkles,
-  RefreshCw, TrendingUp, FlaskConical, HelpCircle
+  Calendar, FileText, Zap,
+  ArrowUpRight, Clock, Star, ChevronRight, Sparkles,
+  RefreshCw, FlaskConical, HelpCircle
 } from 'lucide-react';
 
 /* ─── Stat Card ─────────────────────────────────────────────── */
@@ -67,7 +67,7 @@ const QuickTile: React.FC<{ to: string; icon: React.ReactNode; label: string; su
 /* ─── Dashboard ──────────────────────────────────────────────── */
 const DashboardView: React.FC<{
   clients: Client[];
-  posts: any[];
+  posts: Post[];
   onDeletePost: (postId: string) => void;
   isLoadingClients: boolean;
   isLoadingPosts: boolean;

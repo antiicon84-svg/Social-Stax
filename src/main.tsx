@@ -4,7 +4,14 @@ import { HashRouter, MemoryRouter } from 'react-router-dom';
 import App from './App';
 import ErrorBoundary from './components/ErrorBoundary';
 import '~/index.css'; // Essential for styling and preventing layout shifts
-import { isAppKit } from '~/utils/appkitUtils';
+
+declare global {
+  interface Window {
+    appkit?: {
+      ready: Promise<void>;
+    };
+  }
+}
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -38,13 +45,13 @@ if ('serviceWorker' in navigator) {
 
 // Environment Initialization with safety checks
 const initAndRender = () => {
-  const ak = (window as any).appkit;
+  const ak = window.appkit;
   
   if (ak && ak.ready && typeof ak.ready.then === 'function' && !isBlobEnv) {
     console.log("AppKit detected, waiting for initialization...");
     ak.ready.then(() => {
       renderApp();
-    }).catch((error: any) => {
+    }).catch((error: Error) => {
       console.error("AppKit failed to initialize, falling back to web rendering:", error);
       renderApp();
     });

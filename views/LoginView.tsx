@@ -20,8 +20,8 @@ const LoginView: React.FC = () => {
 
   const validateEmail = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
 
-  const getGoogleAuthErrorMessage = (err: any): string => {
-    const code = err?.code || err?.message || '';
+  const getGoogleAuthErrorMessage = (err: Error): string => {
+    const code = (err as any)?.code || err?.message || '';
     if (code.includes('operation-not-allowed')) {
       return 'Google Sign-In is not enabled. Please enable it in Firebase Console under Authentication → Sign-in providers.';
     }
@@ -49,7 +49,7 @@ const LoginView: React.FC = () => {
     try {
       await login(email, password);
       navigate('/');
-    } catch (err: any) {
+    } catch (err: Error) {
       const code = err?.code || err?.message || '';
       if (code.includes('user-not-found') || code.includes('invalid-credential') || code.includes('invalid-login-credentials')) {
         setError('No account found with this email. Please sign up first.');
@@ -76,7 +76,7 @@ const LoginView: React.FC = () => {
     try {
       await signUp(email, password, name.trim(), phone.trim());
       navigate('/');
-    } catch (err: any) {
+    } catch (err: Error) {
       const code = err?.code || err?.message || '';
       if (code.includes('email-already-in-use')) {
         setError('An account with this email already exists. Please sign in instead.');
@@ -95,7 +95,7 @@ const LoginView: React.FC = () => {
     try {
       await loginWithGoogle();
       navigate('/');
-    } catch (err: any) {
+    } catch (err: Error) {
       setError(getGoogleAuthErrorMessage(err));
     } finally {
       setLoading(false);
@@ -108,7 +108,7 @@ const LoginView: React.FC = () => {
     try {
       await loginGuest();
       navigate('/');
-    } catch (err: any) {
+    } catch (err: Error) {
       setError('Failed to continue as guest.');
       setLoading(false);
     }

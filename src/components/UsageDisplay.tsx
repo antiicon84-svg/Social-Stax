@@ -7,8 +7,27 @@ interface UsageDisplayProps {
   plan: string;
 }
 
+interface Quota {
+  contentGenerations: {
+    used: number;
+    limit: number;
+  };
+  imageGenerations: {
+    used: number;
+    limit: number;
+  };
+  voiceAssistant: {
+    used: number;
+    limit: number;
+  };
+  apiCalls: {
+    used: number;
+    limit: number;
+  };
+}
+
 const UsageDisplay: React.FC<UsageDisplayProps> = ({ uid, email, plan }) => {
-  const [quota, setQuota] = useState<any>(null);
+  const [quota, setQuota] = useState<Quota | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 

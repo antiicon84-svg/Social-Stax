@@ -34,8 +34,8 @@ const validateFirebaseConfig = () => {
   // Log detailed error information
   if (isMissing) {
     const missingVars = Object.entries(isInvalid)
-      .filter(([_, v]) => v)
-      .map(([k, _]) => k)
+      .filter(([, v]) => v)
+      .map(([k]) => k)
       .join(', ');
     
     console.error(

@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
 import { createFreeAccessGrant, revokeFreeAccessGrant, getFreeAccessGrants, getUserByEmail } from '~/services/dbService';
 import Button from './Button';
 import { Lock } from 'lucide-react';
+import type { FreeAccessGrant } from '~/types';
 
 const AdminPanel: React.FC = () => {
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
@@ -21,7 +21,7 @@ const AdminPanel: React.FC = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-  const [grants, setGrants] = useState<any[]>([]);
+  const [grants, setGrants] = useState<FreeAccessGrant[]>([]);
   const [isLoadingGrants, setIsLoadingGrants] = useState(false);
 
   const handleAdminLogin = (e: React.FormEvent) => {
@@ -78,7 +78,7 @@ const AdminPanel: React.FC = () => {
         reason: grantReason, 
         expiresAt: expirationDate,
         ...(showCustomLimits && { customLimits }),
-      } as any); 
+      }); 
 
       setMessage({
         type: 'success',

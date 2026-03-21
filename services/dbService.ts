@@ -12,7 +12,7 @@ import {
 } from "firebase/firestore";
 import { getApp } from "firebase/app";
 import { getFunctions, httpsCallable } from "firebase/functions";
-import { Client, Post, UserProfile, FreeAccessGrant, SubscriptionPlan, Usage } from '../types'
+import { Client, Post, UserProfile, FreeAccessGrant } from '../types'
   import { getCurrentUser } from "./authService";
 
 const db = getFirestore(getApp());
@@ -46,7 +46,7 @@ export const saveClient = async (client: Client): Promise<void> => {
   if (client.id) {
     // Update existing client
     const clientRef = doc(db, "users", uid, "clients", client.id);
-    const { id, ...clientData } = client;
+    const { ...clientData } = client;
     await setDoc(clientRef, clientData, { merge: true });
   } else {
     // Create new client
@@ -70,7 +70,7 @@ export const savePost = async (post: Post): Promise<void> => {
 
   if (post.id) {
     const postRef = doc(db, "users", uid, "posts", post.id);
-    const { id, ...postData } = post;
+    const { ...postData } = post;
     await setDoc(postRef, postData, { merge: true });
   } else {
     const postsCol = collection(db, "users", uid, "posts");

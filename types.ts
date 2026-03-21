@@ -174,7 +174,7 @@ declare global {
 
   interface Window {
     appkit?: AppKit; // appkit is optional, might not be available in all environments
-    gapi?: any;
-    google?: any;
+    gapi?: unknown;
+    google?: unknown;
   }
 }

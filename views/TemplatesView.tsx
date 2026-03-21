@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Copy, Briefcase, Camera, Image as ImageIcon, Check, Monitor, Building2, ShoppingBag, Share2, Film } from 'lucide-react';
+import { Copy, Briefcase, Image as ImageIcon, Check, Monitor, Building2, ShoppingBag, Share2, Film } from 'lucide-react';
 import Button from '@/components/Button';
 
 interface Template {
@@ -231,7 +231,7 @@ const TemplatesView: React.FC = () => {
                 <h3 className="text-xl font-bold text-white mb-3">{t.title}</h3>
                 
                 <div className="bg-gray-900 p-4 rounded-lg border border-gray-800 text-sm text-gray-400 italic mb-6 flex-grow font-serif">
-                "{t.prompt}"
+                &quot;{t.prompt}&quot;
                 </div>
 
                 <Button 

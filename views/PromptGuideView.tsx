@@ -442,7 +442,7 @@ const PromptGuideView: React.FC = () => {
 
               {filteredCategories.length === 0 && (
                   <div className="text-center py-10 text-gray-500">
-                      <p>No prompt items found matching "{searchTerm}".</p>
+                      <p>No prompt items found matching &quot;{searchTerm}&quot;.</p>
                   </div>
               )}
           </div>

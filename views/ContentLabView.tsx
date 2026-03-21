@@ -23,10 +23,14 @@ import {
   RefreshCw
 } from 'lucide-react';
 
+interface EnhancedPrompt {
+  enhancedPrompt: string;
+  technicalParams: string;
+}
+
 const ContentLabView: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'text' | 'image' | 'video'>('text');
   const [topic, setTopic] = useState('');
-  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(['Instagram']);
   const [previewPlatform, setPreviewPlatform] = useState('Instagram');
   const [result, setResult] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -66,7 +70,7 @@ const ContentLabView: React.FC = () => {
     }
   };
 
-  const generateActualImage = async (enhancedPrompt: any) => {
+  const generateActualImage = async (enhancedPrompt: EnhancedPrompt | string) => {
     setIsGeneratingImage(true);
     try {
       const promptText = typeof enhancedPrompt === 'string' 
@@ -106,7 +110,7 @@ const ContentLabView: React.FC = () => {
         id: '', // dbService handles ID generation
         clientId: 'global', // 'global' or allow user to select client. For now 'global' or user's own draft
         ownerEmail: user.email || '',
-        platform: previewPlatform as any,
+        platform: previewPlatform as 'Instagram' | 'LinkedIn' | 'Twitter' | 'Facebook',
         content: result,
         status: 'draft',
         scheduledAt: new Date(),

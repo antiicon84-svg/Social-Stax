@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
-import LoadingSpinner from '@/components/LoadingSpinner';
 import DashboardView from '~/views/DashboardView';
 import AllClientsView from '~/views/AllClientsView';
 import CreateClientView from '~/views/CreateClientView';

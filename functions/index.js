@@ -7,7 +7,7 @@ admin.initializeApp();
 const db = admin.firestore();
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
-const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || '';
+
 
 // Database Schema Collections:
 // - users: { email, passwordHash, createdAt, role }
@@ -16,7 +16,7 @@ const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || '';
 // - accessTokens: { token, createdBy, expiresAt, quotaLimit, quotaUsed }
 
 // Sign Up - Regular User
-exports.signUp = functions.https.onCall(async (data, context) => {
+exports.signUp = functions.https.onCall(async (data) => {
   try {
     const { email, password } = data;
 
@@ -71,7 +71,7 @@ exports.signUp = functions.https.onCall(async (data, context) => {
 });
 
 // Login - Regular User
-exports.login = functions.https.onCall(async (data, context) => {
+exports.login = functions.https.onCall(async (data) => {
   try {
     const { email, password } = data;
 
@@ -141,7 +141,7 @@ exports.login = functions.https.onCall(async (data, context) => {
 });
 
 // Admin Login
-exports.adminLogin = functions.https.onCall(async (data, context) => {
+exports.adminLogin = functions.https.onCall(async (data) => {
   try {
     const { email, password } = data;
 
@@ -187,7 +187,7 @@ exports.adminLogin = functions.https.onCall(async (data, context) => {
 });
 
 // Verify Token
-exports.verifyToken = functions.https.onCall(async (data, context) => {
+exports.verifyToken = functions.https.onCall(async (data) => {
   try {
     const { token } = data;
 
@@ -288,7 +288,7 @@ exports.updateSubscription = functions.https.onCall(async (data, context) => {
 });
 
 // Track API Usage
-exports.trackApiUsage = functions.https.onCall(async (data, context) => {
+exports.trackApiUsage = functions.https.onCall(async (data) => {
   try {
     const { userId, tokenOrEmail } = data;
 
@@ -326,7 +326,7 @@ exports.trackApiUsage = functions.https.onCall(async (data, context) => {
 });
 
 // Get User Quota Status
-exports.getQuotaStatus = functions.https.onCall(async (data, context) => {
+exports.getQuotaStatus = functions.https.onCall(async (data) => {
   try {
     const { userId } = data;
 
@@ -373,6 +373,20 @@ exports.geminiAI = functions.https.onCall(async (data, context) => {
 
   try {
     let result;
+
+    if (operation === 'generateImage') {
+      const { prompt } = payload;
+      const imageModel = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+      const result = await imageModel.generateContent({
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: {
+          responseMimeType: 'image/png',
+        },
+      });
+      const response = result.response;
+      const imagePart = response.candidates[0].content.parts[0];
+      return { imageData: `data:image/png;base64,${imagePart.inlineData.data}` };
+    }
 
     if (operation === 'generateContent') {
       const { topic, platform } = payload;
@@ -492,7 +506,7 @@ exports.geminiLiveChat = functions.https.onCall(async (data, context) => {
 
     const { GoogleGenerativeAI } = require('@google/generative-ai');
     const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
-    const model = genAI.getGenerativeModel({ model: 'gemini-3.1-pro-preview' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro-latest' });
 
     // Build conversation with context
     const contents = [];
@@ -552,7 +566,7 @@ exports.geminiVoiceAssistant = functions.https.onCall(async (data, context) => {
     const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
 
     // Use Gemini with audio capabilities for voice assistant
-    const model = genAI.getGenerativeModel({ model: 'gemini-3.1-pro-preview' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro-latest' });
 
     // Prepare the audio part
     const audioPart = {

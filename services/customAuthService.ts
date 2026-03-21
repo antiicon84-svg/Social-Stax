@@ -36,13 +36,13 @@ export interface CurrentUser {
 /**
  * Helper function to safely call Cloud Functions
  */
-const callCloudFunction = async (functionName: string, data: any) => {
+const callCloudFunction = async (functionName: string, data: Record<string, unknown>) => {
   try {
     const functions = getFirebaseFunctions();
     const fn = httpsCallable(functions, functionName);
     const result = await fn(data);
     return result.data;
-  } catch (error: any) {
+  } catch (error: Error) {
     console.error(`Cloud Function ${functionName} error:`, error);
     
     // Handle specific Firebase errors
@@ -76,14 +76,14 @@ export const customAuthService = {
       }
       
       const result = await callCloudFunction('signUp', { email, password });
-      const data = result as any;
+      const data = result as SignupResponse;
       
       if (data.success && data.token) {
         // Sign in to Firebase Client SDK with the custom token
         await signInWithCustomToken(auth, data.token);
       }
       return data;
-    } catch (error: any) {
+    } catch (error: Error) {
       console.error('Signup error:', error);
       return {
         success: false,
@@ -104,14 +104,14 @@ export const customAuthService = {
       }
       
       const result = await callCloudFunction('login', { email, password });
-      const data = result as any;
+      const data = result as LoginResponse;
       
       if (data.success && data.token) {
         // Sign in to Firebase Client SDK with the custom token
         await signInWithCustomToken(auth, data.token);
       }
       return data;
-    } catch (error: any) {
+    } catch (error: Error) {
       console.error('Login error:', error);
       return {
         success: false,

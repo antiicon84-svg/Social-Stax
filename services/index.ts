@@ -10,7 +10,7 @@ const db = admin.firestore();
  * A scheduled Cloud Function that runs at 00:00 on the first day of every month.
  * It iterates through all users and resets their monthly usage counters.
  */
-export const resetmonthlyusage = onSchedule("0 0 1 * *", async (event) => { // Production schedule
+export const resetmonthlyusage = onSchedule("0 0 1 * *", async () => { // Production schedule
   logger.info("Starting monthly usage reset for all users.", { structuredData: true });
 
   const usersRef = db.collection("users");

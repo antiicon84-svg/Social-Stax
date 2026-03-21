@@ -218,7 +218,7 @@ export const loginWithGoogle = async (): Promise<User> => {
   try {
     // Try popup first (works best with HashRouter)
     userCredential = await signInWithPopup(auth, provider);
-  } catch (popupError: any) {
+  } catch (popupError: Error) {
     // If popup was blocked or failed, fall back to redirect
     if (
       popupError.code === 'auth/popup-blocked' ||

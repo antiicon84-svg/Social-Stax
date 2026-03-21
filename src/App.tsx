@@ -5,6 +5,14 @@ import LoadingSpinner from './components/LoadingSpinner';
 import { isAppKit } from '~/utils/appkitUtils'; // Import appkit utilities
 import { AuthProvider } from './context/AuthContext'; // Import authentication context provider
 
+declare global {
+  interface Window {
+    appkit?: {
+      ready: Promise<void>;
+    };
+  }
+}
+
 const App: React.FC = () => {
   const [isReady, setIsReady] = useState(false);
   const [isAppKitEnvironment, setIsAppKitEnvironment] = useState(false);
@@ -15,10 +23,10 @@ const App: React.FC = () => {
       console.log('[App] Initializing...');
       try {
         // Check if running in AppKit environment
-        if (isAppKit() && (window as any).appkit) {
+        if (isAppKit() && window.appkit) {
           setIsAppKitEnvironment(true);
           try {
-            await (window as any).appkit.ready;
+            await window.appkit.ready;
             setIsReady(true);
           } catch (error) {
             console.error("AppKit failed to initialize:", error);

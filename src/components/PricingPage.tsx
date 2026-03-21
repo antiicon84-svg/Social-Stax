@@ -99,7 +99,7 @@ const PricingPage: React.FC = () => {
     <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto text-center">
         <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
-          Choose the plan that's right for you
+          Choose the plan that&apos;s right for you
         </h2>
         <p className="mt-4 text-lg text-gray-600">
           Start your free 14-day trial today, no credit card required.
@@ -136,7 +136,7 @@ const PricingPage: React.FC = () => {
             </div>
             <div className="pt-6 pb-8 px-6">
               <h3 className="text-xs font-medium text-gray-900 tracking-wide uppercase">
-                What's included
+                What&apos;s included
               </h3>
               <ul role="list" className="mt-6 space-y-4">
                 {plan.features.map((feature) => (

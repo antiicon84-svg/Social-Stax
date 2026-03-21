@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Routes, Route, useNavigate, useParams, useLocation } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import LoginView from '~/views/LoginView';
@@ -28,12 +28,11 @@ const ClientDetailWrapper: React.FC<{ onPostScheduled: () => void }> = ({ onPost
 };
 
 const ErrorFallback: React.FC = () => {
-  const navigate = useNavigate();
   return (
     <div className="p-6 md:p-10 flex-grow max-w-7xl mx-auto text-center text-gray-400">
       <h1 className="text-3xl font-bold mb-4 text-white">404 - Page Not Found</h1>
       <p className="mb-6">The requested page could not be found.</p>
-      <Button variant="primary" onClick={() => navigate('/')}>Go to Dashboard</Button>
+      <Button variant="primary" onClick={() => window.history.back()}>Go Back</Button>
     </div>
   );
 };

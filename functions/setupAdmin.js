@@ -35,7 +35,7 @@ async function setupAdmin() {
     try {
       userRecord = await auth.getUserByEmail(ADMIN_EMAIL);
       console.log('Admin user already exists in Firebase Auth:', userRecord.uid);
-    } catch (e) {
+    } catch {
       userRecord = await auth.createUser({
         email: ADMIN_EMAIL,
         password: ADMIN_PASSWORD,
