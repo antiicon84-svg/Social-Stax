@@ -54,12 +54,6 @@ const WebRouter: React.FC = () => {
     handleDeletePost
   } = useClientData(isAuthenticated);
 
-  useEffect(() => {
-    if (!isAuthLoading && !isAuthenticated) {
-      navigate('/login');
-    }
-  }, [isAuthenticated, isAuthLoading, navigate]);
-
   if (isAuthLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-black">
