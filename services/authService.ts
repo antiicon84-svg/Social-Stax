@@ -5,6 +5,8 @@ import {
   signInWithEmailAndPassword,
   signInAnonymously,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   GoogleAuthProvider,
   updateProfile,
   signOut,
@@ -206,16 +208,26 @@ export const signUpWithEmail = async (
   }
 };
 
-// Sign in with Google
+// Sign in with Google — uses redirect (more reliable than popup across all browsers/domains)
 export const loginWithGoogle = async (): Promise<void> => {
   const provider = new GoogleAuthProvider();
   provider.addScope('email');
   provider.addScope('profile');
-  const userCredential = await signInWithPopup(auth, provider);
-  const user = userCredential.user;
-  const isAdmin = isAdminUser(user.email ?? '');
-  // Use merge:true so existing accounts are not overwritten
-  await createUserRecord(user.uid, user.email ?? '', isAdmin, user.displayName ?? '', user.phoneNumber ?? '');
+  await signInWithRedirect(auth, provider);
+};
+
+// Call this on app load to handle the redirect result
+export const handleGoogleRedirectResult = async (): Promise<void> => {
+  try {
+    const result = await getRedirectResult(auth);
+    if (result?.user) {
+      const user = result.user;
+      const isAdmin = isAdminUser(user.email ?? '');
+      await createUserRecord(user.uid, user.email ?? '', isAdmin, user.displayName ?? '', user.phoneNumber ?? '');
+    }
+  } catch (error) {
+    console.error('Google redirect result error:', error);
+  }
 };
 
 // Sign in with email and password
