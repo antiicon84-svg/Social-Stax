@@ -93,7 +93,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       await signUpWithEmail(email, password, displayName, phone);
       // onAuthStateChanged will handle the state update
-    } catch (error: Error) {
+    } catch (error: unknown) {
+      const errorMsg = error instanceof Error ? error.message : 'Sign up failed';
       console.error('Sign Up Error:', error);
       // Re-throw original error so caller can inspect error code
       throw error;
@@ -104,7 +105,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       await loginUser(email, password);
       // onAuthStateChanged will handle the state update
-    } catch (error: Error) {
+    } catch (error: unknown) {
+      const errorMsg = error instanceof Error ? error.message : 'Login failed';
       console.error('Login Error:', error);
       throw error; // Re-throw original so caller can inspect error.code
     }
@@ -113,26 +115,29 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const loginWithGoogle = async () => {
     try {
       await loginWithGoogleService();
-    } catch (error: Error) {
+    } catch (error: unknown) {
+      const errorMsg = error instanceof Error ? error.message : 'Google login failed';
       console.error('Google Login Error:', error);
-      throw new Error(error.message || 'Failed to login with Google');
+      throw new Error(errorMsg || 'Failed to login with Google');
     }
   };
 
   const loginGuest = async () => {
     try {
       await loginGuestService();
-    } catch (error: Error) {
+    } catch (error: unknown) {
+      const errorMsg = error instanceof Error ? error.message : 'Guest login failed';
       console.error('Guest Login Error:', error);
-      throw new Error(error.message || 'Failed to login as guest');
+      throw new Error(errorMsg || 'Failed to login as guest');
     }
   };
 
   const logout = async () => {
     try {
       await logoutUser();
-    } catch (error: Error) {
-      throw new Error(error.message);
+    } catch (error: unknown) {
+      const errorMsg = error instanceof Error ? error.message : 'Logout failed';
+      throw new Error(errorMsg);
     }
   };
 

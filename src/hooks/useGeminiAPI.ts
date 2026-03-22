@@ -6,13 +6,13 @@ if (!API_KEY) {
 }
 
 
-import { generateImage } from '@/services/aiService';
+import { generateImage } from '~/services/aiService';
 
 export async function textToImage(prompt: string): Promise<string> {
   try {
     const result = await generateImage(prompt);
     // Assuming the backend returns a base64 encoded image or a URL
-    return result.imageData;
+    return (result as { imageData?: string }).imageData || '';
   } catch (error) {
     console.error('Text to image error:', error);
     throw error;

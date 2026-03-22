@@ -320,8 +320,8 @@ const AdminPanel: React.FC = () => {
               {grants.map((grant) => (
                 <div key={grant.id} className="bg-gray-800 p-4 rounded border border-gray-700 flex justify-between items-start">
                   <div className="flex-1">
-                    <p className="text-white font-medium">{grant.email}</p>
-                    <p className="text-gray-400 text-sm">Plan: {grant.plan} • Reason: {grant.reason}</p>
+                    <p className="text-white font-medium">{grant.userEmail}</p>
+                    <p className="text-gray-400 text-sm">Plan: {grant.plan} {grant.reason ? `• Reason: ${grant.reason}` : ''}</p>
                     {grant.expiresAt && (
                       <p className="text-yellow-400 text-sm">
                         Expires: {new Date(grant.expiresAt).toLocaleDateString()}
@@ -329,7 +329,7 @@ const AdminPanel: React.FC = () => {
                     )}
                   </div>
                   <button
-                    onClick={() => handleRevokeAccess(grant.id, grant.email)}
+                    onClick={() => handleRevokeAccess(grant.id || '', grant.userEmail)}
                     className="ml-4 px-4 py-2 bg-red-900 hover:bg-red-800 text-red-300 rounded text-sm"
                   >
                     Revoke

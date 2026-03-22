@@ -264,7 +264,7 @@ const PromptGuideView: React.FC = () => {
       setIsEnhancing(true);
       try {
           const result = await enhancePromptWithAI(fullPrompt, activeTab);
-          setEnhancedResult(result);
+          setEnhancedResult(result as { enhancedPrompt: string; technicalParams: string });
       } catch (e) {
           console.error(e);
           alert("Failed to enhance prompt.");
@@ -278,7 +278,7 @@ const PromptGuideView: React.FC = () => {
       setIsAnalyzing(true);
       try {
           const result = await analyzePromptCoherence(fullPrompt, activeTab);
-          setAdvice(result);
+          setAdvice(result as { score: number; advice: string });
       } catch (e) {
           console.error(e);
       } finally {

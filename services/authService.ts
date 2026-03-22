@@ -218,13 +218,14 @@ export const loginWithGoogle = async (): Promise<User> => {
   try {
     // Try popup first (works best with HashRouter)
     userCredential = await signInWithPopup(auth, provider);
-  } catch (popupError: Error) {
+  } catch (popupError: unknown) {
+    const error = popupError as { code?: string };
     // If popup was blocked or failed, fall back to redirect
     if (
-      popupError.code === 'auth/popup-blocked' ||
-      popupError.code === 'auth/popup-closed-by-user'
+      error.code === 'auth/popup-blocked' ||
+      error.code === 'auth/popup-closed-by-user'
     ) {
-      console.warn('Popup blocked/closed, falling back to redirect:', popupError.code);
+      console.warn('Popup blocked/closed, falling back to redirect:', error.code);
       await signInWithRedirect(auth, provider);
       // signInWithRedirect navigates away; this line won't execute,
       // but we need to satisfy TypeScript

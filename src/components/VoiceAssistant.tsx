@@ -14,6 +14,10 @@ interface SpeechRecognitionEvent extends Event {
   results: SpeechRecognitionResultList;
 }
 
+interface SpeechRecognitionErrorEvent extends Event {
+  error: string;
+}
+
 interface SpeechRecognitionAlternative {
   transcript: string;
   confidence: number;
@@ -35,7 +39,7 @@ interface SpeechRecognition extends EventTarget {
   interimResults: boolean;
   lang: string;
   onresult: (event: SpeechRecognitionEvent) => void;
-  onerror: (event: Event) => void;
+  onerror: (event: SpeechRecognitionErrorEvent) => void;
   onend: () => void;
   start: () => void;
   stop: () => void;
@@ -224,7 +228,7 @@ const VoiceAssistant: React.FC = () => {
       }
       
       parseAndHandleNavigation(responseText);
-    } catch (error: Error) {
+    } catch (error: unknown) {
       console.error('Gemini chat error:', error);
       const errMsg = 'Sorry, I had trouble connecting. Please try again.';
       setMessages(prev => [...prev, { role: 'assistant', text: errMsg, timestamp: new Date() }]);
@@ -255,7 +259,7 @@ const VoiceAssistant: React.FC = () => {
       }
     };
 
-    recognition.onerror = (event: Event) => {
+    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
       console.error('Speech error:', event.error);
       setIsListening(false);
       setTranscript('');

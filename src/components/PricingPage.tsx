@@ -87,9 +87,10 @@ const PricingPage: React.FC = () => {
       } else {
         setError("Failed to get Stripe Checkout session ID.");
       }
-    } catch (err: Error) {
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : "An unexpected error occurred.";
       console.error("Subscription error:", err);
-      setError(err.message || "An unexpected error occurred.");
+      setError(errorMsg || "An unexpected error occurred.");
     } finally {
       setLoadingPlanId(null);
     }

@@ -159,6 +159,7 @@ export interface FreeAccessGrant {
   plan: 'starter' | 'pro' | 'enterprise'; // The plan level granted
   expiresAt: Date | null; // Null for lifetime access
   grantedAt: Date;
+  reason?: string; // Optional reason for the grant
   customLimits?: Partial<Usage>; // For admin-defined custom usage limits
   grantedBy?: string; // UID of the admin who granted it
 }

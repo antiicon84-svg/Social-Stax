@@ -10,7 +10,7 @@ const stripeWebhookSecret = defineString('STRIPE_WEBHOOK_SECRET');
 
 // Initialize Stripe with the secret key from Firebase environment configuration
 const stripe = new Stripe(stripeSecretKey.value(), {
-    apiVersion: "2024-06-20",
+    apiVersion: "2025-12-15.clover",
 });
 
 /**
@@ -104,9 +104,10 @@ export const stripeWebhook = onRequest(async (req, res) => {
     try {
         // Verify the event came from Stripe
         event = stripe.webhooks.constructEvent(req.rawBody, sig, endpointSecret);
-    } catch (err: Error) {
-        console.error("Webhook signature verification failed.", err.message);
-        res.status(400).send(`Webhook Error: ${err.message}`);
+    } catch (err: unknown) {
+        const error = err as { message?: string };
+        console.error("Webhook signature verification failed.", error.message);
+        res.status(400).send(`Webhook Error: ${error.message || 'Unknown error'}`);
         return;
     }
 

@@ -4,12 +4,11 @@ import { HashRouter, MemoryRouter } from 'react-router-dom';
 import App from './App';
 import ErrorBoundary from './components/ErrorBoundary';
 import '~/index.css'; // Essential for styling and preventing layout shifts
-
 declare global {
   interface Window {
-    appkit?: {
-      ready: Promise<void>;
-    };
+    appkit?: AppKit | undefined;
+    gapi?: unknown;
+    google?: unknown;
   }
 }
 

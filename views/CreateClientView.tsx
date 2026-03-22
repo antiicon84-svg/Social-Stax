@@ -52,12 +52,13 @@ const CreateClientView: React.FC<CreateClientViewProps> = ({ onClientAdded }) =>
     setIsAnalyzing(true);
     try {
       const data = await analyzeWebsite(websiteUrl);
-      if (data) {
-        if (data.name) setName(data.name);
-        if (data.industry) setIndustry(data.industry);
-        if (data.tone) setBrandTone(data.tone);
-        if (data.description) setDescription(data.description);
-        if (data.color) setBrandColor(data.color);
+      if (data && typeof data === 'object') {
+        const analyzed = data as { name?: string; industry?: string; tone?: string; description?: string; color?: string };
+        if (analyzed.name) setName(analyzed.name);
+        if (analyzed.industry) setIndustry(analyzed.industry);
+        if (analyzed.tone) setBrandTone(analyzed.tone);
+        if (analyzed.description) setDescription(analyzed.description);
+        if (analyzed.color) setBrandColor(analyzed.color);
       }
     } catch (error) {
       console.error(error);

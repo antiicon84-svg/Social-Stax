@@ -55,14 +55,18 @@ const ContentLabView: React.FC = () => {
       } else {
         // For Image and Video, we generate a detailed prompt/brief
         const enhanced = await enhancePromptWithAI(topic, activeTab);
-        const finalResult = typeof enhanced === 'string' 
-          ? enhanced 
-          : `**Enhanced Prompt:**\n${enhanced.enhancedPrompt}\n\n**Technical Parameters:**\n${enhanced.technicalParams}`;
+        let finalResult = '';
+        if (typeof enhanced === 'string') {
+          finalResult = enhanced;
+        } else if (enhanced && typeof enhanced === 'object') {
+          const enhancedObj = enhanced as { enhancedPrompt?: string; technicalParams?: string };
+          finalResult = `**Enhanced Prompt:**\n${enhancedObj.enhancedPrompt || ''}\n\n**Technical Parameters:**\n${enhancedObj.technicalParams || ''}`;
+        }
         setResult(finalResult);
         
         // For image tab, also generate an actual image using Pollinations
         if (activeTab === 'image') {
-          await generateActualImage(enhanced);
+          await generateActualImage(enhanced as string);
         }
       }
     } catch (error) {

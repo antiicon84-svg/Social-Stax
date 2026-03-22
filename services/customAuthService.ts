@@ -42,17 +42,18 @@ const callCloudFunction = async (functionName: string, data: Record<string, unkn
     const fn = httpsCallable(functions, functionName);
     const result = await fn(data);
     return result.data;
-  } catch (error: Error) {
+  } catch (error: unknown) {
+    const err = error as { code?: string; message?: string };
     console.error(`Cloud Function ${functionName} error:`, error);
     
     // Handle specific Firebase errors
-    if (error.code === 'functions/unavailable') {
+    if (err.code === 'functions/unavailable') {
       throw new Error('Cloud Functions are not available. Check your Firebase configuration.');
     }
-    if (error.code === 'functions/unauthenticated') {
+    if (err.code === 'functions/unauthenticated') {
       throw new Error('Authentication failed. Please check your credentials.');
     }
-    if (error.message?.includes('auth/api-key-not-valid')) {
+    if (err.message?.includes('auth/api-key-not-valid')) {
       throw new Error('Firebase API key is invalid. Check your environment variables.');
     }
     
@@ -83,11 +84,12 @@ export const customAuthService = {
         await signInWithCustomToken(auth, data.token);
       }
       return data;
-    } catch (error: Error) {
-      console.error('Signup error:', error);
+    } catch (error: unknown) {
+      const err = error as { message?: string };
+      console.error('Login error:', error);
       return {
         success: false,
-        message: error.message || 'Sign up failed. Please try again.',
+        message: err.message || 'Login failed. Please try again.',
       };
     }
   },
@@ -111,11 +113,12 @@ export const customAuthService = {
         await signInWithCustomToken(auth, data.token);
       }
       return data;
-    } catch (error: Error) {
+    } catch (error: unknown) {
+      const err = error as { message?: string };
       console.error('Login error:', error);
       return {
         success: false,
-        message: error.message || 'Login failed. Please try again.',
+        message: err.message || 'Login failed. Please try again.',
       };
     }
   },

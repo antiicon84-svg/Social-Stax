@@ -4,9 +4,7 @@
 
 declare global {
   interface Window {
-    appkit?: {
-      on: (event: string, callback: () => void) => void;
-    };
+    appkit?: AppKit | undefined;
   }
 }
 
@@ -22,7 +20,9 @@ export const initializeAppKitListeners = () => {
   if (!isAppKit() || !window.appkit) return;
 
   // Example: Listen for back button events from native side
-  window.appkit.on('backbutton', () => {
-    console.log('Native back button pressed');
-  });
+  if ('on' in window.appkit && typeof (window.appkit as any).on === 'function') {
+    (window.appkit as any).on('backbutton', () => {
+      console.log('Native back button pressed');
+    });
+  }
 };

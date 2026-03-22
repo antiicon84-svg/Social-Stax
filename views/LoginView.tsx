@@ -49,8 +49,9 @@ const LoginView: React.FC = () => {
     try {
       await login(email, password);
       navigate('/');
-    } catch (err: Error) {
-      const code = (err as { code?: string; message?: string })?.code || err?.message || '';
+    } catch (err: unknown) {
+      const error = err as { code?: string; message?: string };
+      const code = error?.code || (error as Error)?.message || '';;
       if (code.includes('user-not-found') || code.includes('invalid-credential') || code.includes('invalid-login-credentials')) {
         setError('No account found with this email. Please sign up first.');
       } else if (code.includes('wrong-password')) {
@@ -58,7 +59,8 @@ const LoginView: React.FC = () => {
       } else if (code.includes('too-many-requests')) {
         setError('Too many failed attempts. Please try again later.');
       } else {
-        setError(err.message || 'Sign in failed. Please try again.');
+        const message = error instanceof Error ? error.message : 'Sign in failed. Please try again.';
+        setError(message);
       }
     } finally {
       setLoading(false);
@@ -76,13 +78,15 @@ const LoginView: React.FC = () => {
     try {
       await signUp(email, password, name.trim(), phone.trim());
       navigate('/');
-    } catch (err: Error) {
-      const code = (err as { code?: string; message?: string })?.code || err?.message || '';
+    } catch (err: unknown) {
+      const error = err as { code?: string; message?: string };
+      const code = error?.code || (error as Error)?.message || '';;
       if (code.includes('email-already-in-use')) {
         setError('An account with this email already exists. Please sign in instead.');
         setMode('signin');
       } else {
-        setError(err.message || 'Sign up failed. Please try again.');
+        const message = error instanceof Error ? error.message : 'Sign up failed. Please try again.';
+        setError(message);
       }
     } finally {
       setLoading(false);
@@ -95,8 +99,9 @@ const LoginView: React.FC = () => {
     try {
       await loginWithGoogle();
       navigate('/');
-    } catch (err: Error) {
-      setError(getGoogleAuthErrorMessage(err));
+    } catch (err: unknown) {
+      const error = err as { message?: string; code?: string };
+      setError(getGoogleAuthErrorMessage(error as Error));
     } finally {
       setLoading(false);
     }

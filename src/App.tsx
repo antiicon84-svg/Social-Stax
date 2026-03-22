@@ -4,12 +4,11 @@ import AppKitRouter from './routes/AppKitRouter'; // Import the new AppKit-speci
 import LoadingSpinner from './components/LoadingSpinner';
 import { isAppKit } from '~/utils/appkitUtils'; // Import appkit utilities
 import { AuthProvider } from './context/AuthContext'; // Import authentication context provider
-
 declare global {
   interface Window {
-    appkit?: {
-      ready: Promise<void>;
-    };
+    appkit?: AppKit | undefined;
+    gapi?: unknown;
+    google?: unknown;
   }
 }
 

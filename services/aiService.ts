@@ -26,7 +26,7 @@ export const analyzeWebsite = async (url: string) => {
 
 export const generateContent = async (topic: string, platform?: string) => {
   const data = await callGemini('generateContent', { topic, platform });
-  return data.text as string;
+  return (data as { text?: string }).text as string;
 };
 
 export const formatSocialMediaContent = async (
@@ -35,5 +35,5 @@ export const formatSocialMediaContent = async (
   brandKit?: Record<string, unknown>
 ): Promise<string> => {
   const data = await callGemini('formatContent', { content, platform, brandKit });
-  return data.text as string;
+  return (data as { text?: string }).text as string;
 };
