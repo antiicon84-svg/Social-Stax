@@ -1,17 +1,7 @@
 import { httpsCallable } from 'firebase/functions';
 import { signInWithCustomToken, signOut } from 'firebase/auth';
-import { getFirebaseFunctions, auth_instance as auth } from '../src/config/firebase';
+import { getFirebaseFunctions, getFirebaseAuth } from '@/config/firebase';
 
-/**
- * ===================================================
- * Custom Authentication Service for Social Stax
- * ===================================================
- * Provides secure email/password authentication with JWT tokens.
- * Uses Firebase Cloud Functions for backend authentication.
- * Includes comprehensive error handling for Firebase initialization failures.
- */
-
-// Response interfaces
 export interface SignupResponse {
   success: boolean;
   message: string;
@@ -33,9 +23,6 @@ export interface CurrentUser {
   email: string | null;
 }
 
-/**
- * Helper function to safely call Cloud Functions
- */
 const callCloudFunction = async (functionName: string, data: Record<string, unknown>) => {
   try {
     const functions = getFirebaseFunctions();
@@ -45,8 +32,6 @@ const callCloudFunction = async (functionName: string, data: Record<string, unkn
   } catch (error: unknown) {
     const err = error as { code?: string; message?: string };
     console.error(`Cloud Function ${functionName} error:`, error);
-    
-    // Handle specific Firebase errors
     if (err.code === 'functions/unavailable') {
       throw new Error('Cloud Functions are not available. Check your Firebase configuration.');
     }
@@ -56,31 +41,20 @@ const callCloudFunction = async (functionName: string, data: Record<string, unkn
     if (err.message?.includes('auth/api-key-not-valid')) {
       throw new Error('Firebase API key is invalid. Check your environment variables.');
     }
-    
     throw error;
   }
 };
 
-/**
- * Custom Authentication Service
- */
 export const customAuthService = {
-  /**
-   * Sign up a new user with email and password
-   * @param email User email address
-   * @param password User password (hashed on backend)
-   */
   async signUp(email: string, password: string): Promise<SignupResponse> {
     try {
       if (!email || !password) {
         throw new Error('Email and password are required');
       }
-      
       const result = await callCloudFunction('signUp', { email, password });
       const data = result as SignupResponse;
-      
       if (data.success && data.token) {
-        // Sign in to Firebase Client SDK with the custom token
+        const auth = getFirebaseAuth();
         await signInWithCustomToken(auth, data.token);
       }
       return data;
@@ -94,22 +68,15 @@ export const customAuthService = {
     }
   },
 
-  /**
-   * Login user with email and password
-   * @param email User email address
-   * @param password User password
-   */
   async login(email: string, password: string): Promise<LoginResponse> {
     try {
       if (!email || !password) {
         throw new Error('Email and password are required');
       }
-      
       const result = await callCloudFunction('login', { email, password });
       const data = result as LoginResponse;
-      
       if (data.success && data.token) {
-        // Sign in to Firebase Client SDK with the custom token
+        const auth = getFirebaseAuth();
         await signInWithCustomToken(auth, data.token);
       }
       return data;
@@ -123,11 +90,9 @@ export const customAuthService = {
     }
   },
 
-  /**
-   * Logout the current user
-   */
   async logout(): Promise<{ success: boolean }> {
     try {
+      const auth = getFirebaseAuth();
       await signOut(auth);
       return { success: true };
     } catch (error) {
@@ -136,10 +101,8 @@ export const customAuthService = {
     }
   },
 
-  /**
-   * Get the currently logged-in user
-   */
   getCurrentUser(): CurrentUser {
+    const auth = getFirebaseAuth();
     const user = auth.currentUser;
     return {
       userId: user?.uid || null,
@@ -147,24 +110,16 @@ export const customAuthService = {
     };
   },
 
-  /**
-   * Check if user is authenticated
-   */
   isAuthenticated(): boolean {
+    const auth = getFirebaseAuth();
     return !!auth.currentUser;
   },
 
-  /**
-   * Verify token is still valid
-   * Note: With Firebase Auth integration, checking currentUser is usually sufficient,
-   * but we can keep this for specific backend token checks if needed.
-   */
   async verifyToken(): Promise<boolean> {
     try {
+      const auth = getFirebaseAuth();
       const user = auth.currentUser;
       if (!user) return false;
-      
-      // Force refresh token to ensure validity
       await user.getIdToken(true);
       return true;
     } catch (error) {

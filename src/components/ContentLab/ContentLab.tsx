@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { doc, getDoc } from 'firebase/firestore';
-import { db_instance as db } from '@/config/firebase';
+import { getFirebaseDB } from '@/config/firebase';
 import TextToImage from './TextToImage';
 import ImageEditor from './ImageEditor';
 import VideoGenerator from './VideoGenerator';
@@ -24,7 +24,7 @@ export default function ContentLab() {
     if (!currentUser) return;
     setLoading(true);
     try {
-      const userDoc = await getDoc(doc(db, 'users', currentUser.userId));
+      const userDoc = await getDoc(doc(getFirebaseDB(), 'users', currentUser.userId));
       if (userDoc.exists()) {
         const data = userDoc.data();
         setCredits(data.credits - data.creditsUsed);

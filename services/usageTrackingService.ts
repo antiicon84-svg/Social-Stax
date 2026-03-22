@@ -1,5 +1,7 @@
-import { getDoc, setDoc, updateDoc, doc } from 'firebase/firestore';
-import { db_instance as db } from '@/config/firebase';
+import { getDoc, setDoc, updateDoc, doc, type Firestore } from 'firebase/firestore';
+import { getFirebaseDB } from '@/config/firebase';
+
+const getDB = (): Firestore => getFirebaseDB();
 import { UserProfile, Usage } from '~/types';
 
 // Default usage limits per plan
@@ -23,7 +25,7 @@ export const canPerformAction = async (
  }
 
  try {
- const userRef = doc(db, 'users', userProfile.uid);
+ const userRef = doc(getDB(),'users', userProfile.uid);
  const userDoc = await getDoc(userRef);
 
  if (!userDoc.exists()) {
@@ -56,7 +58,7 @@ export const incrementUsage = async (
  }
 
  try {
- const userRef = doc(db, 'users', uid);
+ const userRef = doc(getDB(),'users', uid);
  const userDoc = await getDoc(userRef);
 
  if (userDoc.exists()) {
@@ -80,7 +82,7 @@ export const incrementUsage = async (
  */
 const initializeUserUsage = async (uid: string, initialUsage: Partial<Usage> = {}): Promise<void> => {
  try {
- const userRef = doc(db, 'users', uid);
+ const userRef = doc(getDB(),'users', uid);
  const usage: Usage = {
  contentGenerations: initialUsage.contentGenerations || 0,
  imageGenerations: initialUsage.imageGenerations || 0,
@@ -107,7 +109,7 @@ export const getUserUsage = async (uid: string): Promise<Usage | null> => {
  }
 
  try {
- const userRef = doc(db, 'users', uid);
+ const userRef = doc(getDB(),'users', uid);
  const userDoc = await getDoc(userRef);
 
  if (userDoc.exists()) {
@@ -129,7 +131,7 @@ export const resetUserUsage = async (uid: string): Promise<void> => {
  }
 
  try {
- const userRef = doc(db, 'users', uid);
+ const userRef = doc(getDB(),'users', uid);
  const resetUsage: Usage = {
  contentGenerations: 0,
  imageGenerations: 0,

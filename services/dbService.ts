@@ -1,5 +1,4 @@
 import {
-  getFirestore,
   collection,
   doc,
   setDoc,
@@ -10,12 +9,12 @@ import {
   query,
   where,
 } from "firebase/firestore";
-import { getApp } from "firebase/app";
 import { getFunctions, httpsCallable } from "firebase/functions";
-import { Client, Post, UserProfile, FreeAccessGrant } from '../types'
-  import { getCurrentUser } from "./authService";
+import { getFirebaseDB, getFirebaseApp } from '@/config/firebase';
+import { Client, Post, UserProfile, FreeAccessGrant } from '../types';
+import { getCurrentUser } from "./authService";
 
-const db = getFirestore(getApp());
+const getDB = () => getFirebaseDB();
 
 
 /**
@@ -35,7 +34,7 @@ const getAuthenticatedUid = (): string => {
 
 export const getClients = async (): Promise<Client[]> => {
   const uid = getAuthenticatedUid();
-  const clientsCol = collection(db, "users", uid, "clients");
+  const clientsCol = collection(getDB(),"users", uid, "clients");
   const clientSnapshot = await getDocs(clientsCol);
   return clientSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Client));
 };
@@ -45,12 +44,12 @@ export const saveClient = async (client: Client): Promise<void> => {
 
   if (client.id) {
     // Update existing client
-    const clientRef = doc(db, "users", uid, "clients", client.id);
+    const clientRef = doc(getDB(),"users", uid, "clients", client.id);
     const { ...clientData } = client;
     await setDoc(clientRef, clientData, { merge: true });
   } else {
     // Create new client
-    const clientsCol = collection(db, "users", uid, "clients");
+    const clientsCol = collection(getDB(),"users", uid, "clients");
     // Exclude a potential empty id from the document data
     const { ...clientData } = client;
     await addDoc(clientsCol, clientData);
@@ -60,7 +59,7 @@ export const saveClient = async (client: Client): Promise<void> => {
 export const getScheduledPosts = async (): Promise<Post[]> => {
   const uid = getAuthenticatedUid();
 
-  const postsCol = collection(db, "users", uid, "posts");
+  const postsCol = collection(getDB(),"users", uid, "posts");
   const postSnapshot = await getDocs(postsCol);
   return postSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Post));
 };
@@ -69,11 +68,11 @@ export const savePost = async (post: Post): Promise<void> => {
   const uid = getAuthenticatedUid();
 
   if (post.id) {
-    const postRef = doc(db, "users", uid, "posts", post.id);
+    const postRef = doc(getDB(),"users", uid, "posts", post.id);
     const { ...postData } = post;
     await setDoc(postRef, postData, { merge: true });
   } else {
-    const postsCol = collection(db, "users", uid, "posts");
+    const postsCol = collection(getDB(),"users", uid, "posts");
     const { ...postData } = post;
     await addDoc(postsCol, postData);
   }
@@ -81,13 +80,13 @@ export const savePost = async (post: Post): Promise<void> => {
 
 export const deletePost = async (postId: string): Promise<void> => {
   const uid = getAuthenticatedUid();
-  await deleteDoc(doc(db, "users", uid, "posts", postId));
+  await deleteDoc(doc(getDB(),"users", uid, "posts", postId));
 };
 
 export const getClientById = async (id: string): Promise<Client | undefined> => {
   const uid = getAuthenticatedUid();
 
-  const clientRef = doc(db, "users", uid, "clients", id);
+  const clientRef = doc(getDB(),"users", uid, "clients", id);
   const clientSnap = await getDoc(clientRef);
   return clientSnap.exists() ? { id: clientSnap.id, ...clientSnap.data() } as Client : undefined;
 };
@@ -98,7 +97,7 @@ export const getClientById = async (id: string): Promise<Client | undefined> => 
  */
 export const getUserProfile = async (): Promise<UserProfile | null> => {
   const uid = getAuthenticatedUid();
-  const userRef = doc(db, "users", uid);
+  const userRef = doc(getDB(),"users", uid);
   const userSnap = await getDoc(userRef);
 
   if (!userSnap.exists()) {
@@ -115,7 +114,7 @@ export const getUserProfile = async (): Promise<UserProfile | null> => {
  * @returns The user's profile and UID, or null if not found.
  */
 export const getUserByEmail = async (email: string): Promise<(UserProfile & { uid: string }) | null> => {
-  const usersRef = collection(db, "users");
+  const usersRef = collection(getDB(),"users");
   const q = query(usersRef, where("email", "==", email));
   const querySnapshot = await getDocs(q);
 
@@ -134,7 +133,7 @@ export const getUserByEmail = async (email: string): Promise<(UserProfile & { ui
 export const getFreeAccessGrants = async (): Promise<FreeAccessGrant[]> => {
   // Note: This assumes the admin has appropriate Firestore security rules
   // to read the 'free_access' collection.
-  const grantsCol = collection(db, "free_access");
+  const grantsCol = collection(getDB(),"free_access");
   const grantsSnapshot = await getDocs(grantsCol);
   return grantsSnapshot.docs.map(doc => ({
     id: doc.id, ...doc.data()
@@ -155,7 +154,7 @@ export const createFreeAccessGrant = async (grant: Omit<FreeAccessGrant, 'id' | 
   }
 
   // Create the new grant document
-  const grantsCol = collection(db, "free_access");
+  const grantsCol = collection(getDB(),"free_access");
   const newGrantData = {
     ...grant,
     grantedAt: new Date(), // Set the grant timestamp
@@ -178,7 +177,7 @@ export const revokeFreeAccessGrant = async (grantId: string): Promise<void> => {
   }
 
   // Proceed to delete the grant document
-  const grantRef = doc(db, "free_access", grantId);
+  const grantRef = doc(getDB(),"free_access", grantId);
   await deleteDoc(grantRef);
 };
 
@@ -188,7 +187,7 @@ export const revokeFreeAccessGrant = async (grantId: string): Promise<void> => {
  */
 export const dev_setCurrentUserAsAdmin = async (): Promise<void> => {
   const uid = getAuthenticatedUid();
-  const userRef = doc(db, "users", uid);
+  const userRef = doc(getDB(),"users", uid);
   await setDoc(userRef, { role: 'admin' }, { merge: true });
 };
 
@@ -197,7 +196,7 @@ export const dev_setCurrentUserAsAdmin = async (): Promise<void> => {
  * This can only be successfully called by an authenticated admin.
  */
 export const triggerManualUsageReset = async (): Promise<{ message: string }> => {
-  const fns = getFunctions(getApp(), 'us-central1');
+  const fns = getFunctions(getFirebaseApp(), 'us-central1');
   const resetFunction = httpsCallable(fns, 'manualusagereset');
   const result = await resetFunction();
   return result.data as { message: string };

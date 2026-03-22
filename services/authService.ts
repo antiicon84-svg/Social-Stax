@@ -1,6 +1,5 @@
-import { auth_instance as auth, db_instance as db } from '@/config/firebase';
+import { getFirebaseAuth, getFirebaseDB } from '@/config/firebase';
 import {
-  onAuthStateChanged,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signInAnonymously,
@@ -21,17 +20,13 @@ import {
 } from 'firebase/firestore';
 import type { UserProfile as User } from '../types';
 
-// Set up auth state listener
-onAuthStateChanged(auth, async (firebaseUser) => {
-  if (firebaseUser) {
-    console.log('User is authenticated:', firebaseUser.uid);
-  } else {
-    console.log('User is logged out');
-  }
-});
+// Helper to get auth instance safely
+const getAuth = () => getFirebaseAuth();
+const getDB = () => getFirebaseDB();
 
 // Helper function to map Firebase user to app User type
 const mapFirebaseUserToAppUser = async (fbUser: FirebaseUser): Promise<User> => {
+  const db = getDB();
   const ref = doc(db, 'users', fbUser.uid);
   const snap = await getDoc(ref);
 
@@ -83,28 +78,17 @@ const mapFirebaseUserToAppUser = async (fbUser: FirebaseUser): Promise<User> => 
 
 // Login function
 export const loginUser = async (email: string, password: string): Promise<User | null> => {
-  try {
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    const appUser = await mapFirebaseUserToAppUser(userCredential.user);
-    return appUser;
-  } catch (error) {
-    console.error('Login error:', error);
-    throw error;
-  }
+  const auth = getAuth();
+  const userCredential = await signInWithEmailAndPassword(auth, email, password);
+  return mapFirebaseUserToAppUser(userCredential.user);
 };
 
 // Guest Login function
 export const loginGuest = async (): Promise<User | null> => {
-  try {
-    const userCredential = await signInAnonymously(auth);
-    // Create a basic user record for the guest
-    await createUserRecord(userCredential.user.uid, 'guest@socialstax.app', false, 'Guest User');
-    const appUser = await mapFirebaseUserToAppUser(userCredential.user);
-    return appUser;
-  } catch (error) {
-    console.error('Guest login error:', error);
-    throw error;
-  }
+  const auth = getAuth();
+  const userCredential = await signInAnonymously(auth);
+  await createUserRecord(userCredential.user.uid, 'guest@socialstax.app', false, 'Guest User');
+  return mapFirebaseUserToAppUser(userCredential.user);
 };
 
 // Check if admin
@@ -120,61 +104,58 @@ export const createUserRecord = async (
   displayName: string = '',
   phone: string = ''
 ): Promise<void> => {
-  try {
-    const userRef = doc(db, 'users', uid);
-    const trialExpiresAt = new Date();
-    trialExpiresAt.setDate(trialExpiresAt.getDate() + 14);
+  const db = getDB();
+  const userRef = doc(db, 'users', uid);
+  const trialExpiresAt = new Date();
+  trialExpiresAt.setDate(trialExpiresAt.getDate() + 14);
 
-    await setDoc(
-      userRef,
-      {
-        uid,
-        email,
-        displayName,
-        phoneNumber: phone,
-        role: isAdmin ? 'admin' : 'user',
-        planTier: 'free',
-        credits: 100,
-        creditsUsed: 0,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-        autoDeleteGeneratedContent: false,
-        storageUsed: 0,
-        subscription: {
-          status: 'trial',
-          plan: 'starter',
-          expiresAt: Timestamp.fromDate(trialExpiresAt),
-          autoRenew: false,
-        },
-        usage: {
-          contentGenerations: 0,
-          imageGenerations: 0,
-          voiceAssistantMinutes: 0,
-          apiCalls: 0,
-          lastReset: serverTimestamp(),
-        },
+  await setDoc(
+    userRef,
+    {
+      uid,
+      email,
+      displayName,
+      phoneNumber: phone,
+      role: isAdmin ? 'admin' : 'user',
+      planTier: 'free',
+      credits: 100,
+      creditsUsed: 0,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+      autoDeleteGeneratedContent: false,
+      storageUsed: 0,
+      subscription: {
+        status: 'trial',
+        plan: 'starter',
+        expiresAt: Timestamp.fromDate(trialExpiresAt),
+        autoRenew: false,
       },
-      { merge: true }
-    );
-  } catch (error) {
-    console.error('Error creating user record:', error);
-    throw error;
-  }
+      usage: {
+        contentGenerations: 0,
+        imageGenerations: 0,
+        voiceAssistantMinutes: 0,
+        apiCalls: 0,
+        lastReset: serverTimestamp(),
+      },
+    },
+    { merge: true }
+  );
 };
 
 // Get current user
 export const getCurrentUser = () => {
-  return auth.currentUser;
+  try {
+    const auth = getAuth();
+    return auth.currentUser;
+  } catch {
+    return null;
+  }
 };
 
 // Logout
 export const logoutUser = async (): Promise<void> => {
-  try {
-    await signOut(auth);
-  } catch (error) {
-    console.error('Logout error:', error);
-    throw error;
-  }
+  const auth = getAuth();
+  await signOut(auth);
 };
 
 // Sign up with email and password
@@ -184,51 +165,36 @@ export const signUpWithEmail = async (
   displayName?: string,
   phone?: string
 ): Promise<User> => {
-  try {
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    const user = userCredential.user;
+  const auth = getAuth();
+  const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+  const user = userCredential.user;
 
-    // Update profile with display name if provided
-    if (displayName) {
-      await updateProfile(user, { displayName });
-    }
-
-    // Check if user should be admin
-    const isAdmin = isAdminUser(email);
-
-    // Create user record in Firestore (with phone number)
-    await createUserRecord(user.uid, email, isAdmin, displayName, phone);
-
-    // Map to app User type
-    const appUser = await mapFirebaseUserToAppUser(user);
-    return appUser;
-  } catch (error) {
-    console.error('Error signing up:', error);
-    throw error;
+  if (displayName) {
+    await updateProfile(user, { displayName });
   }
+
+  const isAdmin = isAdminUser(email);
+  await createUserRecord(user.uid, email, isAdmin, displayName, phone);
+  return mapFirebaseUserToAppUser(user);
 };
 
-// Sign in with Google — uses popup with redirect fallback (HashRouter breaks redirect flow)
+// Sign in with Google
 export const loginWithGoogle = async (): Promise<User> => {
+  const auth = getAuth();
   const provider = new GoogleAuthProvider();
   provider.addScope('email');
   provider.addScope('profile');
 
   let userCredential;
   try {
-    // Try popup first (works best with HashRouter)
     userCredential = await signInWithPopup(auth, provider);
   } catch (popupError: unknown) {
     const error = popupError as { code?: string };
-    // If popup was blocked or failed, fall back to redirect
     if (
       error.code === 'auth/popup-blocked' ||
       error.code === 'auth/popup-closed-by-user'
     ) {
-      console.warn('Popup blocked/closed, falling back to redirect:', error.code);
       await signInWithRedirect(auth, provider);
-      // signInWithRedirect navigates away; this line won't execute,
-      // but we need to satisfy TypeScript
       throw new Error('Redirecting for Google sign-in...');
     }
     throw popupError;
@@ -240,9 +206,10 @@ export const loginWithGoogle = async (): Promise<User> => {
   return mapFirebaseUserToAppUser(user);
 };
 
-// Call this on app load to handle the redirect result (fallback path)
+// Handle Google redirect result on app load
 export const handleGoogleRedirectResult = async (): Promise<void> => {
   try {
+    const auth = getAuth();
     const result = await getRedirectResult(auth);
     if (result?.user) {
       const user = result.user;
@@ -254,16 +221,12 @@ export const handleGoogleRedirectResult = async (): Promise<void> => {
   }
 };
 
-// Sign in with email and password
+// Sign in with email and password (alias)
 export const signInWithEmail = async (
   email: string,
   password: string
 ): Promise<FirebaseUser> => {
-  try {
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    return userCredential.user;
-  } catch (error) {
-    console.error('Error signing in:', error);
-    throw error;
-  }
+  const auth = getAuth();
+  const userCredential = await signInWithEmailAndPassword(auth, email, password);
+  return userCredential.user;
 };
