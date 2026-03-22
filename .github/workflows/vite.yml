@@ -42,12 +42,16 @@ jobs:
         repoToken: ${{ secrets.GITHUB_TOKEN }}
         firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
         channelId: live
-        projectId: elegant-fort-482119-t4
+        projectId: social-stax-7ce24
 
     - name: Install Functions dependencies
       if: github.event_name == 'push' && matrix.node-version == '20.x'
       run: cd functions && npm install
 
+    - name: Set Cloud Functions environment variables
+      if: github.event_name == 'push' && matrix.node-version == '20.x'
+      run: echo "GOOGLE_API_KEY=${{ secrets.VITE_GOOGLE_API_KEY }}" > functions/.env
+
     - name: Deploy Cloud Functions
       if: github.event_name == 'push' && matrix.node-version == '20.x'
-      run: npx firebase-tools deploy --only functions --project elegant-fort-482119-t4 --token ${{ secrets.FIREBASE_TOKEN }}
+      run: npx firebase-tools deploy --only functions --project social-stax-7ce24 --token ${{ secrets.FIREBASE_TOKEN }}

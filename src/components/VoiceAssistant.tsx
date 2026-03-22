@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mic, MicOff, Volume2, X, Minimize2, Maximize2, Bot, Loader2, Navigation } from 'lucide-react';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { httpsCallable } from 'firebase/functions';
+import { getFirebaseFunctions } from '@/config/firebase';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -165,7 +166,7 @@ const VoiceAssistant: React.FC = () => {
 
     // Call Gemini via cloud function
     try {
-      const functions = getFunctions();
+      const functions = getFirebaseFunctions();
       const geminiChat = httpsCallable(functions, 'geminiLiveChat');
 
       // Build conversation history for context
