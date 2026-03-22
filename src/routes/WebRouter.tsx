@@ -77,13 +77,11 @@ const WebRouter: React.FC = () => {
     onDataRefresh: handleRefresh,
   };
 
-  console.log('[WebRouter] Rendering main layout. Path:', location.pathname);
-  
   return (
     <div className="flex min-h-screen bg-black flex-col md:flex-row">
       <VoiceAssistant />
       <Navbar clients={clients} />
-      <div className="flex-1 flex flex-col overflow-auto relative">
+      <div className="flex-1 flex flex-col overflow-auto relative pt-14 md:pt-0">
         {loadError && (
           <div className="bg-red-900 text-red-100 p-4 m-4 rounded z-50 relative">
             <p className="font-semibold">Error loading data:</p>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import {
@@ -14,7 +14,9 @@ import {
   LogOut,
   Shield,
   Settings,
-  Zap
+  Zap,
+  Menu,
+  X
 } from 'lucide-react';
 import { Client } from '~/types';
 
@@ -27,6 +29,12 @@ const Navbar: React.FC<NavbarProps> = ({ clients }) => {
   const navigate = useNavigate();
   const { isAdmin, logout } = useAuth();
   const path = location.pathname;
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Auto-close mobile menu on route change
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [location.pathname]);
 
   const handleLogout = async () => {
     try {
@@ -55,16 +63,14 @@ const Navbar: React.FC<NavbarProps> = ({ clients }) => {
 
   const isActive = (itemPath: string) => path === itemPath;
 
-  return (
-    <nav className="w-full md:w-60 flex flex-col h-auto md:h-screen z-50 relative"
-      style={{ background: 'linear-gradient(180deg, #050c1a 0%, #080d1f 100%)', borderRight: '1px solid rgba(30,58,120,0.4)' }}>
-
+  const navContent = (
+    <>
       {/* Subtle grid overlay */}
       <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
         style={{ backgroundImage: 'linear-gradient(rgba(99,179,237,1) 1px,transparent 1px),linear-gradient(90deg,rgba(99,179,237,1) 1px,transparent 1px)', backgroundSize: '32px 32px' }} />
 
       {/* Logo */}
-      <div className="relative px-5 pt-6 pb-5 border-b" style={{ borderColor: 'rgba(30,58,120,0.35)' }}>
+      <div className="relative px-5 pt-6 pb-5 border-b flex items-center justify-between" style={{ borderColor: 'rgba(30,58,120,0.35)' }}>
         <div className="flex items-center gap-3">
           <div className="relative w-9 h-9 flex items-center justify-center rounded-xl flex-shrink-0"
             style={{ background: 'linear-gradient(135deg, #e11d48 0%, #7c3aed 100%)', boxShadow: '0 0 18px rgba(124,58,237,0.5)' }}>
@@ -76,6 +82,10 @@ const Navbar: React.FC<NavbarProps> = ({ clients }) => {
             <p className="text-[10px] mt-0.5" style={{ color: '#3b82f6' }}>AI Marketing Platform</p>
           </div>
         </div>
+        {/* Mobile close button */}
+        <button onClick={() => setMobileOpen(false)} className="md:hidden p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition-colors">
+          <X size={20} />
+        </button>
       </div>
 
       {/* Nav */}
@@ -168,7 +178,42 @@ const Navbar: React.FC<NavbarProps> = ({ clients }) => {
           <span className="text-[13px] font-medium">Logout</span>
         </button>
       </div>
-    </nav>
+    </>
+  );
+
+  return (
+    <>
+      {/* Mobile hamburger button - fixed top bar */}
+      <div className="md:hidden fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 py-3"
+        style={{ background: 'linear-gradient(180deg, #050c1a 0%, #080d1f 100%)', borderBottom: '1px solid rgba(30,58,120,0.4)' }}>
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 flex items-center justify-center rounded-lg"
+            style={{ background: 'linear-gradient(135deg, #e11d48 0%, #7c3aed 100%)' }}>
+            <Zap size={14} className="text-white" />
+          </div>
+          <span className="text-sm font-bold text-white">Social StaX</span>
+        </div>
+        <button onClick={() => setMobileOpen(true)} className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition-colors">
+          <Menu size={22} />
+        </button>
+      </div>
+
+      {/* Mobile overlay */}
+      {mobileOpen && (
+        <div className="md:hidden fixed inset-0 bg-black/60 z-50 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
+      )}
+
+      {/* Sidebar - hidden on mobile, slide-in drawer when open */}
+      <nav className={`
+        fixed md:relative inset-y-0 left-0 z-50 w-64 flex flex-col
+        transform transition-transform duration-300 ease-in-out
+        ${mobileOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0
+        md:h-screen
+      `}
+        style={{ background: 'linear-gradient(180deg, #050c1a 0%, #080d1f 100%)', borderRight: '1px solid rgba(30,58,120,0.4)' }}>
+        {navContent}
+      </nav>
+    </>
   );
 };
 

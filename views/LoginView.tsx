@@ -51,7 +51,7 @@ const LoginView: React.FC = () => {
       navigate('/');
     } catch (err: unknown) {
       const error = err as { code?: string; message?: string };
-      const code = error?.code || (error as Error)?.message || '';;
+      const code = error?.code || (error as Error)?.message || '';
       if (code.includes('user-not-found') || code.includes('invalid-credential') || code.includes('invalid-login-credentials')) {
         setError('No account found with this email. Please sign up first.');
       } else if (code.includes('wrong-password')) {
@@ -80,7 +80,7 @@ const LoginView: React.FC = () => {
       navigate('/');
     } catch (err: unknown) {
       const error = err as { code?: string; message?: string };
-      const code = error?.code || (error as Error)?.message || '';;
+      const code = error?.code || (error as Error)?.message || '';
       if (code.includes('email-already-in-use')) {
         setError('An account with this email already exists. Please sign in instead.');
         setMode('signin');
@@ -146,8 +146,8 @@ const LoginView: React.FC = () => {
       </header>
 
       {/* Main Content */}
-      <main className="relative z-10 flex flex-col items-center justify-center px-4 mt-6 md:mt-12 pb-12">
-        <div className="w-full max-w-md">
+      <main className="relative z-10 flex flex-col items-center justify-center px-4 pb-12" style={{ minHeight: 'calc(100vh - 80px)' }}>
+        <div className="w-full max-w-sm">
           {/* Mode Toggle */}
           <div className="flex mb-6 bg-gray-900/80 rounded-2xl p-1 border border-white/5 backdrop-blur-sm">
             <button

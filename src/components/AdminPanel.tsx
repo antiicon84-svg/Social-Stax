@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
 import { createFreeAccessGrant, revokeFreeAccessGrant, getFreeAccessGrants, getUserByEmail } from '~/services/dbService';
+import { useAuth } from '@/context/AuthContext';
 import Button from './Button';
 import { Lock } from 'lucide-react';
 import type { FreeAccessGrant } from '~/types';
 
+const ADMIN_SECRET = import.meta.env.VITE_ADMIN_SECRET_KEY || '';
+
 const AdminPanel: React.FC = () => {
+  const { isAdmin } = useAuth();
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
   const [adminPassword, setAdminPassword] = useState('');
   
@@ -27,10 +31,10 @@ const AdminPanel: React.FC = () => {
 
   const handleAdminLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (adminPassword === 'admin123') {
+    if (isAdmin || (ADMIN_SECRET && adminPassword === ADMIN_SECRET)) {
         setIsAdminAuthenticated(true);
     } else {
-        alert('Incorrect Password');
+        setMessage({ type: 'error', text: 'Incorrect admin password.' });
     }
   };
 

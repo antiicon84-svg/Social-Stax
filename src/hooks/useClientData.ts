@@ -20,7 +20,7 @@ export function useClientData(isAuthenticated: boolean) {
     }
 
     const fetchData = async () => {
-      console.log('[useClientData] Fetching data...');
+      // Fetching client data
       setIsLoadingClients(true);
       setIsLoadingPosts(true);
       setLoadError(null);
