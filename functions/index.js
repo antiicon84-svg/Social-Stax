@@ -379,16 +379,24 @@ exports.geminiAI = functions.https.onCall(async (data, context) => {
 
     if (operation === 'generateImage') {
       const { prompt } = payload;
-      const imageModel = genAI.getGenerativeModel({ model: 'gemini-3.1-flash' });
+      const imageModel = genAI.getGenerativeModel({ model: 'gemini-3.1-flash-image-preview' });
       const result = await imageModel.generateContent({
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        contents: [{ role: 'user', parts: [{ text: `Generate an image: ${prompt}` }] }],
         generationConfig: {
           responseMimeType: 'image/png',
         },
       });
       const response = result.response;
-      const imagePart = response.candidates[0].content.parts[0];
-      return { imageData: `data:image/png;base64,${imagePart.inlineData.data}` };
+      const candidates = response.candidates;
+      if (!candidates || !candidates[0]?.content?.parts) {
+        throw new functions.https.HttpsError('internal', 'No image generated');
+      }
+      // Find the image part in the response
+      const imagePart = candidates[0].content.parts.find(p => p.inlineData);
+      if (!imagePart) {
+        throw new functions.https.HttpsError('internal', 'No image data in response');
+      }
+      return { imageData: `data:${imagePart.inlineData.mimeType || 'image/png'};base64,${imagePart.inlineData.data}` };
     }
 
     if (operation === 'generateContent') {
