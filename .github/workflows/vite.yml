@@ -37,12 +37,7 @@ jobs:
 
     - name: Deploy to Firebase Hosting
       if: github.event_name == 'push' && matrix.node-version == '20.x'
-      uses: FirebaseExtended/action-hosting-deploy@v0
-      with:
-        repoToken: ${{ secrets.GITHUB_TOKEN }}
-        firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-        channelId: live
-        projectId: social-stax-7ce24
+      run: npx firebase-tools deploy --only hosting --project social-stax-7ce24 --token ${{ secrets.FIREBASE_TOKEN }}
 
     - name: Install Functions dependencies
       if: github.event_name == 'push' && matrix.node-version == '20.x'
