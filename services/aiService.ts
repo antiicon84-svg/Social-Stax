@@ -29,6 +29,10 @@ export const generateContent = async (topic: string, platform?: string) => {
   return (data as { text?: string }).text as string;
 };
 
+export const editImageService = async (imageUrl: string, instructions: string) => {
+  return callGemini('editImage', { imageUrl, instructions });
+};
+
 export const formatSocialMediaContent = async (
   content: string,
   platform: 'Instagram' | 'LinkedIn' | 'Twitter' | 'Facebook',

@@ -370,47 +370,45 @@ exports.geminiAI = functions.https.onCall(async (data, context) => {
     throw new functions.https.HttpsError('invalid-argument', 'operation and payload required');
   }
 
-  const { GoogleGenerativeAI } = require('@google/generative-ai');
-  const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
-  const model = genAI.getGenerativeModel({ model: 'gemini-3.1-pro' });
+  const { GoogleGenAI } = require('@google/genai');
+  const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY });
 
   try {
     let result;
 
     if (operation === 'generateImage') {
       const { prompt } = payload;
-      const imageModel = genAI.getGenerativeModel({ model: 'gemini-3.1-flash-image-preview' });
-      const result = await imageModel.generateContent({
-        contents: [{ role: 'user', parts: [{ text: `Generate an image: ${prompt}` }] }],
-        generationConfig: {
-          responseMimeType: 'image/png',
-        },
+      const response = await ai.models.generateImages({
+        model: 'imagen-4.0-generate-001',
+        prompt: prompt,
+        config: { numberOfImages: 1, aspectRatio: '1:1' }
       });
-      const response = result.response;
-      const candidates = response.candidates;
-      if (!candidates || !candidates[0]?.content?.parts) {
+      const imageBytes = response.generatedImages?.[0]?.image?.imageBytes;
+      if (!imageBytes) {
         throw new functions.https.HttpsError('internal', 'No image generated');
       }
-      // Find the image part in the response
-      const imagePart = candidates[0].content.parts.find(p => p.inlineData);
-      if (!imagePart) {
-        throw new functions.https.HttpsError('internal', 'No image data in response');
-      }
-      return { imageData: `data:${imagePart.inlineData.mimeType || 'image/png'};base64,${imagePart.inlineData.data}` };
+      return { imageData: `data:image/png;base64,${imageBytes}` };
     }
 
     if (operation === 'generateContent') {
       const { topic, platform } = payload;
       const prompt = `Generate high-quality social media content for the topic: "${topic}"${platform ? ` specifically for ${platform}` : ''}. Provide a headline, body text, and a visual brief for an image generator.`;
-      result = await model.generateContent(prompt);
-      return { text: result.response.text() };
+      result = await ai.models.generateContent({
+        model: 'gemini-3.1-pro',
+        contents: [{ role: 'user', parts: [{ text: prompt }] }]
+      });
+      return { text: result.text };
     }
 
     if (operation === 'enhancePrompt') {
       const { prompt, type } = payload;
       const systemPrompt = `You are a professional prompt engineer for ${type} generation AI. Enhance the user's prompt to be more detailed, cinematic, and effective. Output only the enhanced prompt and technical parameters in JSON format: { "enhancedPrompt": "...", "technicalParams": "..." }`;
-      result = await model.generateContent([systemPrompt, prompt]);
-      const text = result.response.text();
+      result = await ai.models.generateContent({
+        model: 'gemini-3.1-pro',
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        config: { systemInstruction: systemPrompt }
+      });
+      const text = result.text;
       const jsonMatch = text.match(/\{.*\}/s);
       return jsonMatch ? JSON.parse(jsonMatch[0]) : { enhancedPrompt: text, technicalParams: '' };
     }
@@ -465,8 +463,11 @@ exports.geminiAI = functions.https.onCall(async (data, context) => {
         : `Website URL: ${url}`;
 
       const systemPrompt = `You are a brand analyst. Analyze the following website information and extract brand details.\n\n${context}\n\nOutput ONLY valid JSON (no markdown, no explanation): { "name": "Brand Name", "industry": "Industry", "tone": "Professional|Friendly|Luxury|Bold|Playful|Educational|Minimalist", "description": "Short 1-2 sentence brand description", "color": "#hexcode" }`;
-      result = await model.generateContent([systemPrompt]);
-      const text = result.response.text().trim();
+      result = await ai.models.generateContent({
+        model: 'gemini-3.1-pro',
+        contents: [{ role: 'user', parts: [{ text: systemPrompt }] }]
+      });
+      const text = result.text.trim();
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       return jsonMatch ? JSON.parse(jsonMatch[0]) : null;
     }
@@ -482,17 +483,55 @@ exports.geminiAI = functions.https.onCall(async (data, context) => {
       const config = configs[platform] || configs.Instagram;
       const tone = brandKit?.tone || config.tone;
       const systemPrompt = `Format this content for ${platform}. Max ${config.maxLength} characters. Add ${config.hashtagCount} relevant hashtags. ${config.emojiEmphasis ? 'Use strategic emojis.' : 'Minimal emojis.'} Tone: ${tone}. Include CTA if relevant. Return ONLY formatted post.`;
-      result = await model.generateContent([systemPrompt, `Content: ${content}`]);
-      return { text: result.response.text().trim() };
+      result = await ai.models.generateContent({
+        model: 'gemini-3.1-pro',
+        contents: [{ role: 'user', parts: [{ text: `Content: ${content}` }] }],
+        config: { systemInstruction: systemPrompt }
+      });
+      return { text: result.text.trim() };
     }
 
     if (operation === 'analyzeCoherence') {
       const { prompt, type } = payload;
       const systemPrompt = `Analyze the following ${type} generation prompt for coherence and potential conflicts. Provide a score from 1-10 and brief advice. Output in JSON: { "score": 8, "advice": "..." }`;
-      result = await model.generateContent([systemPrompt, prompt]);
-      const text = result.response.text();
+      result = await ai.models.generateContent({
+        model: 'gemini-3.1-pro',
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        config: { systemInstruction: systemPrompt }
+      });
+      const text = result.text;
       const jsonMatch = text.match(/\{.*\}/s);
       return jsonMatch ? JSON.parse(jsonMatch[0]) : { score: 5, advice: 'Unable to analyze.' };
+    }
+
+    if (operation === 'editImage') {
+      const { imageUrl, instructions } = payload;
+      const https = require('https');
+      const http = require('http');
+      const client = imageUrl.startsWith('https') ? https : http;
+      const imageBuffer = await new Promise((resolve, reject) => {
+        const req = client.get(imageUrl, { timeout: 10000 }, (res) => {
+          const chunks = [];
+          res.on('data', chunk => chunks.push(chunk));
+          res.on('end', () => resolve(Buffer.concat(chunks)));
+          res.on('error', reject);
+        });
+        req.on('error', reject);
+        req.on('timeout', () => { req.destroy(); reject(new Error('Image fetch timeout')); });
+      });
+      const base64Image = imageBuffer.toString('base64');
+      const editResponse = await ai.models.generateImages({
+        model: 'imagen-4.0-generate-001',
+        prompt: instructions,
+        config: {
+          numberOfImages: 1,
+          aspectRatio: '1:1',
+          referenceImages: [{ referenceType: 'REFERENCE_TYPE_RAW', referenceImage: { imageBytes: base64Image } }]
+        }
+      });
+      const editedBytes = editResponse.generatedImages?.[0]?.image?.imageBytes;
+      if (!editedBytes) throw new functions.https.HttpsError('internal', 'No edited image returned');
+      return { imageData: `data:image/png;base64,${editedBytes}` };
     }
 
     throw new functions.https.HttpsError('invalid-argument', `Unknown operation: ${operation}`);
@@ -515,16 +554,17 @@ exports.geminiLiveChat = functions.https.onCall(async (data, context) => {
       throw new functions.https.HttpsError('invalid-argument', 'Message is required');
     }
 
-    const { GoogleGenerativeAI } = require('@google/generative-ai');
-    const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
-    const model = genAI.getGenerativeModel({ model: 'gemini-3.1-pro' });
+    const { GoogleGenAI } = require('@google/genai');
+    const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY });
 
-    // Build conversation with context
+    // Build conversation with context — skip leading non-user messages
     const contents = [];
 
-    // Add history
     if (history && history.length > 0) {
+      let userMessageFound = false;
       for (const msg of history) {
+        if (!userMessageFound && msg.role !== 'user') continue;
+        userMessageFound = true;
         contents.push({
           role: msg.role === 'user' ? 'user' : 'model',
           parts: [{ text: msg.text }]
@@ -540,12 +580,13 @@ exports.geminiLiveChat = functions.https.onCall(async (data, context) => {
 
     const systemPrompt = systemContext || 'You are Stax, a helpful AI assistant for a social media marketing platform called Social StaX.';
 
-    const result = await model.generateContent({
-      systemInstruction: { parts: [{ text: systemPrompt }] },
-      contents
+    const result = await ai.models.generateContent({
+      model: 'gemini-3.1-pro',
+      contents,
+      config: { systemInstruction: systemPrompt }
     });
 
-    const responseText = result.response.text();
+    const responseText = result.text;
 
     return {
       success: true,
@@ -573,11 +614,8 @@ exports.geminiVoiceAssistant = functions.https.onCall(async (data, context) => {
     }
 
     // Import Gemini SDK
-    const { GoogleGenerativeAI } = require('@google/generative-ai');
-    const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
-
-    // Use Gemini with audio capabilities for voice assistant
-    const model = genAI.getGenerativeModel({ model: 'gemini-3.1-pro' });
+    const { GoogleGenAI } = require('@google/genai');
+    const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY });
 
     // Prepare the audio part
     const audioPart = {
@@ -588,14 +626,12 @@ exports.geminiVoiceAssistant = functions.https.onCall(async (data, context) => {
     };
 
     // Send to Gemini with audio
-    const result = await model.generateContent([
-      {
-        text: 'You are a helpful voice assistant. Listen to the user\'s voice input and provide a natural, concise response. Respond in a conversational manner.'
-      },
-      audioPart
-    ]);
+    const result = await ai.models.generateContent({
+      model: 'gemini-3.1-pro',
+      contents: [{ role: 'user', parts: [{ text: 'You are a helpful voice assistant. Listen to the user\'s voice input and provide a natural, concise response. Respond in a conversational manner.' }, audioPart] }]
+    });
 
-    const responseText = result.response.text();
+    const responseText = result.text;
 
     // Convert response to speech using Google Cloud Text-to-Speech
     const textToSpeech = require('@google-cloud/text-to-speech');
