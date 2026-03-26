@@ -59,7 +59,7 @@ jobs:
 
     - name: Deploy Cloud Functions
       if: github.event_name == 'push'
-      run: npx firebase-tools deploy --only functions --project social-stax-7ce24
+      run: npx firebase-tools deploy --only functions:default --project social-stax-7ce24 --debug 2>&1 | tail -100
 
     - name: Clean up credentials
       if: always()
