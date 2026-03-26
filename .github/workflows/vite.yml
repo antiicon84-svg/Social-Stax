@@ -35,9 +35,15 @@ jobs:
         VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
         VITE_FIREBASE_URL: ${{ secrets.VITE_FIREBASE_URL }}
 
+    - name: Authenticate to Google Cloud
+      if: github.event_name == 'push' && matrix.node-version == '20.x'
+      run: |
+        echo '${{ secrets.FIREBASE_SA_KEY }}' > /tmp/sa-key.json
+        echo "GOOGLE_APPLICATION_CREDENTIALS=/tmp/sa-key.json" >> $GITHUB_ENV
+
     - name: Deploy to Firebase Hosting
       if: github.event_name == 'push' && matrix.node-version == '20.x'
-      run: npx firebase-tools deploy --only hosting --project social-stax-7ce24 --token ${{ secrets.FIREBASE_TOKEN }}
+      run: npx firebase-tools deploy --only hosting --project social-stax-7ce24
 
     - name: Install Functions dependencies
       if: github.event_name == 'push' && matrix.node-version == '20.x'
@@ -52,4 +58,8 @@ jobs:
 
     - name: Deploy Cloud Functions
       if: github.event_name == 'push' && matrix.node-version == '20.x'
-      run: npx firebase-tools deploy --only functions --project social-stax-7ce24 --token ${{ secrets.FIREBASE_TOKEN }}
+      run: npx firebase-tools deploy --only functions --project social-stax-7ce24
+
+    - name: Clean up credentials
+      if: always() && matrix.node-version == '20.x'
+      run: rm -f /tmp/sa-key.json
