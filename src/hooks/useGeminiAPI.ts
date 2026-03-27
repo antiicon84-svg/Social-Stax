@@ -1,12 +1,9 @@
-
+import { generateImage, editImageService } from '~/services/aiService';
 
 const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY;
 if (!API_KEY) {
   console.warn('VITE_GOOGLE_API_KEY is not set. AI features will be disabled.');
 }
-
-
-import { generateImage, editImageService } from '~/services/aiService';
 
 export async function textToImage(prompt: string): Promise<string> {
   try {

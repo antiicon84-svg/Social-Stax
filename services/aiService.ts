@@ -41,3 +41,10 @@ export const formatSocialMediaContent = async (
   const data = await callGemini('formatContent', { content, platform, brandKit });
   return (data as { text?: string }).text as string;
 };
+
+export const generateVideo = async (prompt: string, aspectRatio: string = '16:9'): Promise<{ videoData: string }> => {
+  const fns = getFirebaseFunctions();
+  const fn = httpsCallable(fns, 'generateVideoAI', { timeout: 550000 }); // 550s — exceeds CF max so client never times out first
+  const result = await fn({ prompt, aspectRatio });
+  return result.data as { videoData: string };
+};
