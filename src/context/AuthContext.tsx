@@ -112,9 +112,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       await loginWithGoogleService();
     } catch (error: unknown) {
-      const errorMsg = error instanceof Error ? error.message : 'Google login failed';
       console.error('Google Login Error:', error);
-      throw new Error(errorMsg || 'Failed to login with Google');
+      throw error; // preserve original Firebase error with .code property
     }
   };
 

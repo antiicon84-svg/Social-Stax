@@ -748,5 +748,81 @@ exports.bootstrapAdmin = functions.https.onRequest(async (req, res) => {
   }
 });
 
+// ============================================================
+// Video Generation using Veo 3 — Secure Backend Proxy
+// Uses runWith({ timeoutSeconds: 540 }) — gen 1 maximum
+// ============================================================
+exports.generateVideoAI = functions.runWith({ timeoutSeconds: 540 }).https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError('unauthenticated', 'Must be authenticated');
+  }
+
+  const { prompt, aspectRatio = '16:9' } = data;
+  if (!prompt) {
+    throw new functions.https.HttpsError('invalid-argument', 'Prompt is required');
+  }
+
+  const { GoogleGenAI } = require('@google/genai');
+  const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY });
+
+  try {
+    let operation = await ai.models.generateVideos({
+      model: 'veo-3.0-generate-preview',
+      prompt,
+      config: { numberOfVideos: 1, aspectRatio },
+    });
+
+    // Poll for completion — max 8 minutes (within the 540s Cloud Function timeout)
+    const maxPollMs = 480000;
+    const pollIntervalMs = 15000;
+    let elapsed = 0;
+
+    while (!operation.done && elapsed < maxPollMs) {
+      await new Promise(r => setTimeout(r, pollIntervalMs));
+      elapsed += pollIntervalMs;
+      operation = await ai.operations.getVideosOperation({ operation });
+    }
+
+    if (!operation.done) {
+      throw new functions.https.HttpsError('deadline-exceeded', 'Video generation timed out. Please try again.');
+    }
+
+    const generatedVideo = operation.response?.generatedVideos?.[0]?.video;
+    if (!generatedVideo) {
+      throw new functions.https.HttpsError('internal', 'No video was generated');
+    }
+
+    // Return base64 bytes if the API provides them directly
+    if (generatedVideo.videoBytes) {
+      return { videoData: `data:video/mp4;base64,${generatedVideo.videoBytes}` };
+    }
+
+    // Otherwise fetch the video from its URI and convert to base64
+    if (generatedVideo.uri) {
+      const https = require('https');
+      const http = require('http');
+      const client = generatedVideo.uri.startsWith('https') ? https : http;
+
+      const videoBuffer = await new Promise((resolve, reject) => {
+        const req = client.get(generatedVideo.uri, { timeout: 30000 }, (res) => {
+          const chunks = [];
+          res.on('data', chunk => chunks.push(chunk));
+          res.on('end', () => resolve(Buffer.concat(chunks)));
+          res.on('error', reject);
+        });
+        req.on('error', reject);
+        req.on('timeout', () => { req.destroy(); reject(new Error('Video fetch timeout')); });
+      });
+
+      return { videoData: `data:video/mp4;base64,${videoBuffer.toString('base64')}` };
+    }
+
+    throw new functions.https.HttpsError('internal', 'No video data returned from Veo');
+  } catch (error) {
+    console.error('Video generation error:', error);
+    throw new functions.https.HttpsError('internal', error.message);
+  }
+});
+
 module.exports = exports;
 
