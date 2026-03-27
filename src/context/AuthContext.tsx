@@ -5,7 +5,6 @@ import {
   logoutUser,
   loginGuest as loginGuestService,
   loginWithGoogle as loginWithGoogleService,
-  handleGoogleRedirectResult
 } from '~/services/authService';
 import { 
   onAuthStateChanged 
@@ -52,9 +51,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setLoading(false);
       return;
     }
-    // Handle Google redirect result on app load
-    handleGoogleRedirectResult();
-
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         // Set user immediately so isAuthenticated is true right away
