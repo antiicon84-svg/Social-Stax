@@ -30,3 +30,21 @@ jobs:
         run: firebase deploy --only hosting --project social-stax-7ce24
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/serviceAccount.json
+
+      - name: Install Functions dependencies
+        run: cd functions && npm install
+
+      - name: Set Cloud Functions environment variables
+        run: |
+          echo "GOOGLE_API_KEY=${{ secrets.VITE_GOOGLE_API_KEY }}" > functions/.env
+          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> functions/.env
+          echo "ADMIN_SETUP_SECRET=${{ secrets.ADMIN_SETUP_SECRET }}" >> functions/.env
+
+      - name: Deploy Cloud Functions
+        run: firebase deploy --only functions --project social-stax-7ce24 --force --debug
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/serviceAccount.json
+
+      - name: Clean up credentials
+        if: always()
+        run: rm -f "$GITHUB_WORKSPACE/serviceAccount.json"
