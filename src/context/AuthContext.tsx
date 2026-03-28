@@ -102,7 +102,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       await loginUser(email, password);
       // onAuthStateChanged will handle the state update
     } catch (error: unknown) {
-      console.error('Login Error:', error);
       throw error; // Re-throw original so caller can inspect error.code
     }
   };
