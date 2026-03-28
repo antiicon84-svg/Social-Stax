@@ -2,6 +2,7 @@ const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const cheerio = require('cheerio');
 
 admin.initializeApp();
 const db = admin.firestore();
@@ -447,10 +448,8 @@ exports.geminiAI = functions.https.onCall(async (data, context) => {
         });
 
         // Strip scripts/styles/tags, keep readable text
-        siteContent = siteContent
-          .replace(/<script[\s\S]*?<\/script>/gi, '')
-          .replace(/<style[\s\S]*?<\/style>/gi, '')
-          .replace(/<[^>]+>/g, ' ')
+        const $ = cheerio.load(siteContent);
+        siteContent = $.text()
           .replace(/\s+/g, ' ')
           .trim()
           .slice(0, 6000);
