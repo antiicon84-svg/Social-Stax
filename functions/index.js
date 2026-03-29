@@ -472,9 +472,16 @@ exports.geminiAI = functions.https.onCall(async (data, context) => {
         model: 'gemini-3.1-pro',
         contents: [{ role: 'user', parts: [{ text: systemPrompt }] }]
       });
-      const text = result.text.trim();
+      const rawText = result.text;
+      if (!rawText) {
+        throw new functions.https.HttpsError('internal', 'AI returned an empty response for website analysis');
+      }
+      const text = rawText.trim();
       const jsonMatch = text.match(/\{[\s\S]*\}/);
-      return jsonMatch ? JSON.parse(jsonMatch[0]) : null;
+      if (!jsonMatch) {
+        throw new functions.https.HttpsError('internal', 'AI response did not contain valid JSON for website analysis');
+      }
+      return JSON.parse(jsonMatch[0]);
     }
 
     if (operation === 'formatContent') {
@@ -552,6 +559,11 @@ exports.geminiLiveChat = functions.https.onCall(async (data, context) => {
     throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
   }
 
+  if (!process.env.GOOGLE_API_KEY) {
+    console.error('FATAL: GOOGLE_API_KEY environment variable is not set. AI functions will fail.');
+    throw new functions.https.HttpsError('internal', 'The server is missing its connection to the AI service.');
+  }
+
   try {
     const { message, history = [], systemContext = '' } = data;
 
@@ -593,6 +605,11 @@ exports.geminiLiveChat = functions.https.onCall(async (data, context) => {
 
     const responseText = result.text;
 
+    if (!responseText) {
+      console.error('Gemini Live Chat: empty or undefined response text from model', result);
+      throw new functions.https.HttpsError('internal', 'The AI returned an empty response. Please try again.');
+    }
+
     return {
       success: true,
       text: responseText,
@@ -600,6 +617,7 @@ exports.geminiLiveChat = functions.https.onCall(async (data, context) => {
     };
   } catch (error) {
     console.error('Gemini Live Chat error:', error);
+    if (error instanceof functions.https.HttpsError) throw error;
     throw new functions.https.HttpsError('internal', 'Chat error: ' + error.message);
   }
 });

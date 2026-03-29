@@ -1,9 +1,4 @@
-import { generateImage, editImageService, generateVideo as generateVideoService } from '~/services/aiService';
-
-const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY;
-if (!API_KEY) {
-  console.warn('VITE_GOOGLE_API_KEY is not set. AI features will be disabled.');
-}
+import { generateImage, editImageService, generateVideo as generateVideoService, generateContent as generateContentService } from '~/services/aiService';
 
 export async function textToImage(prompt: string): Promise<string> {
   try {
@@ -31,6 +26,16 @@ export async function generateVideo(prompt: string, aspectRatio: string = '16:9'
     return result.videoData;
   } catch (error) {
     console.error('Generate video error:', error);
+    throw error;
+  }
+}
+
+export async function generateTextContent(topic: string, platform?: string): Promise<string> {
+  try {
+    const text = await generateContentService(topic, platform);
+    return text || '';
+  } catch (error) {
+    console.error('Generate text content error:', error);
     throw error;
   }
 }

@@ -2,13 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { doc, getDoc } from 'firebase/firestore';
 import { getFirebaseDB } from '@/config/firebase';
+import TextGenerator from './TextGenerator';
 import TextToImage from './TextToImage';
 import ImageEditor from './ImageEditor';
 import VideoGenerator from './VideoGenerator';
 
 export default function ContentLab() {
   const { currentUser, loading: authLoading } = useAuth();
-  const [activeTab, setActiveTab] = useState<'image' | 'edit' | 'video'>('image');
+  const [activeTab, setActiveTab] = useState<'text' | 'image' | 'edit' | 'video'>('text');
   const [credits, setCredits] = useState(0);
   const [loading, setLoading] = useState(true);
 
@@ -50,6 +51,14 @@ export default function ContentLab() {
       
       <div className="flex gap-4 mb-6">
         <button
+          onClick={() => setActiveTab('text')}
+          className={`px-4 py-2 rounded text-white font-medium transition ${
+            activeTab === 'text' ? 'bg-red-primary' : 'bg-gray-700 hover:bg-gray-600'
+          }`}
+        >
+          Text Generator
+        </button>
+        <button
           onClick={() => setActiveTab('image')}
           className={`px-4 py-2 rounded text-white font-medium transition ${
             activeTab === 'image' ? 'bg-red-primary' : 'bg-gray-700 hover:bg-gray-600'
@@ -82,6 +91,7 @@ export default function ContentLab() {
         <div className="text-center text-white">Loading credits...</div>
       ) : (
         <>
+          {activeTab === 'text' && <TextGenerator credits={credits} onRefresh={loadCredits} />}
           {activeTab === 'image' && <TextToImage credits={credits} onRefresh={loadCredits} />}
           {activeTab === 'edit' && <ImageEditor credits={credits} onRefresh={loadCredits} />}
           {activeTab === 'video' && <VideoGenerator credits={credits} onRefresh={loadCredits} />}

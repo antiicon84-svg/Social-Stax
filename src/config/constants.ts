@@ -13,12 +13,12 @@ export const GOOGLE_API_KEY = import.meta.env.VITE_GOOGLE_API_KEY || '';
 // ===================================================
 // Enhanced validation to detect missing/invalid credentials early
 const validateFirebaseConfig = () => {
-  const apiKey = import.meta.env.VITE_FIREBASE_API_KEY || '';
-  const authDomain = import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || '';
-  const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID || '';
-  const storageBucket = import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || '';
-  const messagingSenderId = import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '';
-  const appId = import.meta.env.VITE_FIREBASE_APP_ID || '';
+  const apiKey = (import.meta.env.VITE_FIREBASE_API_KEY || '').trim();
+  const authDomain = (import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || '').split('\n')[0].trim();
+  const projectId = (import.meta.env.VITE_FIREBASE_PROJECT_ID || '').trim();
+  const storageBucket = (import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || '').trim();
+  const messagingSenderId = (import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '').trim();
+  const appId = (import.meta.env.VITE_FIREBASE_APP_ID || '').trim();
 
   // Check for missing or placeholder values
   const isMissing = !projectId || projectId === '' || projectId.includes('YOUR-');
