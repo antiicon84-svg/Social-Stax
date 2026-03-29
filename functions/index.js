@@ -571,7 +571,7 @@ exports.geminiLiveChat = functions.https.onCall(async (data, context) => {
         if (!userMessageFound && msg.role !== 'user') continue;
         userMessageFound = true;
         contents.push({
-          role,
+          role: msg.role === 'user' ? 'user' : 'model',
           parts: [{ text: msg.text }]
         });
       }
@@ -619,16 +619,8 @@ exports.geminiVoiceAssistant = functions.https.onCall(async (data, context) => {
     }
 
     // Import Gemini SDK
-<<<<<<< HEAD
-    const { GoogleGenerativeAI } = require('@google/generative-ai');
-    const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
-
-    // Use Gemini with audio capabilities for voice assistant
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
-=======
     const { GoogleGenAI } = require('@google/genai');
     const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY });
->>>>>>> bbc749ef3aebc0833489957e606820aefb725619
 
     // Prepare the audio part
     const audioPart = {

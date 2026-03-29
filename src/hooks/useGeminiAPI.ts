@@ -1,4 +1,4 @@
-import { generateImage, editImageService } from '~/services/aiService';
+import { generateImage, editImageService, generateVideo as generateVideoService } from '~/services/aiService';
 
 const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY;
 if (!API_KEY) {
@@ -21,6 +21,16 @@ export async function editImage(imageUrl: string, instructions: string): Promise
     return (result as { imageData?: string }).imageData || '';
   } catch (error) {
     console.error('Edit image error:', error);
+    throw error;
+  }
+}
+
+export async function generateVideo(prompt: string, aspectRatio: string = '16:9'): Promise<string> {
+  try {
+    const result = await generateVideoService(prompt, aspectRatio);
+    return result.videoData;
+  } catch (error) {
+    console.error('Generate video error:', error);
     throw error;
   }
 }
