@@ -10,16 +10,19 @@ export default function TextToImage({ credits, onRefresh }: TextToImageProps) {
   const [prompt, setPrompt] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState('');
+  const [error, setError] = useState('');
 
   const handleGenerate = async () => {
     if (!prompt.trim()) return;
     setLoading(true);
+    setError('');
     try {
       const imageData = await textToImage(prompt);
       setResult(imageData);
       onRefresh();
-    } catch (error) {
-      console.error('Generation error:', error);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Image generation failed';
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -41,6 +44,11 @@ export default function TextToImage({ credits, onRefresh }: TextToImageProps) {
       >
         {loading ? 'Generating...' : 'Generate Image'}
       </button>
+      {error && (
+        <div className="mt-4 p-3 bg-red-900/50 border border-red-500/50 rounded text-red-300 text-sm">
+          {error}
+        </div>
+      )}
       {result && (
         <div className="mt-4">
           <img src={result} alt="Generated" className="max-w-full h-auto rounded" />

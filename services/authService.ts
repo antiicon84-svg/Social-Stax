@@ -4,8 +4,6 @@ import {
   signInWithEmailAndPassword,
   signInAnonymously,
   signInWithPopup,
-  signInWithRedirect,
-  getRedirectResult,
   GoogleAuthProvider,
   updateProfile,
   signOut,
@@ -190,12 +188,11 @@ export const loginWithGoogle = async (): Promise<User> => {
     userCredential = await signInWithPopup(auth, provider);
   } catch (popupError: unknown) {
     const error = popupError as { code?: string };
-    if (
-      error.code === 'auth/popup-blocked' ||
-      error.code === 'auth/popup-closed-by-user'
-    ) {
-      await signInWithRedirect(auth, provider);
-      throw new Error('Redirecting for Google sign-in...');
+    if (error.code === 'auth/popup-blocked') {
+      throw new Error('Popup was blocked. Please allow popups for this site and try again.');
+    }
+    if (error.code === 'auth/popup-closed-by-user') {
+      throw new Error('Sign-in was cancelled.');
     }
     throw popupError;
   }
@@ -206,20 +203,6 @@ export const loginWithGoogle = async (): Promise<User> => {
   return mapFirebaseUserToAppUser(user);
 };
 
-// Handle Google redirect result on app load
-export const handleGoogleRedirectResult = async (): Promise<void> => {
-  try {
-    const auth = getAuth();
-    const result = await getRedirectResult(auth);
-    if (result?.user) {
-      const user = result.user;
-      const isAdmin = isAdminUser(user.email ?? '');
-      await createUserRecord(user.uid, user.email ?? '', isAdmin, user.displayName ?? '', user.phoneNumber ?? '');
-    }
-  } catch (error) {
-    console.error('Google redirect result error:', error);
-  }
-};
 
 // Sign in with email and password (alias)
 export const signInWithEmail = async (

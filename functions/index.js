@@ -2,6 +2,7 @@ const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const cheerio = require('cheerio');
 
 admin.initializeApp();
 const db = admin.firestore();
@@ -376,47 +377,45 @@ exports.geminiAI = functions.https.onCall(async (data, context) => {
     throw new functions.https.HttpsError('invalid-argument', 'operation and payload required');
   }
 
-  const { GoogleGenerativeAI } = require('@google/generative-ai');
-  const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
-  const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+  const { GoogleGenAI } = require('@google/genai');
+  const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY });
 
   try {
     let result;
 
     if (operation === 'generateImage') {
       const { prompt } = payload;
-      const imageModel = genAI.getGenerativeModel({ model: 'gemini-3.1-flash-image-preview' });
-      const result = await imageModel.generateContent({
-        contents: [{ role: 'user', parts: [{ text: `Generate an image: ${prompt}` }] }],
-        generationConfig: {
-          responseMimeType: 'image/png',
-        },
+      const response = await ai.models.generateImages({
+        model: 'imagen-4.0-generate-001',
+        prompt: prompt,
+        config: { numberOfImages: 1, aspectRatio: '1:1' }
       });
-      const response = result.response;
-      const candidates = response.candidates;
-      if (!candidates || !candidates[0]?.content?.parts) {
+      const imageBytes = response.generatedImages?.[0]?.image?.imageBytes;
+      if (!imageBytes) {
         throw new functions.https.HttpsError('internal', 'No image generated');
       }
-      // Find the image part in the response
-      const imagePart = candidates[0].content.parts.find(p => p.inlineData);
-      if (!imagePart) {
-        throw new functions.https.HttpsError('internal', 'No image data in response');
-      }
-      return { imageData: `data:${imagePart.inlineData.mimeType || 'image/png'};base64,${imagePart.inlineData.data}` };
+      return { imageData: `data:image/png;base64,${imageBytes}` };
     }
 
     if (operation === 'generateContent') {
       const { topic, platform } = payload;
       const prompt = `Generate high-quality social media content for the topic: "${topic}"${platform ? ` specifically for ${platform}` : ''}. Provide a headline, body text, and a visual brief for an image generator.`;
-      result = await model.generateContent(prompt);
-      return { text: result.response.text() };
+      result = await ai.models.generateContent({
+        model: 'gemini-3.1-pro',
+        contents: [{ role: 'user', parts: [{ text: prompt }] }]
+      });
+      return { text: result.text };
     }
 
     if (operation === 'enhancePrompt') {
       const { prompt, type } = payload;
       const systemPrompt = `You are a professional prompt engineer for ${type} generation AI. Enhance the user's prompt to be more detailed, cinematic, and effective. Output only the enhanced prompt and technical parameters in JSON format: { "enhancedPrompt": "...", "technicalParams": "..." }`;
-      result = await model.generateContent([systemPrompt, prompt]);
-      const text = result.response.text();
+      result = await ai.models.generateContent({
+        model: 'gemini-3.1-pro',
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        config: { systemInstruction: systemPrompt }
+      });
+      const text = result.text;
       const jsonMatch = text.match(/\{.*\}/s);
       return jsonMatch ? JSON.parse(jsonMatch[0]) : { enhancedPrompt: text, technicalParams: '' };
     }
@@ -455,10 +454,8 @@ exports.geminiAI = functions.https.onCall(async (data, context) => {
         });
 
         // Strip scripts/styles/tags, keep readable text
-        siteContent = siteContent
-          .replace(/<script[\s\S]*?<\/script>/gi, '')
-          .replace(/<style[\s\S]*?<\/style>/gi, '')
-          .replace(/<[^>]+>/g, ' ')
+        const $ = cheerio.load(siteContent);
+        siteContent = $.text()
           .replace(/\s+/g, ' ')
           .trim()
           .slice(0, 6000);
@@ -466,13 +463,16 @@ exports.geminiAI = functions.https.onCall(async (data, context) => {
         console.warn('Could not fetch website, falling back to URL inference:', fetchErr.message);
       }
 
-      const context = siteContent
+      const siteContext = siteContent
         ? `Website URL: ${url}\n\nWebsite content:\n${siteContent}`
         : `Website URL: ${url}`;
 
-      const systemPrompt = `You are a brand analyst. Analyze the following website information and extract brand details.\n\n${context}\n\nOutput ONLY valid JSON (no markdown, no explanation): { "name": "Brand Name", "industry": "Industry", "tone": "Professional|Friendly|Luxury|Bold|Playful|Educational|Minimalist", "description": "Short 1-2 sentence brand description", "color": "#hexcode" }`;
-      result = await model.generateContent([systemPrompt]);
-      const text = result.response.text().trim();
+      const systemPrompt = `You are a brand analyst. Analyze the following website information and extract brand details.\n\n${siteContext}\n\nOutput ONLY valid JSON (no markdown, no explanation): { "name": "Brand Name", "industry": "Industry", "tone": "Professional|Friendly|Luxury|Bold|Playful|Educational|Minimalist", "description": "Short 1-2 sentence brand description", "color": "#hexcode" }`;
+      result = await ai.models.generateContent({
+        model: 'gemini-3.1-pro',
+        contents: [{ role: 'user', parts: [{ text: systemPrompt }] }]
+      });
+      const text = result.text.trim();
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       return jsonMatch ? JSON.parse(jsonMatch[0]) : null;
     }
@@ -488,17 +488,55 @@ exports.geminiAI = functions.https.onCall(async (data, context) => {
       const config = configs[platform] || configs.Instagram;
       const tone = brandKit?.tone || config.tone;
       const systemPrompt = `Format this content for ${platform}. Max ${config.maxLength} characters. Add ${config.hashtagCount} relevant hashtags. ${config.emojiEmphasis ? 'Use strategic emojis.' : 'Minimal emojis.'} Tone: ${tone}. Include CTA if relevant. Return ONLY formatted post.`;
-      result = await model.generateContent([systemPrompt, `Content: ${content}`]);
-      return { text: result.response.text().trim() };
+      result = await ai.models.generateContent({
+        model: 'gemini-3.1-pro',
+        contents: [{ role: 'user', parts: [{ text: `Content: ${content}` }] }],
+        config: { systemInstruction: systemPrompt }
+      });
+      return { text: result.text.trim() };
     }
 
     if (operation === 'analyzeCoherence') {
       const { prompt, type } = payload;
       const systemPrompt = `Analyze the following ${type} generation prompt for coherence and potential conflicts. Provide a score from 1-10 and brief advice. Output in JSON: { "score": 8, "advice": "..." }`;
-      result = await model.generateContent([systemPrompt, prompt]);
-      const text = result.response.text();
+      result = await ai.models.generateContent({
+        model: 'gemini-3.1-pro',
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        config: { systemInstruction: systemPrompt }
+      });
+      const text = result.text;
       const jsonMatch = text.match(/\{.*\}/s);
       return jsonMatch ? JSON.parse(jsonMatch[0]) : { score: 5, advice: 'Unable to analyze.' };
+    }
+
+    if (operation === 'editImage') {
+      const { imageUrl, instructions } = payload;
+      const https = require('https');
+      const http = require('http');
+      const client = imageUrl.startsWith('https') ? https : http;
+      const imageBuffer = await new Promise((resolve, reject) => {
+        const req = client.get(imageUrl, { timeout: 10000 }, (res) => {
+          const chunks = [];
+          res.on('data', chunk => chunks.push(chunk));
+          res.on('end', () => resolve(Buffer.concat(chunks)));
+          res.on('error', reject);
+        });
+        req.on('error', reject);
+        req.on('timeout', () => { req.destroy(); reject(new Error('Image fetch timeout')); });
+      });
+      const base64Image = imageBuffer.toString('base64');
+      const editResponse = await ai.models.generateImages({
+        model: 'imagen-4.0-generate-001',
+        prompt: instructions,
+        config: {
+          numberOfImages: 1,
+          aspectRatio: '1:1',
+          referenceImages: [{ referenceType: 'REFERENCE_TYPE_RAW', referenceImage: { imageBytes: base64Image } }]
+        }
+      });
+      const editedBytes = editResponse.generatedImages?.[0]?.image?.imageBytes;
+      if (!editedBytes) throw new functions.https.HttpsError('internal', 'No edited image returned');
+      return { imageData: `data:image/png;base64,${editedBytes}` };
     }
 
     throw new functions.https.HttpsError('invalid-argument', `Unknown operation: ${operation}`);
@@ -521,20 +559,17 @@ exports.geminiLiveChat = functions.https.onCall(async (data, context) => {
       throw new functions.https.HttpsError('invalid-argument', 'Message is required');
     }
 
-    const { GoogleGenerativeAI } = require('@google/generative-ai');
-    const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
-    const model = genAI.getGenerativeModel({ model: 'gemini-3.1-flash' });
+    const { GoogleGenAI } = require('@google/genai');
+    const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY });
 
-    // Build conversation with context
+    // Build conversation with context — skip leading non-user messages
     const contents = [];
 
-    // Add history, ensuring it starts with a user message (Gemini requirement)
     if (history && history.length > 0) {
-      let foundFirstUser = false;
+      let userMessageFound = false;
       for (const msg of history) {
-        const role = msg.role === 'user' ? 'user' : 'model';
-        if (!foundFirstUser && role === 'model') continue;
-        foundFirstUser = true;
+        if (!userMessageFound && msg.role !== 'user') continue;
+        userMessageFound = true;
         contents.push({
           role,
           parts: [{ text: msg.text }]
@@ -550,12 +585,13 @@ exports.geminiLiveChat = functions.https.onCall(async (data, context) => {
 
     const systemPrompt = systemContext || 'You are Stax, a helpful AI assistant for a social media marketing platform called Social StaX.';
 
-    const result = await model.generateContent({
-      systemInstruction: { parts: [{ text: systemPrompt }] },
-      contents
+    const result = await ai.models.generateContent({
+      model: 'gemini-3.1-pro',
+      contents,
+      config: { systemInstruction: systemPrompt }
     });
 
-    const responseText = result.response.text();
+    const responseText = result.text;
 
     return {
       success: true,
@@ -583,11 +619,16 @@ exports.geminiVoiceAssistant = functions.https.onCall(async (data, context) => {
     }
 
     // Import Gemini SDK
+<<<<<<< HEAD
     const { GoogleGenerativeAI } = require('@google/generative-ai');
     const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
 
     // Use Gemini with audio capabilities for voice assistant
     const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+=======
+    const { GoogleGenAI } = require('@google/genai');
+    const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY });
+>>>>>>> bbc749ef3aebc0833489957e606820aefb725619
 
     // Prepare the audio part
     const audioPart = {
@@ -598,14 +639,12 @@ exports.geminiVoiceAssistant = functions.https.onCall(async (data, context) => {
     };
 
     // Send to Gemini with audio
-    const result = await model.generateContent([
-      {
-        text: 'You are a helpful voice assistant. Listen to the user\'s voice input and provide a natural, concise response. Respond in a conversational manner.'
-      },
-      audioPart
-    ]);
+    const result = await ai.models.generateContent({
+      model: 'gemini-3.1-pro',
+      contents: [{ role: 'user', parts: [{ text: 'You are a helpful voice assistant. Listen to the user\'s voice input and provide a natural, concise response. Respond in a conversational manner.' }, audioPart] }]
+    });
 
-    const responseText = result.response.text();
+    const responseText = result.text;
 
     // Convert response to speech using Google Cloud Text-to-Speech
     const textToSpeech = require('@google-cloud/text-to-speech');
@@ -719,6 +758,82 @@ exports.bootstrapAdmin = functions.https.onRequest(async (req, res) => {
   } catch (err) {
     console.error('bootstrapAdmin error:', err);
     res.status(500).json({ error: err.message });
+  }
+});
+
+// ============================================================
+// Video Generation using Veo 3 — Secure Backend Proxy
+// Uses runWith({ timeoutSeconds: 540 }) — gen 1 maximum
+// ============================================================
+exports.generateVideoAI = functions.runWith({ timeoutSeconds: 540 }).https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError('unauthenticated', 'Must be authenticated');
+  }
+
+  const { prompt, aspectRatio = '16:9' } = data;
+  if (!prompt) {
+    throw new functions.https.HttpsError('invalid-argument', 'Prompt is required');
+  }
+
+  const { GoogleGenAI } = require('@google/genai');
+  const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY });
+
+  try {
+    let operation = await ai.models.generateVideos({
+      model: 'veo-3.0-generate-preview',
+      prompt,
+      config: { numberOfVideos: 1, aspectRatio },
+    });
+
+    // Poll for completion — max 8 minutes (within the 540s Cloud Function timeout)
+    const maxPollMs = 480000;
+    const pollIntervalMs = 15000;
+    let elapsed = 0;
+
+    while (!operation.done && elapsed < maxPollMs) {
+      await new Promise(r => setTimeout(r, pollIntervalMs));
+      elapsed += pollIntervalMs;
+      operation = await ai.operations.getVideosOperation({ operation });
+    }
+
+    if (!operation.done) {
+      throw new functions.https.HttpsError('deadline-exceeded', 'Video generation timed out. Please try again.');
+    }
+
+    const generatedVideo = operation.response?.generatedVideos?.[0]?.video;
+    if (!generatedVideo) {
+      throw new functions.https.HttpsError('internal', 'No video was generated');
+    }
+
+    // Return base64 bytes if the API provides them directly
+    if (generatedVideo.videoBytes) {
+      return { videoData: `data:video/mp4;base64,${generatedVideo.videoBytes}` };
+    }
+
+    // Otherwise fetch the video from its URI and convert to base64
+    if (generatedVideo.uri) {
+      const https = require('https');
+      const http = require('http');
+      const client = generatedVideo.uri.startsWith('https') ? https : http;
+
+      const videoBuffer = await new Promise((resolve, reject) => {
+        const req = client.get(generatedVideo.uri, { timeout: 30000 }, (res) => {
+          const chunks = [];
+          res.on('data', chunk => chunks.push(chunk));
+          res.on('end', () => resolve(Buffer.concat(chunks)));
+          res.on('error', reject);
+        });
+        req.on('error', reject);
+        req.on('timeout', () => { req.destroy(); reject(new Error('Video fetch timeout')); });
+      });
+
+      return { videoData: `data:video/mp4;base64,${videoBuffer.toString('base64')}` };
+    }
+
+    throw new functions.https.HttpsError('internal', 'No video data returned from Veo');
+  } catch (error) {
+    console.error('Video generation error:', error);
+    throw new functions.https.HttpsError('internal', error.message);
   }
 });
 

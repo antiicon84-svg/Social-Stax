@@ -6,23 +6,24 @@ on:
   pull_request:
     branches: [ "main" ]
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        node-version: [20.x, 22.x]
-
     steps:
     - uses: actions/checkout@v4
-    - name: Use Node.js ${{ matrix.node-version }}
+
+    - name: Use Node.js 20.x
       uses: actions/setup-node@v4
       with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
+        node-version: '20.x'
+
     - name: Install dependencies
       run: npm install
+
     - name: Build
       run: npm run build
       env:
@@ -35,21 +36,31 @@ jobs:
         VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
         VITE_FIREBASE_URL: ${{ secrets.VITE_FIREBASE_URL }}
 
+    - name: Authenticate to Google Cloud
+      if: github.event_name == 'push'
+      run: |
+        echo '${{ secrets.FIREBASE_SA_KEY }}' > /tmp/sa-key.json
+        echo "GOOGLE_APPLICATION_CREDENTIALS=/tmp/sa-key.json" >> $GITHUB_ENV
+
     - name: Deploy to Firebase Hosting
-      if: github.event_name == 'push' && matrix.node-version == '20.x'
-      run: npx firebase-tools deploy --only hosting --project social-stax-7ce24 --token ${{ secrets.FIREBASE_TOKEN }}
+      if: github.event_name == 'push'
+      run: npx firebase-tools deploy --only hosting --project social-stax-7ce24
 
     - name: Install Functions dependencies
-      if: github.event_name == 'push' && matrix.node-version == '20.x'
+      if: github.event_name == 'push'
       run: cd functions && npm install
 
     - name: Set Cloud Functions environment variables
-      if: github.event_name == 'push' && matrix.node-version == '20.x'
+      if: github.event_name == 'push'
       run: |
         echo "GOOGLE_API_KEY=${{ secrets.VITE_GOOGLE_API_KEY }}" > functions/.env
         echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> functions/.env
         echo "ADMIN_SETUP_SECRET=${{ secrets.ADMIN_SETUP_SECRET }}" >> functions/.env
 
     - name: Deploy Cloud Functions
-      if: github.event_name == 'push' && matrix.node-version == '20.x'
-      run: npx firebase-tools deploy --only functions --project social-stax-7ce24 --token ${{ secrets.FIREBASE_TOKEN }}
+      if: github.event_name == 'push'
+      run: npx firebase-tools@latest deploy --only functions --project social-stax-7ce24 --force --debug
+
+    - name: Clean up credentials
+      if: always()
+      run: rm -f /tmp/sa-key.json

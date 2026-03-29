@@ -29,6 +29,10 @@ export const generateContent = async (topic: string, platform?: string) => {
   return (data as { text?: string }).text as string;
 };
 
+export const editImageService = async (imageUrl: string, instructions: string) => {
+  return callGemini('editImage', { imageUrl, instructions });
+};
+
 export const formatSocialMediaContent = async (
   content: string,
   platform: 'Instagram' | 'LinkedIn' | 'Twitter' | 'Facebook',
@@ -36,4 +40,11 @@ export const formatSocialMediaContent = async (
 ): Promise<string> => {
   const data = await callGemini('formatContent', { content, platform, brandKit });
   return (data as { text?: string }).text as string;
+};
+
+export const generateVideo = async (prompt: string, aspectRatio: string = '16:9'): Promise<{ videoData: string }> => {
+  const fns = getFirebaseFunctions();
+  const fn = httpsCallable(fns, 'generateVideoAI', { timeout: 550000 }); // 550s — exceeds CF max so client never times out first
+  const result = await fn({ prompt, aspectRatio });
+  return result.data as { videoData: string };
 };

@@ -1,0 +1,62 @@
+name: Firebase Deploy
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install dependencies
+        run: npm ci
+      - name: Build
+        run: npm run build
+        env:
+          VITE_GOOGLE_API_KEY: ${{ secrets.VITE_GOOGLE_API_KEY }}
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
+          VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+          VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
+          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+          VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
+          VITE_FIREBASE_URL: ${{ secrets.VITE_FIREBASE_URL }}
+      - name: Write service account to file
+        run: echo "$FIREBASE_SERVICE_ACCOUNT" > "$GITHUB_WORKSPACE/serviceAccount.json"
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+      - name: Install firebase-tools
+        run: npm install -g firebase-tools
+      - name: Set GOOGLE_APPLICATION_CREDENTIALS
+        run: echo "GOOGLE_APPLICATION_CREDENTIALS=$GITHUB_WORKSPACE/serviceAccount.json" >> $GITHUB_ENV
+      - name: Deploy to Firebase Hosting
+        run: firebase deploy --only hosting --project social-stax-7ce24
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/serviceAccount.json
+
+      - name: Install Functions dependencies
+        run: cd functions && npm install
+
+      - name: Set Cloud Functions environment variables
+        run: |
+          echo "GOOGLE_API_KEY=${{ secrets.VITE_GOOGLE_API_KEY }}" > functions/.env
+          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> functions/.env
+          echo "ADMIN_SETUP_SECRET=${{ secrets.ADMIN_SETUP_SECRET }}" >> functions/.env
+
+      - name: Deploy Cloud Functions
+        run: firebase deploy --only functions --project social-stax-7ce24 --force --debug
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/serviceAccount.json
+
+      - name: Clean up credentials
+        if: always()
+        run: rm -f "$GITHUB_WORKSPACE/serviceAccount.json"

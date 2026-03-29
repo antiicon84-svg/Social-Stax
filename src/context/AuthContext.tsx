@@ -5,7 +5,6 @@ import {
   logoutUser,
   loginGuest as loginGuestService,
   loginWithGoogle as loginWithGoogleService,
-  handleGoogleRedirectResult
 } from '~/services/authService';
 import { 
   onAuthStateChanged 
@@ -52,9 +51,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setLoading(false);
       return;
     }
-    // Handle Google redirect result on app load
-    handleGoogleRedirectResult();
-
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         // Set user immediately so isAuthenticated is true right away
@@ -106,8 +102,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       await loginUser(email, password);
       // onAuthStateChanged will handle the state update
     } catch (error: unknown) {
-      const errorMsg = error instanceof Error ? error.message : 'Login failed';
-      console.error('Login Error:', error);
       throw error; // Re-throw original so caller can inspect error.code
     }
   };
@@ -116,9 +110,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       await loginWithGoogleService();
     } catch (error: unknown) {
-      const errorMsg = error instanceof Error ? error.message : 'Google login failed';
       console.error('Google Login Error:', error);
-      throw new Error(errorMsg || 'Failed to login with Google');
+      throw error; // preserve original Firebase error with .code property
     }
   };
 
